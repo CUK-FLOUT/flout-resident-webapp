@@ -88,7 +88,6 @@ src/
 
 ## 초기세팅 내역
 
-2026-10-18 `chore/initial-setup` 브랜치에서 진행한 내용이에요.
 
 | 항목             | 내용                                                                                                                                                        | 위치                                   |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
@@ -104,9 +103,6 @@ src/
 | 상태             | 현장점검 신청 3단계 폼 draft 스토어                                                                                                                         | `src/stores/inspectionDraft.ts`        |
 | GitHub           | PR 템플릿, 이슈 템플릿(기능·버그), CI, Vercel SPA rewrite                                                                                                   | `.github`, `vercel.json`               |
 
-**검증:** `tsc -b` 타입체크 · ESLint 모두 에러 0, 홈·취약도 결과 화면 렌더링을 Figma 와 대조 확인.
-
-**아직 남은 것**
 
 - [ ] 화면 구현 — 추천 순서: 현장점검 신청(03 → 03-2 → 03-3 → 04) → 내 신청·진행 허브(05, 06) → 결과(08) → 지원(09~12) → 시공(13~15) → 알림(16) → 인증
 - [ ] 백엔드 API 스펙 확정 후 `src/api/*`, `src/types/domain.ts` 반영 (`TODO(백엔드)` 검색)
@@ -118,7 +114,7 @@ src/
 
 ## 디자인 토큰 (Figma → Tailwind)
 
-`src/styles/index.css` 의 `@theme` 에 정의돼 있어요. **hex 값을 직접 쓰지 말고 토큰 클래스를 쓰세요.**
+`src/styles/index.css` 의 `@theme` 에 정의
 
 | Figma                             | Tailwind                                                 | 값                                            |
 | --------------------------------- | -------------------------------------------------------- | --------------------------------------------- |
@@ -131,7 +127,7 @@ src/
 | radius 4 · 6 · 8 · 12             | `rounded-sm` `rounded-md` `rounded-lg` `rounded-xl`      | 썸네일 · 버튼/입력/카드 · 신청 CTA · 바텀시트 |
 | 좌우 여백 20 · 헤더 56            | `px-gutter` `h-header`                                   |                                               |
 
-> ⚠️ Figma 의 `color/body` 는 타이포 `Body` 와 클래스명이 겹쳐서 `text-body-text` 로 이름을 바꿨어요. (`text-body` = 14px 본문 크기)
+> ⚠️ Figma 의 `color/body` 는 타이포 `Body` 와 클래스명이 겹쳐서 `text-body-text` 로 이름을 바꿈 (`text-body` = 14px 본문 크기)
 
 디자인 원칙(디자인 시스템 문서에서 발췌)
 
@@ -181,7 +177,7 @@ src/
 
 ## 배포
 
-SPA 라우팅이라 호스팅에서 모든 경로를 `index.html` 로 rewrite 해야 해요 (Vercel/Netlify 기본 SPA 설정 또는 `_redirects`).
+SPA 라우팅이라 호스팅에서 모든 경로를 `index.html` 로 rewrite (Vercel/Netlify 기본 SPA 설정 또는 `_redirects`).
 
 ## 컨벤션
 

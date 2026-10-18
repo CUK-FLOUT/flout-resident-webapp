@@ -181,7 +181,7 @@ SPA 라우팅이라 호스팅에서 모든 경로를 `index.html` 로 rewrite (V
 
 ## 컨벤션
 
-- 브랜치: `main` ← `develop` ← `feat/<이슈번호>-<요약>` (예: `feat/12-inspection-apply`)
+- 브랜치: `main`(배포) ← `dev`(통합) ← `feat/<이슈번호>-<요약>` (예: `feat/12-inspection-apply`). 작업 브랜치는 `dev` 에서 따고 PR 도 `dev` 로 보내요.
 - 커밋: `feat:` `fix:` `refactor:` `style:` `chore:` `docs:` + 한국어 요약 (예: `feat: 현장점검 신청 1단계 화면`)
 - PR: 템플릿에 Figma 노드 링크 + 명세 ID + 모바일 스크린샷 첨부
 - import 는 `@/` 절대경로, 컴포넌트 파일명 PascalCase, 훅은 `useXxx`

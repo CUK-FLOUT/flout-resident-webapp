@@ -14,8 +14,8 @@ export function KeyValueList({ items, className }: { items: KeyValueItem[]; clas
     <dl className={cn('flex flex-col gap-3', className)}>
       {items.map((item, i) => (
         <div key={i} className="flex items-start justify-between gap-4">
-          <dt className="shrink-0 text-body text-body-text">{item.label}</dt>
-          <dd className="text-right text-label font-bold text-ink">{item.value}</dd>
+          <dt className="text-body text-body-text shrink-0">{item.label}</dt>
+          <dd className="text-label text-ink text-right font-bold">{item.value}</dd>
         </div>
       ))}
     </dl>

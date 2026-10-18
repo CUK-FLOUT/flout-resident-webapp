@@ -60,7 +60,7 @@ export function BottomSheet({
       {/* Dim overlay — Figma: Dim opacity 28% + 배경 blur */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-ink/30 backdrop-blur-[2px]"
+        className="bg-ink/30 absolute inset-0 backdrop-blur-[2px]"
         onClick={dismissible ? onClose : undefined}
       />
       <section
@@ -68,15 +68,15 @@ export function BottomSheet({
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         className={cn(
-          'absolute bottom-0 flex max-h-[90dvh] w-full max-w-app flex-col rounded-t-xl bg-surface pb-[env(safe-area-inset-bottom)]',
+          'max-w-app bg-surface absolute bottom-0 flex max-h-[90dvh] w-full flex-col rounded-t-xl pb-[env(safe-area-inset-bottom)]',
           className,
         )}
       >
         <div className="flex justify-center pt-3 pb-2">
-          <span aria-hidden className="h-1 w-10 rounded-full bg-border" />
+          <span aria-hidden className="bg-border h-1 w-10 rounded-full" />
         </div>
 
-        <header className="flex items-start justify-between gap-4 px-gutter pt-2">
+        <header className="px-gutter flex items-start justify-between gap-4 pt-2">
           <div className="flex flex-col gap-2">
             {eyebrow && <p className="text-label text-ink">{eyebrow}</p>}
             {title && (
@@ -90,13 +90,13 @@ export function BottomSheet({
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="-mt-2 -mr-2 flex size-11 shrink-0 items-center justify-center text-primary"
+            className="text-primary -mt-2 -mr-2 flex size-11 shrink-0 items-center justify-center"
           >
             <X size={24} />
           </button>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-gutter py-4">{children}</div>
+        <div className="px-gutter flex-1 overflow-y-auto py-4">{children}</div>
 
         {footer && <div className="px-gutter pt-2 pb-4">{footer}</div>}
       </section>

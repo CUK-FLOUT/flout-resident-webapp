@@ -72,9 +72,9 @@ export function ChoiceGroup<T extends string>(props: ChoiceGroupProps<T>) {
               aria-checked={selected}
               onClick={() => toggle(opt.value)}
               className={cn(
-                'h-11 rounded-md border bg-surface text-label',
+                'bg-surface text-label h-11 rounded-md border',
                 selected
-                  ? 'border-primary text-ink ring-1 ring-primary'
+                  ? 'border-primary text-ink ring-primary ring-1'
                   : 'border-border text-body-text',
               )}
             >

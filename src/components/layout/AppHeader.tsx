@@ -23,7 +23,7 @@ export function AppHeader({ title, onBack, right, className }: AppHeaderProps) {
   return (
     <header
       className={cn(
-        'sticky top-0 z-20 grid h-header shrink-0 grid-cols-[44px_1fr_44px] items-center bg-surface px-2',
+        'h-header bg-surface sticky top-0 z-20 grid shrink-0 grid-cols-[44px_1fr_44px] items-center px-2',
         className,
       )}
     >
@@ -32,14 +32,14 @@ export function AppHeader({ title, onBack, right, className }: AppHeaderProps) {
           type="button"
           aria-label="뒤로 가기"
           onClick={typeof onBack === 'function' ? onBack : () => navigate(-1)}
-          className="flex size-11 items-center justify-center text-primary"
+          className="text-primary flex size-11 items-center justify-center"
         >
           <ChevronLeft size={26} />
         </button>
       ) : (
         <span />
       )}
-      <h1 className="truncate text-center text-section text-ink">{title}</h1>
+      <h1 className="text-section text-ink truncate text-center">{title}</h1>
       <div className="flex items-center justify-end">{right}</div>
     </header>
   );

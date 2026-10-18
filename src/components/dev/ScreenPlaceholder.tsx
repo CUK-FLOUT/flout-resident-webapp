@@ -39,7 +39,7 @@ export function ScreenPlaceholder({ screen }: { screen: PathKey }) {
                 href={figmaNodeUrl(node)}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-body text-primary underline"
+                className="text-body text-primary inline-flex items-center gap-1 underline"
               >
                 node {node} <ExternalLink size={14} />
               </a>
@@ -50,7 +50,7 @@ export function ScreenPlaceholder({ screen }: { screen: PathKey }) {
                 href={figmaNodeUrl(s.figmaNode)}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-body text-primary underline"
+                className="text-body text-primary inline-flex items-center gap-1 underline"
               >
                 바텀시트 · {s.figmaName} <ExternalLink size={14} />
               </a>
@@ -65,7 +65,7 @@ export function ScreenPlaceholder({ screen }: { screen: PathKey }) {
               <Link
                 key={key}
                 to={fill(PATHS[key])}
-                className="flex h-11 items-center rounded-md border border-border px-4 text-label text-ink"
+                className="border-border text-label text-ink flex h-11 items-center rounded-md border px-4"
               >
                 {SCREENS[key]?.figmaName ?? key}
               </Link>

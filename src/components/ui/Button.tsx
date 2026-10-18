@@ -65,7 +65,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         sizeClass[size],
         fullWidth && 'w-full',
         !isDisabled && variantClass[variant],
-        isDisabled && (variant === 'text' ? 'bg-transparent text-muted' : 'bg-border text-muted'),
+        isDisabled && (variant === 'text' ? 'text-muted bg-transparent' : 'bg-border text-muted'),
         className,
       )}
       {...rest}

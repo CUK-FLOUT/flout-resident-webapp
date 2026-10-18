@@ -40,7 +40,7 @@ export function BottomCTA({ children, className }: { children: ReactNode; classN
   return (
     <div
       className={cn(
-        'sticky bottom-0 z-10 flex flex-col gap-2 bg-surface px-gutter pt-4 pb-[max(16px,env(safe-area-inset-bottom))]',
+        'bg-surface px-gutter sticky bottom-0 z-10 flex flex-col gap-2 pt-4 pb-[max(16px,env(safe-area-inset-bottom))]',
         className,
       )}
     >

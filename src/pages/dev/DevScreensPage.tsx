@@ -15,13 +15,13 @@ export default function DevScreensPage() {
 
   return (
     <Screen header={{ title: '화면 목록 (dev)', onBack: false }}>
-      <p className="pt-2 pb-4 text-caption text-muted">
+      <p className="text-caption text-muted pt-2 pb-4">
         구현 {done} / {entries.length} · 목업 데이터 기준 샘플 경로로 이동합니다.
       </p>
       {groups.map((group) => (
         <section key={group} className="mb-6">
-          <h2 className="mb-2 text-section text-ink">{group}</h2>
-          <ul className="flex flex-col divide-y divide-border/60">
+          <h2 className="text-section text-ink mb-2">{group}</h2>
+          <ul className="divide-border/60 flex flex-col divide-y">
             {entries
               .filter(([, m]) => m.group === group)
               .map(([key, m]) => (
@@ -31,7 +31,7 @@ export default function DevScreensPage() {
                     className="flex items-center justify-between gap-3 py-3"
                   >
                     <span className="flex min-w-0 flex-col">
-                      <span className="truncate text-label text-ink">{m.figmaName}</span>
+                      <span className="text-label text-ink truncate">{m.figmaName}</span>
                       <span className="text-caption text-muted">{PATHS[key]}</span>
                     </span>
                     <StatusText

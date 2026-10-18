@@ -28,7 +28,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
         rows={rows}
         aria-describedby={helperText ? `${inputId}-desc` : undefined}
         className={cn(
-          'min-h-32 w-full resize-none rounded-md border border-border bg-surface px-4 py-3 text-body text-ink outline-none placeholder:text-muted focus:border-primary',
+          'border-border bg-surface text-body text-ink placeholder:text-muted focus:border-primary min-h-32 w-full resize-none rounded-md border px-4 py-3 outline-none',
           className,
         )}
         {...rest}

@@ -6,8 +6,8 @@ import { Outlet, ScrollRestoration } from 'react-router';
  */
 export function AppLayout() {
   return (
-    <div className="flex min-h-dvh justify-center bg-page">
-      <div className="relative flex min-h-dvh w-full max-w-app flex-col bg-surface">
+    <div className="bg-page flex min-h-dvh justify-center">
+      <div className="max-w-app bg-surface relative flex min-h-dvh w-full flex-col">
         <Outlet />
       </div>
       <ScrollRestoration />

@@ -42,9 +42,9 @@ export default function HomePage() {
 
   return (
     <>
-      <main className="flex flex-1 flex-col px-gutter pt-20 pb-6">
+      <main className="px-gutter flex flex-1 flex-col pt-20 pb-6">
         <p className="text-caption text-body-text">반지하 침수 예방 서비스</p>
-        <h1 className="mt-3 text-title text-ink">
+        <h1 className="text-title text-ink mt-3">
           우리 집,
           <br />비 오기 전에 확인해요.
         </h1>
@@ -57,7 +57,7 @@ export default function HomePage() {
             onChange={(e) => setKeyword(e.target.value)}
             enterKeyHint="search"
             autoComplete="off"
-            rightSlot={<Search size={20} className="mr-3 text-muted" aria-hidden />}
+            rightSlot={<Search size={20} className="text-muted mr-3" aria-hidden />}
             helperText={
               assess.isPending ? '공공데이터로 침수 취약도를 분석하고 있어요…' : undefined
             }
@@ -68,11 +68,11 @@ export default function HomePage() {
             <ul
               role="listbox"
               aria-label="주소 검색 결과"
-              className="absolute inset-x-0 top-full z-10 mt-1 max-h-72 overflow-y-auto rounded-md border border-border bg-surface"
+              className="border-border bg-surface absolute inset-x-0 top-full z-10 mt-1 max-h-72 overflow-y-auto rounded-md border"
             >
-              {search.isLoading && <li className="p-4 text-caption text-muted">검색 중…</li>}
+              {search.isLoading && <li className="text-caption text-muted p-4">검색 중…</li>}
               {search.data?.length === 0 && (
-                <li className="p-4 text-caption text-muted">
+                <li className="text-caption text-muted p-4">
                   검색 결과가 없어요. 도로명과 건물번호로 검색해 보세요.
                 </li>
               )}
@@ -81,9 +81,9 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={() => handleSelect(a)}
-                    className="flex w-full items-start gap-2 px-4 py-3 text-left active:bg-soft"
+                    className="active:bg-soft flex w-full items-start gap-2 px-4 py-3 text-left"
                   >
-                    <MapPin size={16} className="mt-1 shrink-0 text-primary" aria-hidden />
+                    <MapPin size={16} className="text-primary mt-1 shrink-0" aria-hidden />
                     <span className="flex flex-col">
                       <span className="text-label text-ink">{a.roadAddress}</span>
                       <span className="text-caption text-muted">{a.jibunAddress}</span>
@@ -106,8 +106,8 @@ export default function HomePage() {
                     onClick={() => goResult(r.assessmentId)}
                     className="flex w-full items-center justify-between gap-3 text-left"
                   >
-                    <span className="truncate text-label text-ink">{r.address}</span>
-                    <span className="shrink-0 text-body text-body-text">
+                    <span className="text-label text-ink truncate">{r.address}</span>
+                    <span className="text-body text-body-text shrink-0">
                       침수 취약도 {r.riskLabel}
                     </span>
                   </button>
@@ -160,7 +160,7 @@ function Step({ n, title, desc }: { n: number; title: string; desc: string }) {
     <li className="flex items-center gap-4">
       <span
         aria-hidden
-        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-section text-on-primary"
+        className="bg-primary text-section text-on-primary flex size-10 shrink-0 items-center justify-center rounded-full"
       >
         {n}
       </span>

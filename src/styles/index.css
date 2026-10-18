@@ -9,8 +9,8 @@
 @theme {
   /* ── Font ─────────────────────────────── */
   --font-sans:
-    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo',
-    'Noto Sans KR', sans-serif;
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 
   /* ── Color · Brand / action ───────────── */
   --color-primary: #234f73;
@@ -88,7 +88,7 @@
   }
 
   body {
-    @apply bg-page font-sans text-body text-ink antialiased; /* text-body = 14/22 Regular */
+    @apply bg-page text-body text-ink font-sans antialiased; /* text-body = 14/22 Regular */
     word-break: keep-all; /* 한국어 단어 단위 줄바꿈 */
     overflow-wrap: anywhere;
   }

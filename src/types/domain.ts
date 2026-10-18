@@ -101,11 +101,7 @@ export type WaterEntryPoint = 'WINDOW' | 'ENTRANCE' | 'BATHROOM' | 'DRAIN' | 'OT
 
 /** INSPECTION-04 기존 침수방지시설 */
 export type ExistingFacility =
-  | 'NONE'
-  | 'WATER_BARRIER'
-  | 'BACKFLOW_PREVENTER'
-  | 'WINDOW_GUARD'
-  | 'UNKNOWN';
+  'NONE' | 'WATER_BARRIER' | 'BACKFLOW_PREVENTER' | 'WINDOW_GUARD' | 'UNKNOWN';
 
 /** INSPECTION-05 방문 가능 시간대 */
 export type VisitTimeSlot = 'MORNING' | 'AFTERNOON' | 'ANYTIME';
@@ -170,10 +166,7 @@ export interface ApplicationDetail extends ApplicationSummary {
 
 /** 기획서 STEP 3 대표 점검 유형 */
 export type VulnerabilityType =
-  | 'WINDOW_OPENING'
-  | 'ENTRANCE'
-  | 'SEWER_BACKFLOW'
-  | 'STRUCTURE_OTHER';
+  'WINDOW_OPENING' | 'ENTRANCE' | 'SEWER_BACKFLOW' | 'STRUCTURE_OTHER';
 
 /** STEP 4 해결 방식 분기 — 개별 주택 문제 vs 지역·공공 인프라 문제 */
 export type ResolutionScope = 'INDIVIDUAL' | 'REGIONAL';

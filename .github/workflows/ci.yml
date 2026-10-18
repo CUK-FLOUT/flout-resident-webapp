@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, develop]
+    branches: [main, dev]
 
 jobs:
   build:
@@ -13,9 +13,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          # package-lock.json 을 커밋한 뒤에는 아래 주석을 풀고 npm ci 로 바꾸세요
-          # cache: npm
-      - run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+          cache: npm
+      - run: npm ci
       - run: npm run lint
       - run: npm run build
         env:

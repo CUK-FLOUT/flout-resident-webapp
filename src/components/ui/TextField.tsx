@@ -46,7 +46,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
       )}
       <div
         className={cn(
-          'flex items-center rounded-md border bg-surface pl-4 focus-within:border-primary',
+          'bg-surface focus-within:border-primary flex items-center rounded-md border pl-4',
           size === 'lg' ? 'h-13' : 'h-11',
           rightSlot ? 'pr-1' : 'pr-4',
           hasError ? 'border-danger' : 'border-border',
@@ -58,7 +58,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
           aria-invalid={hasError || undefined}
           aria-describedby={helperText || errorText ? descId : undefined}
           className={cn(
-            'h-full min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-muted',
+            'text-body text-ink placeholder:text-muted h-full min-w-0 flex-1 bg-transparent outline-none',
             className,
           )}
           {...rest}

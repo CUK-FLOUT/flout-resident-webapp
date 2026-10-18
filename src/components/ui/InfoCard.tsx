@@ -18,7 +18,7 @@ export interface InfoCardProps {
 
 export function InfoCard({ eyebrow, title, children, action, className }: InfoCardProps) {
   return (
-    <section className={cn('flex flex-col gap-2 rounded-md bg-page p-4', className)}>
+    <section className={cn('bg-page flex flex-col gap-2 rounded-md p-4', className)}>
       {eyebrow && <p className="text-caption text-body-text">{eyebrow}</p>}
       {title && <p className="text-section text-ink">{title}</p>}
       {children && <div className="text-body text-body-text">{children}</div>}
@@ -26,7 +26,7 @@ export function InfoCard({ eyebrow, title, children, action, className }: InfoCa
         <button
           type="button"
           onClick={action.onClick}
-          className="mt-1 flex items-center justify-between text-label text-ink"
+          className="text-label text-ink mt-1 flex items-center justify-between"
         >
           {action.label}
           <ArrowRight size={18} className="text-primary" />

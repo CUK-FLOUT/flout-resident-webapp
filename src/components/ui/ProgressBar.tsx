@@ -24,10 +24,10 @@ export function ProgressBar({ value, max, label, className }: ProgressBarProps) 
         aria-valuemax={max}
         aria-valuenow={value}
         aria-label={label}
-        className="h-1 w-full overflow-hidden rounded-full bg-border/50"
+        className="bg-border/50 h-1 w-full overflow-hidden rounded-full"
       >
         <div
-          className="h-full rounded-full bg-primary transition-[width]"
+          className="bg-primary h-full rounded-full transition-[width]"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -47,9 +47,9 @@ export function StepProgress({ steps, current, className }: StepProgressProps) {
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
-      <div className="h-1 w-full overflow-hidden rounded-full bg-border/50">
+      <div className="bg-border/50 h-1 w-full overflow-hidden rounded-full">
         <div
-          className="h-full rounded-full bg-primary"
+          className="bg-primary h-full rounded-full"
           style={{ width: `${Math.min(pct, 100)}%` }}
         />
       </div>

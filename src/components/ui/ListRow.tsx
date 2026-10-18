@@ -32,7 +32,7 @@ export function ListRow({
       disabled={disabled}
       className={cn(
         'flex w-full items-center justify-between gap-3 text-left',
-        variant === 'outlined' ? 'rounded-md border border-border p-4' : 'py-4',
+        variant === 'outlined' ? 'border-border rounded-md border p-4' : 'py-4',
         disabled && 'opacity-60',
         className,
       )}

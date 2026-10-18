@@ -34,7 +34,7 @@ export default function RiskResultPage() {
   if (isLoading) {
     return (
       <Screen header={{ title: '취약도 결과' }}>
-        <p className="pt-10 text-center text-body text-muted">결과를 불러오고 있어요…</p>
+        <p className="text-body text-muted pt-10 text-center">결과를 불러오고 있어요…</p>
       </Screen>
     );
   }
@@ -45,7 +45,7 @@ export default function RiskResultPage() {
         header={{ title: '취약도 결과' }}
         bottom={<Button onClick={() => refetch()}>다시 시도</Button>}
       >
-        <p className="pt-10 text-center text-body text-muted">결과를 불러오지 못했어요.</p>
+        <p className="text-body text-muted pt-10 text-center">결과를 불러오지 못했어요.</p>
       </Screen>
     );
   }
@@ -77,13 +77,13 @@ export default function RiskResultPage() {
     >
       <section className="pt-4">
         <h2 className="text-heading text-ink">{data.house.address}</h2>
-        <p className="mt-1 text-caption text-body-text">
+        <p className="text-caption text-body-text mt-1">
           {data.house.floorLabel} 주택 · 주소 기반 참고 결과
         </p>
       </section>
 
       <section className="mt-8 grid grid-cols-2">
-        <div className="flex flex-col gap-2 border-r border-border pr-4">
+        <div className="border-border flex flex-col gap-2 border-r pr-4">
           <p className="text-label text-ink">침수 취약도</p>
           <p className={cn('text-risk', level.textClass)}>{level.label}</p>
         </div>
@@ -93,7 +93,7 @@ export default function RiskResultPage() {
         </div>
       </section>
 
-      <p className="mt-6 text-body text-body-text">
+      <p className="text-body text-body-text mt-6">
         취약도와 점검 필요도는 AI 참고 결과예요. 실제 취약지점과 필요한 시설은 전문가 현장점검으로
         확인해요.
       </p>
@@ -104,8 +104,8 @@ export default function RiskResultPage() {
           {data.factors.map((f) => {
             const Icon = FACTOR_ICON[f.code];
             return (
-              <li key={f.code} className="flex items-center gap-3 text-body text-ink">
-                <Icon size={20} className="shrink-0 text-primary" aria-hidden />
+              <li key={f.code} className="text-body text-ink flex items-center gap-3">
+                <Icon size={20} className="text-primary shrink-0" aria-hidden />
                 {RISK_FACTOR_LABEL[f.code]} · {f.description}
               </li>
             );
@@ -117,7 +117,7 @@ export default function RiskResultPage() {
         <h3 className={cn('text-section', isLow ? 'text-primary' : level.textClass)}>
           {level.headline}
         </h3>
-        <p className="mt-2 text-body text-ink">{level.message}</p>
+        <p className="text-body text-ink mt-2">{level.message}</p>
       </section>
 
       {/* RISK-08 예상 지원정보 — "겁만 주고 끝나지 않게" 즉시 보상 제공 (기획 피드백 반영) */}

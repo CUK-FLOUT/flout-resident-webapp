@@ -36,7 +36,7 @@ export function StatusText({ tone, children, indicator = 'icon', className }: St
   const Icon = toneIcon[tone];
 
   return (
-    <span className={cn('inline-flex items-center gap-1 text-caption', toneClass[tone], className)}>
+    <span className={cn('text-caption inline-flex items-center gap-1', toneClass[tone], className)}>
       {indicator === 'icon' && <Icon size={16} aria-hidden />}
       {indicator === 'dot' && <Dot size={20} strokeWidth={6} aria-hidden className="-mx-1" />}
       {children}

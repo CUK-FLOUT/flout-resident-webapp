@@ -13,9 +13,9 @@ export default function OnboardingPage() {
 
   return (
     <>
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-gutter">
+      <main className="px-gutter flex flex-1 flex-col items-center justify-center gap-4">
         <img src="/favicon.svg" alt="" className="size-40" />
-        <p className="text-[30px] font-bold tracking-wide text-primary">FLOUT</p>
+        <p className="text-primary text-[30px] font-bold tracking-wide">FLOUT</p>
       </main>
       <BottomCTA className="px-10">
         {/* TODO(auth): Google OAuth 연동 */}

@@ -8,13 +8,17 @@ FLOUT 주민용 모바일 웹앱 — 공공데이터로 우리 집 침수 취약
 ## 시작하기
 
 ```bash
-# Node 20 이상 (.nvmrc 참고)
+# Node 22 권장 (.nvmrc) · 최소 20
 npm install
 cp .env.example .env   # VITE_USE_MOCK=true 면 백엔드 없이 목업 데이터로 동작
-npm run format         # 최초 1회: Tailwind 클래스 순서 정렬 (prettier-plugin-tailwindcss)
-# ↑ 처음 설치한 사람은 생성된 package-lock.json 을 커밋해 주세요
 npm run dev            # http://localhost:5173  (같은 와이파이 휴대폰에서 Network 주소로 접속 가능)
 ```
+
+| 환경변수            | 설명                                                                            |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `VITE_API_BASE_URL` | 백엔드 API 주소 (끝에 `/` 없이)                                                 |
+| `VITE_JUSO_API_KEY` | 도로명주소 검색 API 승인키 ([business.juso.go.kr](https://business.juso.go.kr)) |
+| `VITE_USE_MOCK`     | `true` 면 `src/api/mocks.ts` 목업 데이터 사용                                   |
 
 개발 서버에서 **`/__screens`** 로 들어가면 전체 화면 목록(구현 여부, 경로, Figma 링크)을 볼 수 있어요. 미구현 화면은 placeholder 로 떠서 플로우를 끝까지 클릭해 볼 수 있습니다.
 
@@ -29,14 +33,31 @@ npm run dev            # http://localhost:5173  (같은 와이파이 휴대폰�
 
 ## 기술 스택
 
-| 영역            | 선택                                    | 이유                                                              |
-| --------------- | --------------------------------------- | ----------------------------------------------------------------- |
-| 빌드            | Vite 6 + React 19 + TypeScript (strict) |                                                                   |
-| 스타일          | Tailwind CSS v4                         | Figma 변수를 `@theme` 토큰으로 1:1 매핑                           |
-| 라우팅          | React Router v7 (data router, lazy)     | 화면별 코드 스플리팅                                              |
-| 서버 상태       | TanStack Query v5                       | 신청 상태 갱신·캐시·재시도                                        |
-| 클라이언트 상태 | Zustand                                 | 3단계 신청 폼 등 화면 간 공유 상태만                              |
-| 아이콘          | lucide-react                            | 디자인 시스템의 선형 아이콘(chevron, map-pin, info …)과 동일 계열 |
+**런타임**
+
+| 영역            | 라이브러리                         | 버전  | 선택 이유                                                         |
+| --------------- | ---------------------------------- | ----- | ----------------------------------------------------------------- |
+| UI              | React                              | 19.3  |                                                                   |
+| 라우팅          | React Router (data router, `lazy`) | 7.18  | 화면별 코드 스플리팅, `generatePath` 로 경로 파라미터 타입 체크   |
+| 서버 상태       | TanStack Query                     | 5.104 | 신청 진행상태 캐시·갱신·재시도                                    |
+| 클라이언트 상태 | Zustand                            | 5.0   | 3단계 신청 폼처럼 화면 간 공유 상태만 (서버 데이터는 Query)       |
+| 스타일          | Tailwind CSS (`@tailwindcss/vite`) | 4.3   | Figma 변수를 `@theme` 토큰으로 1:1 매핑                           |
+| 아이콘          | lucide-react                       | 0.511 | 디자인 시스템의 선형 아이콘(chevron, map-pin, info …)과 같은 계열 |
+| 유틸            | clsx                               | 2.1   | 조건부 className (`cn()`)                                         |
+| 폰트            | Pretendard Variable (CDN)          | 1.3.9 | 디자인 시스템 지정 서체                                           |
+
+**개발 도구**
+
+| 영역             | 도구                                                                 | 버전                       |
+| ---------------- | -------------------------------------------------------------------- | -------------------------- |
+| 빌드 · 개발 서버 | Vite + `@vitejs/plugin-react`                                        | 6.4 · 4.7                  |
+| 언어             | TypeScript (`strict`, `noUnusedLocals`, `@/` 경로 별칭)              | 5.8                        |
+| 린트             | ESLint flat config + typescript-eslint + react-hooks + react-refresh | 9 · 8                      |
+| 포맷             | Prettier + prettier-plugin-tailwindcss (클래스 순서 자동 정렬)       | 3 · 0.6                    |
+| CI               | GitHub Actions — `npm ci` → lint → build                             | `.github/workflows/ci.yml` |
+| 런타임           | Node.js                                                              | 22 (`.nvmrc`)              |
+
+> 정확한 버전은 `package-lock.json` 기준이에요. 의존성 추가는 `npm install <pkg>` 후 lock 파일까지 커밋해 주세요.
 
 ## 폴더 구조
 
@@ -64,6 +85,36 @@ src/
 ├─ styles/index.css     # Tailwind + 디자인 토큰
 └─ types/domain.ts      # 기능명세 기반 도메인 타입 (백엔드 확정 전 가안)
 ```
+
+## 초기세팅 내역
+
+2026-10-18 `chore/initial-setup` 브랜치에서 진행한 내용이에요.
+
+| 항목             | 내용                                                                                                                                                        | 위치                                   |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| 프로젝트 설정    | Vite + React + TS strict, `@/` 별칭, ESLint, Prettier, `.env.example`, `.nvmrc`, VS Code 추천 확장                                                          | 루트 설정 파일                         |
+| 디자인 토큰      | 주민용 디자인 시스템(Figma 1162:561)의 색상 11 · 타이포 8 · radius · 레이아웃 값을 Tailwind 토큰으로                                                        | `src/styles/index.css`                 |
+| 공통 컴포넌트    | Button · TextField · Textarea · ChoiceGroup · CheckItem · BottomSheet · ProgressBar/StepProgress · InfoCard · StatusText · KeyValueList · ListRow · Divider | `src/components/ui`                    |
+| 레이아웃         | AppLayout(모바일 폭 고정) · AppHeader(56px, 뒤로가기) · Screen(헤더 + 본문 + 하단 고정 CTA)                                                                 | `src/components/layout`                |
+| 라우팅           | 주민용 화면 32개 라우트. 바텀시트·상태 변형 프레임까지 Figma 노드 ↔ 경로 ↔ 기능명세 ID 매핑                                                                 | `src/routes`, `src/constants/paths.ts` |
+| 화면             | 레퍼런스 구현 3개(온보딩, 01 홈, 02 취약도 결과 높음·낮음) + 나머지 29개 placeholder                                                                        | `src/pages`                            |
+| 개발용 화면 목록 | `/__screens` — 구현 여부·경로·Figma 링크, placeholder 에서 다음 화면으로 플로우 이동                                                                        | `src/pages/dev`                        |
+| 도메인 타입      | 노션 기능명세(RISK · INSPECTION · STATUS · RESULT · SUPPORT · CONSTRUCTION · NOTI) 기반                                                                     | `src/types/domain.ts`                  |
+| API 레이어       | fetch 래퍼(타임아웃·에러 정규화·토큰), 도메인별 Query 훅, 목업 스위치, 도로명주소 API 연동                                                                  | `src/api`, `src/lib/http.ts`           |
+| 상태             | 현장점검 신청 3단계 폼 draft 스토어                                                                                                                         | `src/stores/inspectionDraft.ts`        |
+| GitHub           | PR 템플릿, 이슈 템플릿(기능·버그), CI, Vercel SPA rewrite                                                                                                   | `.github`, `vercel.json`               |
+
+**검증:** `tsc -b` 타입체크 · ESLint 모두 에러 0, 홈·취약도 결과 화면 렌더링을 Figma 와 대조 확인.
+
+**아직 남은 것**
+
+- [ ] 화면 구현 — 추천 순서: 현장점검 신청(03 → 03-2 → 03-3 → 04) → 내 신청·진행 허브(05, 06) → 결과(08) → 지원(09~12) → 시공(13~15) → 알림(16) → 인증
+- [ ] 백엔드 API 스펙 확정 후 `src/api/*`, `src/types/domain.ts` 반영 (`TODO(백엔드)` 검색)
+- [ ] 로고 에셋 — Figma 'FLOUT' 로고를 `public/` 에 내보내 온보딩·파비콘 교체 (지금은 임시 아이콘)
+- [ ] 인증 — Google OAuth / 이메일 로그인 방식 확정
+- [ ] 도로명주소 API 승인키 발급 및 운영 도메인 등록
+- [ ] 배포처 결정 (Vercel 기준 `vercel.json` 준비됨)
+- [ ] 기획 확인 — 물 유입 위치에 '화장실'(Figma 에만 있음) 포함 여부
 
 ## 디자인 토큰 (Figma → Tailwind)
 
@@ -106,7 +157,7 @@ src/
 | 시공          | 13(+13-1 시트) · 14 · 15                             | `/applications/:applicationId/construction/*`                | CONSTRUCTION-04~07                |
 | 알림          | 16 (+16-1 시트)                                      | `/notifications`                                             | NOTI-01~08                        |
 
-현재 구현: **온보딩, 홈(01), 취약도 결과(02 / 낮음)** — 나머지는 placeholder.
+현재 구현: **온보딩, 홈(01), 취약도 결과(02 / 낮음)** — 나머지는 placeholder. 진행 현황은 개발 서버의 `/__screens` 에서 확인하세요.
 
 ## 새 화면 만들기
 

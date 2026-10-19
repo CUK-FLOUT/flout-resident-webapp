@@ -48,7 +48,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1116:1389'],
     specs: [],
     next: ['consent'],
-    status: 'todo',
+    status: 'done',
     group: '진입·인증',
   },
   signup: {
@@ -64,7 +64,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1115:2428'],
     specs: [],
     next: ['home'],
-    status: 'todo',
+    status: 'done',
     group: '진입·인증',
   },
 

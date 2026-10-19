@@ -1,8 +1,99 @@
-import { ScreenPlaceholder } from '@/components/dev/ScreenPlaceholder';
+import { useState } from 'react';
+import { Info } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
-/**
- * Figma: 00 정보 제공 동의 (1115:2428)
- */
+import { Screen } from '@/components/layout';
+import { Button, CheckItem } from '@/components/ui';
+import { PATHS } from '@/constants/paths';
+
 export default function ConsentPage() {
-  return <ScreenPlaceholder screen="consent" />;
+  const navigate = useNavigate();
+
+  const [agreeThirdParty, setAgreeThirdParty] = useState(false);
+  const [agreeRequiredNotice, setAgreeRequiredNotice] = useState(false);
+  const [agreeOptionalNotice, setAgreeOptionalNotice] = useState(false);
+
+  const canSubmit = agreeThirdParty && agreeRequiredNotice;
+
+  function handleSubmit() {
+    if (!canSubmit) return;
+
+    // TODO: 동의 정보 저장 API 연결
+    navigate(PATHS.home);
+  }
+
+  return (
+    <Screen
+      header={{
+        title: '정보 제공 동의',
+        onBack: () => navigate(-1),
+      }}
+      bottom={
+        <Button disabled={!canSubmit} onClick={handleSubmit}>
+          현장점검 신청하기
+        </Button>
+      }
+    >
+      <div className="flex flex-col pt-10">
+        <p className="text-muted text-sm">서비스 시작 전</p>
+
+        <h1 className="text-ink mt-4 text-[24px] leading-snug font-bold">
+          필요한 정보만 확인하고
+          <br />
+          동의해 주세요.
+        </h1>
+
+        <h2 className="text-ink mt-8 text-[18px] font-bold">동의 항목</h2>
+
+        <div className="mt-8 flex flex-col gap-5">
+          <CheckItem
+            variant="checklist"
+            checked={agreeThirdParty}
+            onChange={setAgreeThirdParty}
+            title={
+              <span className="font-bold">
+                <span className="text-primary">필수</span> 개인정보 제3자 제공
+              </span>
+            }
+            description="현장점검 및 행정 처리를 위해 부천시에 제공해요."
+            className="px-3 py-3 [&>span:first-child]:mt-1"
+          />
+
+          <CheckItem
+            variant="checklist"
+            checked={agreeRequiredNotice}
+            onChange={setAgreeRequiredNotice}
+            title={
+              <span className="font-bold">
+                <span className="text-primary">필수</span> 진행상태 알림 수신
+              </span>
+            }
+            description="서비스 이용과 신청자 확인을 위해 사용해요"
+            className="px-3 py-3 [&>span:first-child]:mt-1"
+          />
+
+          <CheckItem
+            variant="checklist"
+            checked={agreeOptionalNotice}
+            onChange={setAgreeOptionalNotice}
+            title={
+              <span className="font-bold">
+                <span className="text-primary">선택</span> 진행상태 알림 수신
+              </span>
+            }
+            description="점검 일정과 지원·시공 상태를 알려드려요."
+            className="px-3 py-3 [&>span:first-child]:mt-1"
+          />
+        </div>
+
+        <div className="mt-8 flex items-start gap-3">
+          <Info className="text-primary mt-0.5 size-5 shrink-0" />
+
+          <p className="text-muted text-sm leading-relaxed">
+            필수 항목에 동의하지 않으면 현장점검 및 지원 서비스를 이용할 수 없어요.
+          </p>
+        </div>
+      </div>
+    </Screen>
+  );
 }

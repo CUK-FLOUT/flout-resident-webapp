@@ -6,7 +6,7 @@ import { PATHS } from '@/constants/paths';
 
 /**
  * Figma: 온보딩 (1115:4758)
- * TODO: 로고 이미지 — Figma 'FLOUT' 로고 에셋을 public/logo.png 로 내보내 교체하세요.
+ * 로고 이미지: public/logo.svg
  */
 export default function OnboardingPage() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export default function OnboardingPage() {
   return (
     <>
       <main className="px-gutter flex flex-1 flex-col items-center justify-center gap-4">
-        <img src="/favicon.svg" alt="" className="size-40" />
+        <img src="/logo.svg" alt="FLOUT 로고" className="h-56 w-64 object-contain" />
         <p className="text-primary text-[30px] font-bold tracking-wide">FLOUT</p>
       </main>
       <BottomCTA className="px-10">
@@ -30,7 +30,7 @@ export default function OnboardingPage() {
   );
 }
 
-function GoogleIcon() {
+export function GoogleIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
       <path

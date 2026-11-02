@@ -12,6 +12,7 @@ export const PATHS = {
 
   // 홈 · 취약도 (RISK)
   home: '/',
+  addressSearch: '/address/search',
   riskResult: '/risk/:assessmentId',
   guideLoading: '/risk/:assessmentId/guide/loading',
   guide: '/risk/:assessmentId/guide',

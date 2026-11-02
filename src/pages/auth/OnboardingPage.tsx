@@ -2,6 +2,7 @@ import { Mail } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { BottomCTA } from '@/components/layout';
 import { Button } from '@/components/ui';
+import { GoogleLoginButton } from '@/components/ui/GoogleLoginButton';
 import { PATHS } from '@/constants/paths';
 
 /**
@@ -13,15 +14,21 @@ export default function OnboardingPage() {
 
   return (
     <>
-      <main className="px-gutter flex flex-1 flex-col items-center justify-center gap-4">
-        <img src="/logo.svg" alt="FLOUT 로고" className="h-56 w-64 object-contain" />
-        <p className="text-primary text-[30px] font-bold tracking-wide">FLOUT</p>
+      <main className="px-gutter flex flex-1 flex-col items-center justify-center gap-4 pb-12">
+        <img
+          src="/logo.svg"
+          alt="FLOUT 로고"
+          className="h-auto w-[220px] max-w-full object-contain"
+        />
+        <p className="text-primary text-[30px] leading-9 font-bold">FLOUT</p>
       </main>
-      <BottomCTA className="px-10">
-        {/* TODO(auth): Google OAuth 연동 */}
-        <Button variant="secondary" leftIcon={<GoogleIcon />} onClick={() => navigate(PATHS.login)}>
-          <span className="font-medium">구글로 로그인</span>
-        </Button>
+      <BottomCTA className="gap-3 px-10 pb-[max(20px,env(safe-area-inset-bottom))]">
+        <GoogleLoginButton
+          mockLabel="구글로 로그인"
+          mockIcon={<GoogleIcon />}
+          mockClassName="text-[14px] leading-[22px] font-medium"
+          googleContainerClassName="flex min-h-[52px] items-center justify-center"
+        />
         <Button leftIcon={<Mail size={20} />} onClick={() => navigate(PATHS.login)}>
           이메일로 로그인
         </Button>

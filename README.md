@@ -20,11 +20,16 @@ npm run dev            # http://localhost:5173
 - 같은 와이파이의 휴대폰에서 터미널에 뜨는 Network 주소로 접속 가능
 - **`/__screens`** — 전체 화면 목록 (구현 여부 · 경로 · Figma 링크). 미구현 화면도 다음 화면으로 이동하며 플로우 확인 가능
 
-| 환경변수            | 설명                                                                            |
-| ------------------- | ------------------------------------------------------------------------------- |
-| `VITE_API_BASE_URL` | 백엔드 API 주소 (끝에 `/` 없이)                                                 |
-| `VITE_JUSO_API_KEY` | 도로명주소 검색 API 승인키 ([business.juso.go.kr](https://business.juso.go.kr)) |
-| `VITE_USE_MOCK`     | `true` 면 `src/api/mocks.ts` 목업 데이터 사용                                   |
+| 환경변수                | 설명                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------- |
+| `VITE_API_BASE_URL`     | 백엔드 API 주소 (끝에 `/` 없이)                                                 |
+| `VITE_JUSO_API_KEY`     | 도로명주소 검색 API 승인키 ([business.juso.go.kr](https://business.juso.go.kr)) |
+| `VITE_USE_MOCK`         | `true` 면 인증·도메인 목업 사용, `false` 면 실제 API 호출                       |
+| `VITE_GOOGLE_CLIENT_ID` | 실제 Google 로그인에 사용할 웹 클라이언트 ID                                    |
+
+목업 인증은 서버와 Google 연결 없이 동작합니다. 로그인 계정은 `resident@example.com` / `password123`입니다. 로그인한 탭에서는 새로고침해도 목업 로그인 및 동의 상태가 유지되지만, 새로 가입한 계정 정보는 메모리에만 있어 새로고침하면 다시 로그인할 수 없습니다. Google 목업 버튼은 기본 계정을 사용합니다.
+
+실제 인증 API를 사용하려면 `VITE_USE_MOCK=false`와 `VITE_API_BASE_URL`을 설정합니다. Google 로그인은 `VITE_GOOGLE_CLIENT_ID`와 Google 측 허용 출처 설정도 필요합니다. 환경변수 변경 후 개발 서버를 다시 시작하세요.
 
 | 스크립트            | 설명                                      |
 | ------------------- | ----------------------------------------- |
@@ -74,7 +79,7 @@ main ← feat/작업이름  (PR 머지 후 브랜치 삭제)
 | 공통 컴포넌트    | Button · TextField · Textarea · ChoiceGroup · CheckItem · BottomSheet · ProgressBar/StepProgress · InfoCard · StatusText · KeyValueList · ListRow · Divider | `src/components/ui`                    |
 | 레이아웃         | AppLayout(모바일 폭 고정) · AppHeader(56px, 뒤로가기) · Screen(헤더 + 본문 + 하단 고정 CTA)                                                                 | `src/components/layout`                |
 | 라우팅           | 주민용 화면 32개 라우트. 바텀시트·상태 변형 프레임까지 Figma 노드 ↔ 경로 ↔ 기능명세 ID 매핑                                                                 | `src/routes`, `src/constants/paths.ts` |
-| 화면             | 온보딩 · 01 홈 · 02 취약도 결과(높음/낮음) 구현, 나머지 29개 placeholder                                                                                    | `src/pages`                            |
+| 화면             | 온보딩 · 로그인 · 회원가입 · 정보 제공 동의 · 홈 구현, 주소 검색은 작업 중. 다른 화면의 상태는 `/__screens` 참고                                           | `src/pages`                            |
 | 개발용 화면 목록 | `/__screens`                                                                                                                                                | `src/pages/dev`                        |
 | 도메인 타입      | 노션 기능명세(RISK · INSPECTION · STATUS · RESULT · SUPPORT · CONSTRUCTION · NOTI) 기반                                                                     | `src/types/domain.ts`                  |
 | API 레이어       | fetch 래퍼(타임아웃·에러 처리·토큰), 도메인별 React Query 훅, 목업 스위치, 도로명주소 API 연동                                                              | `src/api`, `src/lib/http.ts`           |
@@ -87,21 +92,21 @@ main ← feat/작업이름  (PR 머지 후 브랜치 삭제)
 
 사용자 흐름 순서. 각 단계 = 브랜치 1개 = PR 1개. 단계끼리 파일이 겹치지 않아 나눠서 병렬 작업 가능.
 
-| #   | 브랜치                  | 화면 (Figma)                                                                      | 기능명세                                     | 파일 (`src/pages/…`)                                                                                                                 |
-| --- | ----------------------- | --------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | `feat/inspection-apply` | 03 신청(주택 상황) → 03-2 날짜 입력 → 03-3 정보 확인 → 04-1 접수 완료 → 04-2 이후 절차 | INSPECTION-01~10, NOTI-01                    | `inspection/InspectionApplyPage` · `InspectionSchedulePage` · `InspectionConfirmPage` · `InspectionCompletePage` · `InspectionNextStepsPage` |
-| 2   | `feat/applications`     | 05 내 신청 · 05-2 전체 내역 · 06-1 진행 허브 · 06-2 신청 정보 · 07-1 방문 일정 · 07-2 방문 전 안내 | STATUS-01~06, NOTI-02·03                     | `applications/*`                                                                                                                     |
-| 3   | `feat/result`           | 08-1 결과 요약 · 08-2 취약지점·현장사진 · 08-3 전문가 권장 예방조치               | RESULT-01~08, NOTI-04                        | `result/*`                                                                                                                           |
-| 4   | `feat/support`          | 09-1 지원 안내 · 09-2 조건·서류(+10 신청 바텀시트) · 11 신청 완료 · 12-1~4 진행상태  | SUPPORT-01~09, CONSTRUCTION-01~03, NOTI-05·06 | `support/*`                                                                                                                          |
-| 5   | `feat/construction`     | 13 시공 일정(+13-1 방문전 확인 시트) · 14 시공 진행 · 15 시공 완료                | CONSTRUCTION-04~07, NOTI-07·08               | `construction/*`                                                                                                                     |
-| 6   | `feat/notifications`    | 16 알림(+16-1 상세 시트)                                                          | NOTI-01~08                                   | `notifications/NotificationsPage`                                                                                                    |
-| 7   | `feat/guide`            | 02 가이드 생성 중 · 03 가이드 상세(+04 해결 여부 시트) · 05 미해결 사유 · 06 해결 완료 | RISK-07                                      | `guide/*`                                                                                                                            |
-| 8   | `feat/auth`             | 로그인 · 회원가입 · 00 정보 제공 동의                                             | —                                            | `auth/LoginPage` · `SignupPage` · `ConsentPage`                                                                                      |
+| #   | 브랜치                  | 화면 (Figma)                                                                                       | 기능명세                                      | 파일 (`src/pages/…`)                                                                                                                         |
+| --- | ----------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `feat/inspection-apply` | 03 신청(주택 상황) → 03-2 날짜 입력 → 03-3 정보 확인 → 04-1 접수 완료 → 04-2 이후 절차             | INSPECTION-01~10, NOTI-01                     | `inspection/InspectionApplyPage` · `InspectionSchedulePage` · `InspectionConfirmPage` · `InspectionCompletePage` · `InspectionNextStepsPage` |
+| 2   | `feat/applications`     | 05 내 신청 · 05-2 전체 내역 · 06-1 진행 허브 · 06-2 신청 정보 · 07-1 방문 일정 · 07-2 방문 전 안내 | STATUS-01~06, NOTI-02·03                      | `applications/*`                                                                                                                             |
+| 3   | `feat/result`           | 08-1 결과 요약 · 08-2 취약지점·현장사진 · 08-3 전문가 권장 예방조치                                | RESULT-01~08, NOTI-04                         | `result/*`                                                                                                                                   |
+| 4   | `feat/support`          | 09-1 지원 안내 · 09-2 조건·서류(+10 신청 바텀시트) · 11 신청 완료 · 12-1~4 진행상태                | SUPPORT-01~09, CONSTRUCTION-01~03, NOTI-05·06 | `support/*`                                                                                                                                  |
+| 5   | `feat/construction`     | 13 시공 일정(+13-1 방문전 확인 시트) · 14 시공 진행 · 15 시공 완료                                 | CONSTRUCTION-04~07, NOTI-07·08                | `construction/*`                                                                                                                             |
+| 6   | `feat/notifications`    | 16 알림(+16-1 상세 시트)                                                                           | NOTI-01~08                                    | `notifications/NotificationsPage`                                                                                                            |
+| 7   | `feat/guide`            | 02 가이드 생성 중 · 03 가이드 상세(+04 해결 여부 시트) · 05 미해결 사유 · 06 해결 완료             | RISK-07                                       | `guide/*`                                                                                                                                    |
+| 8   | `feat/auth`             | 로그인 · 회원가입 · 00 정보 제공 동의 (화면 및 API 연동 코드 구현, 실서버 검증 필요)              | —                                             | `auth/LoginPage` · `SignupPage` · `ConsentPage`                                                                                              |
 
 ### 확인·결정 필요
 
 - [ ] 백엔드 API 스펙 확정 → `src/api/*`, `src/types/domain.ts` 반영 (`TODO(백엔드)` 검색)
-- [ ] 인증 방식 확정 (Google OAuth / 이메일)
+- [ ] 이메일·Google 인증 및 정보 제공 동의 실제 서버 연동 검증
 - [ ] 로고 에셋 — Figma 'FLOUT' 로고를 `public/` 에 내보내 온보딩·파비콘 교체 (현재 임시 아이콘)
 - [ ] 도로명주소 API 승인키 발급 및 운영 도메인 등록
 - [ ] 배포처 결정 (Vercel 기준 `vercel.json` 준비됨)
@@ -114,11 +119,13 @@ main ← feat/작업이름  (PR 머지 후 브랜치 삭제)
 
 1. `/__screens` 또는 `src/routes/screens.ts` 에서 해당 화면의 Figma 노드·기능명세 확인
 2. `src/pages/<도메인>/XxxPage.tsx` 의 `<ScreenPlaceholder>` 를 실제 UI로 교체
+
 ```tsx
-   <Screen header={{ title: '현장점검 신청' }} bottom={<Button>다음</Button>}>
-     …본문
-   </Screen>
+<Screen header={{ title: '현장점검 신청' }} bottom={<Button>다음</Button>}>
+  …본문
+</Screen>
 ```
+
 3. 버튼·입력창·선택지 등은 `@/components/ui` 사용 — hex 색상 직접 사용 금지, 토큰 클래스 사용
 4. 데이터는 `src/api/*` 훅 사용 (`useApplication(id)` 등). 목업 부족하면 `src/api/mocks.ts` 에 추가
 5. 상태 문구(접수·검토 중·승인 등)는 `src/constants/labels.ts` 에서 가져오기
@@ -131,16 +138,16 @@ main ← feat/작업이름  (PR 머지 후 브랜치 삭제)
 
 **런타임**
 
-| 영역            | 라이브러리                         | 버전  | 선택 이유                                                   |
-| --------------- | ---------------------------------- | ----- | ----------------------------------------------------------- |
-| UI              | React                              | 19.3  |                                                             |
+| 영역            | 라이브러리                         | 버전  | 선택 이유                                                       |
+| --------------- | ---------------------------------- | ----- | --------------------------------------------------------------- |
+| UI              | React                              | 19.3  |                                                                 |
 | 라우팅          | React Router (data router, `lazy`) | 7.18  | 화면별 코드 스플리팅, `generatePath` 로 경로 파라미터 타입 체크 |
-| 서버 상태       | TanStack Query                     | 5.104 | 신청 진행상태 캐시·갱신·재시도                              |
-| 클라이언트 상태 | Zustand                            | 5.0   | 3단계 신청 폼처럼 화면 간 공유 상태만 (서버 데이터는 Query) |
-| 스타일          | Tailwind CSS (`@tailwindcss/vite`) | 4.3   | Figma 변수를 `@theme` 토큰으로 1:1 매핑                     |
-| 아이콘          | lucide-react                       | 0.511 | 디자인 시스템의 선형 아이콘과 같은 계열                     |
-| 유틸            | clsx                               | 2.1   | 조건부 className (`cn()`)                                   |
-| 폰트            | Pretendard Variable (CDN)          | 1.3.9 | 디자인 시스템 지정 서체                                     |
+| 서버 상태       | TanStack Query                     | 5.104 | 신청 진행상태 캐시·갱신·재시도                                  |
+| 클라이언트 상태 | Zustand                            | 5.0   | 3단계 신청 폼처럼 화면 간 공유 상태만 (서버 데이터는 Query)     |
+| 스타일          | Tailwind CSS (`@tailwindcss/vite`) | 4.3   | Figma 변수를 `@theme` 토큰으로 1:1 매핑                         |
+| 아이콘          | lucide-react                       | 0.511 | 디자인 시스템의 선형 아이콘과 같은 계열                         |
+| 유틸            | clsx                               | 2.1   | 조건부 className (`cn()`)                                       |
+| 폰트            | Pretendard Variable (CDN)          | 1.3.9 | 디자인 시스템 지정 서체                                         |
 
 **개발 도구**
 
@@ -162,6 +169,8 @@ main ← feat/작업이름  (PR 머지 후 브랜치 삭제)
 ```
 src/
 ├─ api/                 # 도메인별 API 함수 + React Query 훅, 목업
+│  ├─ auth.ts           #   이메일·Google 인증 및 정보 제공 동의 API와 mutation 훅
+│  ├─ authMock.ts       #   인증 목업 및 탭별 목업 세션
 │  ├─ queryClient.ts    #   QueryClient, queryKeys, withMock()
 │  ├─ risk.ts           #   RISK  주소 검색 · 취약도 분석 · 예방 가이드
 │  ├─ applications.ts   #   INSPECTION / STATUS / RESULT / SUPPORT / CONSTRUCTION
@@ -234,7 +243,9 @@ src/
 ## 9. 백엔드 연동
 
 - `.env` 의 `VITE_API_BASE_URL` 설정 후 `VITE_USE_MOCK=false`
-- API 경로·응답 형태는 `src/api/*.ts`, `src/types/domain.ts` 에 **가안**으로 작성 (`TODO(백엔드)` 검색). 스펙 확정 시 이 두 곳만 수정
+- 인증·동의 API는 Swagger의 `/auth/signup`, `/auth/login`, `/auth/google`, `/resident/consents` 경로를 사용합니다 (`VITE_API_BASE_URL`에 `/api` 포함). 실제 서버 호출은 별도 검증이 필요합니다.
+- 홈은 최근 검색 주소를 로컬 저장소에서 표시합니다. 주소 검색 화면은 작업 중이며 실제 취약도 분석 API는 아직 연결되지 않았습니다.
+- 인증 외 API 경로·응답 형태는 `src/api/*.ts`, `src/types/domain.ts` 에 **가안**으로 작성 (`TODO(백엔드)` 검색). 스펙 확정 시 이 두 곳을 확인
 - 응답이 `{ data, message }` 형태로 감싸져 있으면 `src/lib/http.ts` 반환부만 수정
 - 주소 검색(RISK-01)은 `VITE_JUSO_API_KEY` 입력 시 실제 검색. CORS 문제 시 백엔드 프록시로 이동
 

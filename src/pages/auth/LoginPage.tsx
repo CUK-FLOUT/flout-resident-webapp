@@ -1,23 +1,28 @@
 import { useState, type SubmitEvent } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
 import { Button, TextField } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
-import { GoogleIcon } from './OnboardingPage';
+import { useLogin } from '@/api/auth';
+import { GoogleLoginButton } from '@/components/ui/GoogleLoginButton';
+import { GoogleIcon } from '@/pages/auth/OnboardingPage';
 
 /**
  * Figma: 로그인 · 이메일 및 Google (1116:1389)
  */
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const login = useLogin();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
 
-  function handleLogin(e: SubmitEvent<HTMLFormElement>) {
+  async function handleLogin(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
 
@@ -26,7 +31,15 @@ export default function LoginPage() {
       return;
     }
 
-    // TODO(auth): 추후 백엔드 로그인 API 연결
+    setPending(true);
+    try {
+      const result = await login.mutateAsync({ email: email.trim(), password });
+      navigate(result.requiresConsent ? PATHS.consent : PATHS.home, { replace: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '로그인에 실패했어요.');
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -36,18 +49,23 @@ export default function LoginPage() {
         onBack: () => navigate(PATHS.onboarding),
       }}
     >
-      <div className="flex flex-1 flex-col pt-20">
-        <div className="mb-2 flex items-center gap-3">
-          <img src="/logo.svg" alt="" className="h-10 w-10 object-contain" />
+      <div className="flex flex-1 flex-col pt-[66px]">
+        <div className="mb-2.5 flex h-9 items-center gap-3">
+          <img src="/logo.svg" alt="" className="h-auto w-11 object-contain" />
 
-          <h1 className="text-ink text-[30px] font-bold tracking-wide">FLOUT</h1>
+          <h1 className="text-primary text-title">FLOUT</h1>
         </div>
 
-        <p className="text-body-text mb-8 text-sm">우리 집의 침수 위험을 확인하고 예방하세요.</p>
+        <p className="text-body-text text-body mb-7">우리 집의 침수 위험을 확인하고 예방하세요.</p>
+        {location.state?.signupComplete && (
+          <p role="status" className="text-success mb-4">
+            회원가입이 완료됐어요. 로그인해 주세요.
+          </p>
+        )}
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-5">
+        <form onSubmit={handleLogin} className="flex flex-col gap-6">
           <TextField
-            label={<span className="font-semibold">이메일</span>}
+            label={<span className="font-bold">이메일</span>}
             type="email"
             placeholder="이메일을 입력해 주세요"
             autoComplete="email"
@@ -56,7 +74,7 @@ export default function LoginPage() {
           />
 
           <TextField
-            label={<span className="font-semibold">비밀번호</span>}
+            label={<span className="font-bold">비밀번호</span>}
             type={showPassword ? 'text' : 'password'}
             placeholder="비밀번호를 입력해 주세요"
             autoComplete="current-password"
@@ -65,11 +83,11 @@ export default function LoginPage() {
             rightSlot={
               <button
                 type="button"
-                className="text-muted flex h-11 w-11 items-center justify-center"
+                className="text-primary flex h-11 w-11 items-center justify-center"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
               </button>
             }
           />
@@ -80,35 +98,35 @@ export default function LoginPage() {
             </p>
           )}
 
-          <Button type="submit">로그인</Button>
+          <Button type="submit" className="mt-1" loading={pending} loadingText="로그인 중…">
+            로그인
+          </Button>
         </form>
 
-        <div className="mt-5 flex items-center justify-center gap-2">
-          <span className="text-muted text-sm">아직 계정이 없으신가요?</span>
+        <div className="text-body mt-4 flex items-center justify-center gap-1 whitespace-nowrap">
+          <span className="text-body-text">아직 계정이 없으신가요?</span>
           <button
             type="button"
-            className="text-primary text-sm font-semibold underline"
+            className="text-primary text-[15px] font-semibold underline"
             onClick={() => navigate(PATHS.signup)}
           >
             회원가입
           </button>
         </div>
 
-        <div className="my-8 flex items-center gap-3">
-          <div className="bg-border h-px flex-1" />
-          <span className="text-muted text-sm">또는</span>
-          <div className="bg-border h-px flex-1" />
+        <div className="text-body text-body-text mt-7 flex items-center gap-3">
+          <span className="bg-border h-px flex-1" />
+          <span>또는</span>
+          <span className="bg-border h-px flex-1" />
         </div>
-
-        <Button
-          variant="secondary"
-          leftIcon={<GoogleIcon />}
-          onClick={() => {
-            // TODO(auth): 추후 Google 로그인 API 연결
-          }}
-        >
-          구글로 로그인
-        </Button>
+        <div className="mt-6">
+          <GoogleLoginButton
+            mockLabel="구글로 로그인"
+            mockIcon={<GoogleIcon />}
+            mockClassName="text-[14px] leading-[22px] font-medium"
+            googleContainerClassName="flex min-h-[52px] items-center justify-center"
+          />
+        </div>
       </div>
     </Screen>
   );

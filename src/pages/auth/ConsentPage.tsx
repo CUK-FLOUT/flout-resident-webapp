@@ -5,21 +5,33 @@ import { useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
 import { Button, CheckItem } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
+import { useSaveConsent } from '@/api/auth';
 
 export default function ConsentPage() {
   const navigate = useNavigate();
+  const saveConsent = useSaveConsent();
 
   const [agreeThirdParty, setAgreeThirdParty] = useState(false);
   const [agreeRequiredNotice, setAgreeRequiredNotice] = useState(false);
-  const [agreeOptionalNotice, setAgreeOptionalNotice] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState('');
 
   const canSubmit = agreeThirdParty && agreeRequiredNotice;
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!canSubmit) return;
 
-    // TODO: 동의 정보 저장 API 연결
-    navigate(PATHS.home);
+    setError('');
+    setPending(true);
+    try {
+      const result = await saveConsent.mutateAsync();
+      if (result.requiresConsent) throw new Error('동의가 완료되지 않았어요. 다시 시도해 주세요.');
+      navigate(PATHS.home, { replace: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '동의를 저장하지 못했어요.');
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -29,8 +41,13 @@ export default function ConsentPage() {
         onBack: () => navigate(-1),
       }}
       bottom={
-        <Button disabled={!canSubmit} onClick={handleSubmit}>
-          현장점검 신청하기
+        <Button
+          disabled={!canSubmit}
+          loading={pending}
+          loadingText="저장 중…"
+          onClick={handleSubmit}
+        >
+          동의하고 시작하기
         </Button>
       }
     >
@@ -71,20 +88,12 @@ export default function ConsentPage() {
             description="서비스 이용과 신청자 확인을 위해 사용해요"
             className="px-3 py-3 [&>span:first-child]:mt-1"
           />
-
-          <CheckItem
-            variant="checklist"
-            checked={agreeOptionalNotice}
-            onChange={setAgreeOptionalNotice}
-            title={
-              <span className="font-bold">
-                <span className="text-primary">선택</span> 진행상태 알림 수신
-              </span>
-            }
-            description="점검 일정과 지원·시공 상태를 알려드려요."
-            className="px-3 py-3 [&>span:first-child]:mt-1"
-          />
         </div>
+        {error && (
+          <p role="alert" className="text-danger mt-4">
+            {error}
+          </p>
+        )}
 
         <div className="mt-8 flex items-start gap-3">
           <Info className="text-primary mt-0.5 size-5 shrink-0" />

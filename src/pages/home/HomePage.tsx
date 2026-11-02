@@ -1,173 +1,117 @@
-import { useState } from 'react';
-import { Check, MapPin, Search } from 'lucide-react';
-import { generatePath, useNavigate } from 'react-router';
-import { useAddressSearch, useCreateAssessment } from '@/api/risk';
-import { BottomCTA } from '@/components/layout';
-import { Button, TextField } from '@/components/ui';
-import { RISK_LEVEL } from '@/constants/labels';
+import { ChevronRight, ClipboardCheck, FileText, HardHat, MapPin, Search } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Screen } from '@/components/layout';
 import { PATHS } from '@/constants/paths';
 import { recentAddressStorage } from '@/lib/storage';
-import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import type { AddressCandidate } from '@/types/domain';
 
-/**
- * Figma: 01 홈화면 (1115:2381)
- * 기능명세: RISK-01 주소 검색 → RISK-02~06 분석 → 취약도 결과 이동
- */
+const steps = [
+  ['침수 취약도 확인', '우리 집 위험도를 먼저 확인해요.'],
+  ['현장점검 신청', '전문가가 직접 점검해요.'],
+  ['지원 신청', '예방시설 지원을 신청해요.'],
+  ['시공 신청', '지원사업으로 시공을 신청해요.'],
+];
+
 export default function HomePage() {
   const navigate = useNavigate();
-  const [keyword, setKeyword] = useState('');
-  const debounced = useDebouncedValue(keyword.trim());
-  const search = useAddressSearch(debounced);
-  const assess = useCreateAssessment();
-  const recent = recentAddressStorage.list();
-
-  const goResult = (assessmentId: string) =>
-    navigate(generatePath(PATHS.riskResult, { assessmentId }));
-
-  const handleSelect = (address: AddressCandidate) => {
-    assess.mutate(address, {
-      onSuccess: (result) => {
-        recentAddressStorage.push({
-          address: result.house.address,
-          riskLabel: RISK_LEVEL[result.riskLevel].label,
-          assessmentId: result.id,
-        });
-        goResult(result.id);
-      },
-    });
-  };
-
-  const showCandidates = debounced.length >= 2 && !assess.isPending;
-
+  const recent = recentAddressStorage.list()[0];
   return (
-    <>
-      <main className="px-gutter flex flex-1 flex-col pt-20 pb-6">
-        <p className="text-caption text-body-text">반지하 침수 예방 서비스</p>
-        <h1 className="text-title text-ink mt-3">
-          우리 집,
-          <br />비 오기 전에 확인해요.
-        </h1>
-
-        <div className="relative mt-6">
-          <TextField
-            label="주소 검색"
-            placeholder="주소를 입력해주세요"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            enterKeyHint="search"
-            autoComplete="off"
-            rightSlot={<Search size={20} className="text-muted mr-3" aria-hidden />}
-            helperText={
-              assess.isPending ? '공공데이터로 침수 취약도를 분석하고 있어요…' : undefined
-            }
-            errorText={assess.isError ? '분석에 실패했어요. 다시 선택해 주세요.' : undefined}
-          />
-
-          {showCandidates && (
-            <ul
-              role="listbox"
-              aria-label="주소 검색 결과"
-              className="border-border bg-surface absolute inset-x-0 top-full z-10 mt-1 max-h-72 overflow-y-auto rounded-md border"
-            >
-              {search.isLoading && <li className="text-caption text-muted p-4">검색 중…</li>}
-              {search.data?.length === 0 && (
-                <li className="text-caption text-muted p-4">
-                  검색 결과가 없어요. 도로명과 건물번호로 검색해 보세요.
-                </li>
-              )}
-              {search.data?.map((a) => (
-                <li key={a.buildingManagementNo} role="option" aria-selected={false}>
-                  <button
-                    type="button"
-                    onClick={() => handleSelect(a)}
-                    className="active:bg-soft flex w-full items-start gap-2 px-4 py-3 text-left"
-                  >
-                    <MapPin size={16} className="text-primary mt-1 shrink-0" aria-hidden />
-                    <span className="flex flex-col">
-                      <span className="text-label text-ink">{a.roadAddress}</span>
-                      <span className="text-caption text-muted">{a.jibunAddress}</span>
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+    <Screen header={{ title: '홈', onBack: false }} tab="home">
+      <section className="bg-soft mt-4 rounded-xl px-4 py-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(60px,88px)] items-center gap-2">
+          <div className="min-w-0">
+            <p className="text-primary text-[12px] leading-5 font-bold">FLOUT</p>
+            <h2 className="text-ink mt-1.5 text-[clamp(20px,6.67vw,26px)] leading-9 font-bold tracking-[-0.04em]">
+              내 집의 침수 취약도
+              <br />
+              지금 확인해보세요!
+            </h2>
+            <p className="text-muted mt-1.5 text-[12px] leading-[18px]">
+              주소를 입력하고 침수 위험도를
+              <br />
+              분석할 수 있어요.
+            </p>
+          </div>
+          <img src="/logo.svg" alt="" className="w-full object-contain" />
         </div>
-
-        {recent.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-label text-ink">최근 확인한 주소</h2>
-            <ul className="mt-3 flex flex-col gap-3">
-              {recent.map((r) => (
-                <li key={r.assessmentId}>
-                  <button
-                    type="button"
-                    onClick={() => goResult(r.assessmentId)}
-                    className="flex w-full items-center justify-between gap-3 text-left"
-                  >
-                    <span className="text-label text-ink truncate">{r.address}</span>
-                    <span className="text-body text-body-text shrink-0">
-                      침수 취약도 {r.riskLabel}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
+        {recent && (
+          <p className="text-caption text-primary mt-3 flex items-center gap-1">
+            <MapPin size={15} aria-hidden />
+            {recent.address}
+          </p>
         )}
-
-        <section className="mt-10">
-          <h2 className="text-section text-ink">주소를 확인한 다음에는</h2>
-          <ol className="mt-6 flex flex-col gap-8">
-            <Step
-              n={1}
-              title="침수 취약도 확인"
-              desc="공공 데이터를 기반으로 위험 요인과 점검 필요도를 확인해요."
-            />
-            <Step
-              n={2}
-              title="필요하면 현장점검 신청"
-              desc="전문가가 직접 주택을 확인하고 예방조치를 안내해요."
-            />
-          </ol>
-        </section>
-      </main>
-
-      {/* Figma 12 · Navigation › 홈 하단 행동 · 두 버튼 */}
-      <BottomCTA className="flex-row">
-        <Button
-          variant="soft"
-          leftIcon={<Check size={16} />}
+      </section>
+      <button
+        type="button"
+        onClick={() => navigate(PATHS.addressSearch)}
+        className="border-border mt-[18px] flex min-h-[76px] w-full items-center gap-3 rounded-lg border px-4 py-3 text-left"
+      >
+        <span className="text-primary flex size-7 shrink-0 items-center justify-center">
+          <Search size={22} aria-hidden />
+        </span>
+        <span className="flex-1">
+          <span className="block text-[18px] leading-6 font-bold">침수 취약도 확인</span>
+          <span className="text-muted mt-1 block text-[12px] leading-5">
+            주소 검색으로 우리 집 위험도를 분석해요.
+          </span>
+        </span>
+        <ChevronRight size={20} className="text-primary shrink-0" aria-hidden />
+      </button>
+      <section aria-label="주요 서비스" className="mt-[18px] grid grid-cols-3 gap-2.5">
+        <Service
+          icon={<ClipboardCheck size={24} />}
+          label="현장점검하기"
+          onClick={() => navigate(PATHS.inspectionApply)}
+        />
+        <Service
+          icon={<FileText size={24} />}
+          label="지원하기"
           onClick={() => navigate(PATHS.applications)}
-        >
-          내 신청
-        </Button>
-        <Button
-          variant="soft"
-          leftIcon={<Check size={16} />}
-          onClick={() => navigate(PATHS.notifications)}
-        >
-          알림
-        </Button>
-      </BottomCTA>
-    </>
+        />
+        <Service
+          icon={<HardHat size={24} />}
+          label="시공하기"
+          onClick={() => navigate(PATHS.applications)}
+        />
+      </section>
+      <section className="mt-[18px]">
+        <h2 className="text-heading">이렇게 이용해보세요!</h2>
+        <ol className="mt-3.5 flex flex-col gap-2">
+          {steps.map(([title, desc], index) => (
+            <li key={title} className="flex items-center gap-4">
+              <span className="bg-soft text-primary flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+                {index + 1}
+              </span>
+              <span>
+                <span className="text-label block font-bold">{title}</span>
+                <span className="text-muted block text-[12px] leading-[18px]">{desc}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </Screen>
   );
 }
 
-function Step({ n, title, desc }: { n: number; title: string; desc: string }) {
+function Service({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
   return (
-    <li className="flex items-center gap-4">
-      <span
-        aria-hidden
-        className="bg-primary text-section text-on-primary flex size-10 shrink-0 items-center justify-center rounded-full"
-      >
-        {n}
+    <button
+      type="button"
+      onClick={onClick}
+      className="border-border bg-surface flex min-h-[110px] flex-col items-center justify-center gap-2 rounded-lg border px-1 py-3 text-center"
+    >
+      <span className="text-primary">{icon}</span>
+      <span className="flex items-center justify-center text-[13px] leading-5 font-bold">
+        {label}
       </span>
-      <span className="flex flex-col gap-1">
-        <span className="text-label text-ink">{title}</span>
-        <span className="text-body text-body-text">{desc}</span>
-      </span>
-    </li>
+    </button>
   );
 }

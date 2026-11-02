@@ -67,8 +67,8 @@ export default function AddressSearchPage() {
       }
     >
       {!env.useMock && (
-        <p role="status" className="text-caption text-muted">
-          취약도 분석 API 연결을 준비하고 있어요.
+        <p id="analysis-unavailable" role="status" className="text-caption text-muted">
+          취약도 분석 서비스를 준비하고 있어요. 현재 검색된 주소는 선택할 수 없어요.
         </p>
       )}
       <p className="text-caption text-body-text">반지하 침수 예방 서비스</p>
@@ -96,8 +96,20 @@ export default function AddressSearchPage() {
             aria-label="주소 검색 결과"
             className="border-border bg-surface absolute inset-x-0 top-full z-10 mt-1 max-h-72 overflow-y-auto rounded-md border"
           >
-            {search.isLoading && <li className="text-caption text-muted p-4">검색 중…</li>}
-            {search.data?.length === 0 && (
+            {search.isFetching && <li className="text-caption text-muted p-4">검색 중…</li>}
+            {search.isError && !search.isFetching && (
+              <li className="text-caption text-danger p-4" role="alert">
+                <p>주소 검색에 실패했어요. 다시 시도해 주세요.</p>
+                <button
+                  type="button"
+                  className="text-primary mt-2 underline"
+                  onClick={() => void search.refetch()}
+                >
+                  다시 시도
+                </button>
+              </li>
+            )}
+            {!search.isError && search.data?.length === 0 && (
               <li className="text-caption text-muted p-4">
                 검색 결과가 없어요. 도로명과 건물번호로 검색해 보세요.
               </li>
@@ -106,8 +118,10 @@ export default function AddressSearchPage() {
               <li key={a.buildingManagementNo} role="option" aria-selected={false}>
                 <button
                   type="button"
+                  disabled={!env.useMock}
+                  aria-describedby={!env.useMock ? 'analysis-unavailable' : undefined}
                   onClick={() => handleSelect(a)}
-                  className="active:bg-soft flex w-full items-start gap-2 px-4 py-3 text-left"
+                  className="active:bg-soft flex w-full items-start gap-2 px-4 py-3 text-left disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <MapPin size={16} className="text-primary mt-1 shrink-0" aria-hidden />
                   <span className="flex flex-col">

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 import { useGoogleLogin, useLogin } from '@/api/auth';
 import { PATHS } from '@/constants/paths';
 import { env } from '@/lib/env';
-import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/Button';
 
 type GoogleIdentity = {
@@ -99,7 +98,7 @@ export function GoogleLoginButton({
           variant="secondary"
           loading={pending}
           leftIcon={mockIcon}
-          className={cn('!border-[#747775]', mockClassName)}
+          className={mockClassName}
           onClick={async () => {
             setPending(true);
             setError('');

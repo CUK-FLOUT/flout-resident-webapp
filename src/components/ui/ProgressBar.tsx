@@ -42,35 +42,30 @@ export interface StepProgressProps {
   className?: string;
 }
 
+/** Figma 04-5 progress-bar: 단계별 막대(완료·현재 primary) + 가운데 정렬 라벨(현재 단계 Bold) */
 export function StepProgress({ steps, current, className }: StepProgressProps) {
-  const pct = steps.length > 1 ? ((current + 0.5) / steps.length) * 100 : 100;
-
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
-      <div className="bg-border/50 h-1 w-full overflow-hidden rounded-full">
-        <div
-          className="bg-primary h-full rounded-full"
-          style={{ width: `${Math.min(pct, 100)}%` }}
-        />
-      </div>
-      <ol
-        className="grid"
-        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
-      >
-        {steps.map((step, i) => (
-          <li
-            key={step}
-            aria-current={i === current ? 'step' : undefined}
+    <ol className={cn('flex gap-2', className)}>
+      {steps.map((step, i) => (
+        <li
+          key={step}
+          aria-current={i === current ? 'step' : undefined}
+          className="flex flex-1 flex-col gap-2"
+        >
+          <span
+            aria-hidden
+            className={cn('h-1 rounded-[2px]', i <= current ? 'bg-primary' : 'bg-border')}
+          />
+          <span
             className={cn(
-              'text-caption',
-              i <= current ? 'text-ink' : 'text-muted',
-              i === current && 'font-bold',
+              'text-caption text-center',
+              i === current ? 'text-primary font-bold' : 'text-muted',
             )}
           >
             {step}
-          </li>
-        ))}
-      </ol>
-    </div>
+          </span>
+        </li>
+      ))}
+    </ol>
   );
 }

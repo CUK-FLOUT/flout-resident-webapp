@@ -11,12 +11,13 @@ import type {
   SupportProgress,
 } from '@/types/domain';
 import {
-  mockApplicationDetail,
+  mockApplicationDetailFor,
   mockApplications,
   mockConstruction,
   mockResult,
   mockSupportPrograms,
   mockSupportProgress,
+  mockSupportProgressFor,
 } from './mocks';
 import { queryKeys, withMock } from './queryClient';
 
@@ -65,7 +66,7 @@ export function useApplication(id: string | undefined) {
     queryKey: queryKeys.application(id ?? ''),
     queryFn: () =>
       withMock(
-        () => ({ ...mockApplicationDetail, id: id! }),
+        () => mockApplicationDetailFor(id!),
         () => http.get<ApplicationDetail>(`/applications/${id}`),
       ),
     enabled: Boolean(id),
@@ -125,10 +126,31 @@ export function useSupportProgress(applicationId: string | undefined) {
     queryKey: queryKeys.supportProgress(applicationId ?? ''),
     queryFn: () =>
       withMock(
-        () => mockSupportProgress,
+        () => mockSupportProgressFor(applicationId!),
         () => http.get<SupportProgress>(`/applications/${applicationId}/support`),
       ),
     enabled: Boolean(applicationId),
+  });
+}
+
+/** SUPPORT-07 임대인 동의서 · 주택 소유 증명서 제출 (04-6 / 04-7) */
+export function useSubmitConsentFile(applicationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => {
+      const form = new FormData();
+      form.append('file', file);
+      return withMock(
+        () => ({
+          ...mockSupportProgressFor(applicationId),
+          consent: 'SUBMITTED' as const,
+          consentFile: { name: file.name, url: URL.createObjectURL(file) },
+        }),
+        () => http.post<SupportProgress>(`/applications/${applicationId}/support/consent`, form),
+      );
+    },
+    // 응답(제출 후 상태)으로 바로 갱신 — 목업에서도 제출 완료 화면이 유지됩니다
+    onSuccess: (progress) => qc.setQueryData(queryKeys.supportProgress(applicationId), progress),
   });
 }
 

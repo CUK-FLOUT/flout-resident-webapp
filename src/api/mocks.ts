@@ -161,14 +161,20 @@ export const mockSupportPrograms: SupportProgram[] = [
   {
     id: 'sp-1',
     name: '침수 예방시설 설치 지원',
+    description: '침수 예방을 위한 시설 설치와 관련해 지원 대상 여부를 검토할 수 있는 사업이에요.',
     target: '부천시 반지하 주택 거주 세대',
     benefit: '물막이판·역류방지시설·개폐형 방범창 설치비 지원',
     conditions: [
-      '부천시 소재 반지하 주택',
-      '현장점검 결과 설치 필요 판정',
-      '세입자는 임대인 동의 필요',
+      { title: '현장점검이 완료된 주택', description: '전문가가 등록한 점검 결과가 있어야 해요.' },
+      {
+        title: '사업 기준 확인이 필요한 주택',
+        description: '최종 대상 여부는 신청 후 담당자가 검토해요.',
+      },
     ],
-    requiredDocuments: ['신분증 사본', '임대차계약서 사본 (세입자)', '임대인 동의서 (세입자)'],
+    requiredDocuments: [
+      { title: '사업별 필요자료', description: '해당 사업 안내에 따라 준비해 주세요.' },
+      { title: '추가 확인 서류', description: '필요한 경우 별도 안내' },
+    ],
   },
 ];
 
@@ -176,9 +182,43 @@ export const mockSupportProgress: SupportProgress = {
   applicationId: '000002',
   programName: '침수 예방시설 설치 지원',
   decision: 'PENDING',
-  landlordConsent: 'REQUIRED',
-  submittedAt: '2026-09-03T10:00:00+09:00',
+  consent: 'REQUIRED',
+  submittedAt: '2026-10-07T10:00:00+09:00',
+  facility: '출입구 물막이판',
+  preferredDate: '2026-10-21',
+  preferredTimeSlot: 'MORNING',
 };
+
+/**
+ * 접수번호별로 지원 진행 상태를 바꿔서 04-5 ~ 04-10 을 모두 열어볼 수 있게 합니다.
+ *   000002 검토 중(세입자) · 000003 승인 · 000004 미승인 · 000005 일정 조율 중 · 000006 검토 중(소유자)
+ */
+const mockSupportOverrides: Record<string, Partial<SupportProgress>> = {
+  '000003': {
+    decision: 'APPROVED',
+    consent: 'CONFIRMED',
+    scheduledAt: '2026-10-21T10:00:00+09:00',
+  },
+  '000004': {
+    decision: 'REJECTED',
+    consent: 'NOT_REQUIRED',
+    rejectReason: '자격 미달',
+    facility: '배수시설 개선',
+  },
+  '000005': { decision: 'APPROVED', consent: 'CONFIRMED' },
+};
+
+export const mockSupportProgressFor = (applicationId: string): SupportProgress => ({
+  ...mockSupportProgress,
+  applicationId,
+  ...mockSupportOverrides[applicationId],
+});
+
+export const mockApplicationDetailFor = (id: string): ApplicationDetail => ({
+  ...mockApplicationDetail,
+  id,
+  request: { ...mockApplicationDetail.request, tenure: id === '000006' ? 'OWNER' : 'TENANT' },
+});
 
 export const mockConstruction: Construction = {
   applicationId: '000002',

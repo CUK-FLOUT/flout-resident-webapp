@@ -198,25 +198,41 @@ export interface InspectionResult {
 
 /* ───────────────────────── 5. 지원 신청 (SUPPORT-01 ~ 09) ───────────────────────── */
 
+/** 신청 조건·준비 서류 한 줄 ("현장점검이 완료된 주택" + 설명) */
+export interface SupportRequirement {
+  title: string;
+  description: string;
+}
+
 export interface SupportProgram {
   id: ID;
   name: string; // "침수 예방시설 설치 지원"
+  description: string; // 04-1 사업 소개
   target: string; // SUPPORT-01 지원 대상
   benefit: string; // 지원 내용
-  conditions: string[]; // SUPPORT-02
-  requiredDocuments: string[]; // SUPPORT-03
+  conditions: SupportRequirement[]; // SUPPORT-02
+  requiredDocuments: SupportRequirement[]; // SUPPORT-03
 }
 
 export interface SupportApplicationInput {
   applicationId: ID;
   programId: ID;
   facility: string;
-  preferredSchedule?: string;
+  preferredDate: string; // YYYY-MM-DD
+  preferredTimeSlot: VisitTimeSlot;
   documents: File[]; // SUPPORT-06
 }
 
-/** SUPPORT-07 임대인 동의 */
-export type LandlordConsentStatus = 'NOT_REQUIRED' | 'REQUIRED' | 'SUBMITTED' | 'CONFIRMED';
+/**
+ * SUPPORT-07 동의·증빙 자료 상태.
+ * 세입자는 임대인 동의서(04-6), 소유자는 주택 소유 증명서(04-7)를 제출합니다.
+ */
+export type ConsentStatus = 'NOT_REQUIRED' | 'REQUIRED' | 'SUBMITTED' | 'CONFIRMED';
+
+export interface SubmittedFile {
+  name: string;
+  url: string;
+}
 
 /* ───────────────────────── 6. 지원 · 시공 진행 (CONSTRUCTION-01 ~ 07) ───────────────────────── */
 
@@ -227,9 +243,15 @@ export interface SupportProgress {
   applicationId: ID;
   programName: string;
   decision: SupportDecision; // CONSTRUCTION-02
-  landlordConsent: LandlordConsentStatus; // CONSTRUCTION-03
+  consent: ConsentStatus; // CONSTRUCTION-03
+  consentFile?: SubmittedFile; // 04-8 제출 완료
   rejectReason?: string;
   submittedAt: ISODateString;
+  facility: string;
+  preferredDate: string; // YYYY-MM-DD
+  preferredTimeSlot: VisitTimeSlot;
+  /** 승인 후 등록된 시공 일정. 없으면 일정 조율 중(04-8) */
+  scheduledAt?: ISODateString;
 }
 
 export interface Construction {

@@ -1,62 +1,120 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { env } from '@/lib/env';
-import { http } from '@/lib/http';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+import { ApiError, http } from '@/lib/http';
 import type {
   AddressCandidate,
   PreventionGuide,
   RiskAssessment,
   UnresolvedReason,
 } from '@/types/domain';
-import { mockAddresses, mockAssessmentHigh, mockAssessmentLow, mockGuide } from './mocks';
-import { queryKeys, withMock } from './queryClient';
+import { mockAddresses, mockAddressSearchExtra, mockAssessmentHigh, mockAssessmentLow, mockGuide } from '@/api/mocks';
+import { queryKeys, withMock } from '@/api/queryClient';
 
-/* ── RISK-01 주소 검색 ──────────────────────────────────────────────
- * 행정안전부 도로명주소 검색 API (business.juso.go.kr) 를 직접 호출합니다.
- * 승인키는 VITE_JUSO_API_KEY. 운영 도메인 등록이 필요하며, CORS가 막히면 백엔드 프록시로 옮기세요.
- */
-interface JusoResponse {
-  results: {
-    common: { errorCode: string; errorMessage: string };
-    juso:
-      | { roadAddr: string; jibunAddr: string; zipNo: string; bdNm: string; bdMgtSn: string }[]
-      | null;
-  };
+/* ── RISK-01 주소 검색 (Swagger AddressSearchResult) ─────────────── */
+export interface AddressSearchItem {
+  roadAddress: string;
+  jibunAddress: string;
+  buildingName: string;
+  zipCode: string;
+}
+export interface AddressSearchResponse {
+  addresses: AddressSearchItem[];
+  currentPage: number;
+  countPerPage: number;
+  hasMore: boolean;
+  nextPage: number | null;
+}
+interface AddressEnvelope<T> {
+  isSuccess: boolean;
+  status: number;
+  code: string;
+  message: string;
+  result: T;
 }
 
-export async function searchAddress(keyword: string): Promise<AddressCandidate[]> {
-  if (env.useMock || !env.jusoApiKey) {
-    return withMock(
-      () => mockAddresses.filter((a) => a.roadAddress.includes(keyword) || keyword.length < 2),
-      async () => [],
-    );
-  }
-  const url = new URL('https://business.juso.go.kr/addrlink/addrLinkApi.do');
-  url.search = new URLSearchParams({
-    confmKey: env.jusoApiKey,
-    keyword,
-    currentPage: '1',
-    countPerPage: '10',
-    resultType: 'json',
-  }).toString();
-
-  const res = (await (await fetch(url)).json()) as JusoResponse;
-  if (res.results.common.errorCode !== '0') throw new Error(res.results.common.errorMessage);
-  return (res.results.juso ?? []).map((j) => ({
-    roadAddress: j.roadAddr,
-    jibunAddress: j.jibunAddr,
-    zipCode: j.zipNo,
-    buildingName: j.bdNm || undefined,
-    buildingManagementNo: j.bdMgtSn,
-  }));
+export async function searchAddress(
+  keyword: string,
+  currentPage = 1,
+  signal?: AbortSignal,
+): Promise<AddressSearchResponse> {
+  return withMock(
+    () => {
+      const words = keyword.trim().split(/\s+/);
+      const addresses = [...mockAddresses, ...mockAddressSearchExtra]
+        .filter((a) => {
+          const text = `${a.roadAddress} ${a.jibunAddress} ${a.buildingName ?? ''}`;
+          return words.every((word) => text.includes(word));
+        })
+        .map(({ roadAddress, jibunAddress, buildingName, zipCode }) => ({
+          roadAddress,
+          jibunAddress,
+          buildingName: buildingName ?? '',
+          zipCode,
+        }));
+      return {
+        addresses: addresses.slice((currentPage - 1) * 10, currentPage * 10),
+        currentPage,
+        countPerPage: 10,
+        hasMore: currentPage * 10 < addresses.length,
+        nextPage: currentPage * 10 < addresses.length ? currentPage + 1 : null,
+      };
+    },
+    async () => {
+      const response = await http.get<AddressEnvelope<AddressSearchResponse>>(
+        '/resident/addresses/search',
+        {
+          query: { keyword, currentPage },
+          signal,
+        },
+      );
+      if (!response.isSuccess) throw new ApiError(response.status, response.message, response.code);
+      return response.result;
+    },
+  );
 }
 
-export function useAddressSearch(keyword: string) {
-  return useQuery({
-    queryKey: queryKeys.address(keyword),
-    queryFn: () => searchAddress(keyword),
-    enabled: keyword.trim().length >= 2,
+export function useAddressSearch(keyword: string, revision = 0, enabled = true) {
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.address(keyword), revision],
+    queryFn: ({ pageParam, signal }) => searchAddress(keyword, pageParam, signal),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, _pages, _lastPageParam, allPageParams) =>
+      lastPage.hasMore && lastPage.nextPage != null && !allPageParams.includes(lastPage.nextPage)
+        ? lastPage.nextPage
+        : undefined,
+    enabled: enabled && keyword.trim().length > 0,
     staleTime: 5 * 60_000,
   });
+}
+
+export interface AddressCoordinates {
+  latitude: number;
+  longitude: number;
+}
+
+export async function getAddressCoordinates(address: string): Promise<AddressCoordinates> {
+  return withMock(
+    () => ({ latitude: 37.4874849962478, longitude: 126.79856716311 }),
+    async () => {
+      const response = await http.get<AddressEnvelope<AddressCoordinates>>(
+        '/resident/addresses/coordinates',
+        {
+          query: { address },
+        },
+      );
+      if (!response.isSuccess) throw new ApiError(response.status, response.message, response.code);
+      if (
+        !Number.isFinite(response.result?.latitude) ||
+        !Number.isFinite(response.result?.longitude)
+      ) {
+        throw new ApiError(0, '주소 좌표를 확인할 수 없어요.');
+      }
+      return response.result;
+    },
+  );
+}
+
+export function useAddressCoordinates() {
+  return useMutation({ mutationFn: getAddressCoordinates });
 }
 
 /* ── RISK-02~06 취약도 분석 요청 · 결과 조회 ─────────────────────── */

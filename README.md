@@ -23,8 +23,8 @@ npm run dev            # http://localhost:5173
 | 환경변수                | 설명                                                                            |
 | ----------------------- | ------------------------------------------------------------------------------- |
 | `VITE_API_BASE_URL`     | 백엔드 API 주소 (끝에 `/` 없이)                                                 |
-| `VITE_JUSO_API_KEY`     | 도로명주소 검색 API 승인키 ([business.juso.go.kr](https://business.juso.go.kr)) |
-| `VITE_USE_MOCK`         | `true` 면 인증·도메인 목업 사용, `false` 면 실제 API 호출                       |
+| `VITE_JUSO_API_KEY`     | 기존 주소 API 설정값. 주민 주소 검색은 백엔드 API를 사용하므로 필요 없음          |
+| `VITE_USE_MOCK`         | 개발 서버에서 `true` 면 인증·도메인 목업 사용, `false` 면 실제 API 호출. 운영 빌드에서는 항상 실제 API 사용 |
 | `VITE_GOOGLE_CLIENT_ID` | 실제 Google 로그인에 사용할 웹 클라이언트 ID                                    |
 
 목업 인증은 서버와 Google 연결 없이 동작합니다. 로그인 계정은 `resident@example.com` / `password123`입니다. 로그인한 탭에서는 새로고침해도 목업 로그인 및 동의 상태가 유지되지만, 새로 가입한 계정 정보는 메모리에만 있어 새로고침하면 다시 로그인할 수 없습니다. Google 목업 버튼은 기본 계정을 사용합니다.
@@ -79,10 +79,10 @@ main ← feat/작업이름  (PR 머지 후 브랜치 삭제)
 | 공통 컴포넌트    | Button · TextField · Textarea · ChoiceGroup · CheckItem · BottomSheet · ProgressBar/StepProgress · InfoCard · StatusText · KeyValueList · ListRow · Divider | `src/components/ui`                    |
 | 레이아웃         | AppLayout(모바일 폭 고정) · AppHeader(56px, 뒤로가기) · Screen(헤더 + 본문 + 하단 고정 CTA)                                                                 | `src/components/layout`                |
 | 라우팅           | 주민용 화면 32개 라우트. 바텀시트·상태 변형 프레임까지 Figma 노드 ↔ 경로 ↔ 기능명세 ID 매핑                                                                 | `src/routes`, `src/constants/paths.ts` |
-| 화면             | 온보딩 · 로그인 · 회원가입 · 정보 제공 동의 · 홈 구현, 주소 검색은 작업 중. 다른 화면의 상태는 `/__screens` 참고                                           | `src/pages`                            |
+| 화면             | 온보딩 · 로그인 · 회원가입 · 정보 제공 동의 · 홈 · 주소 검색 및 상세주소 입력 구현. 다른 화면의 상태는 `/__screens` 참고                                   | `src/pages`                            |
 | 개발용 화면 목록 | `/__screens`                                                                                                                                                | `src/pages/dev`                        |
 | 도메인 타입      | 노션 기능명세(RISK · INSPECTION · STATUS · RESULT · SUPPORT · CONSTRUCTION · NOTI) 기반                                                                     | `src/types/domain.ts`                  |
-| API 레이어       | fetch 래퍼(타임아웃·에러 처리·토큰), 도메인별 React Query 훅, 목업 스위치, 도로명주소 API 연동                                                              | `src/api`, `src/lib/http.ts`           |
+| API 레이어       | fetch 래퍼(타임아웃·에러 처리·토큰), 도메인별 React Query 훅, 목업 스위치, 백엔드 주소 검색·좌표 조회 API 연동                                           | `src/api`, `src/lib/http.ts`           |
 | 상태             | 현장점검 신청 3단계 폼 draft 스토어                                                                                                                         | `src/stores/inspectionDraft.ts`        |
 | GitHub           | PR 템플릿, 이슈 템플릿(기능·버그), CI(`npm ci` → lint → build), Vercel SPA rewrite                                                                          | `.github`, `vercel.json`               |
 
@@ -108,7 +108,6 @@ main ← feat/작업이름  (PR 머지 후 브랜치 삭제)
 - [ ] 백엔드 API 스펙 확정 → `src/api/*`, `src/types/domain.ts` 반영 (`TODO(백엔드)` 검색)
 - [ ] 이메일·Google 인증 및 정보 제공 동의 실제 서버 연동 검증
 - [ ] 로고 에셋 — Figma 'FLOUT' 로고를 `public/` 에 내보내 온보딩·파비콘 교체 (현재 임시 아이콘)
-- [ ] 도로명주소 API 승인키 발급 및 운영 도메인 등록
 - [ ] 배포처 결정 (Vercel 기준 `vercel.json` 준비됨)
 - [ ] 기획 확인 — 물 유입 위치 선택지에 '화장실'(Figma 에만 있음) 포함 여부
 - [ ] `.prettierrc` 에 `"tailwindStylesheet": "./src/styles/index.css"` 추가 후 `npm run format` (커스텀 토큰 클래스 정렬)
@@ -188,7 +187,7 @@ src/
 ├─ routes/
 │  ├─ router.tsx        # 라우트 정의
 │  └─ screens.ts        # Figma 프레임 ↔ 라우트 ↔ 기능명세 매핑 (화면 목록 기준 파일)
-├─ stores/              # Zustand 스토어
+├─ stores/              # Zustand 스토어 (addressDraft: 주소 검색·상세주소 초안)
 ├─ styles/index.css     # Tailwind + 디자인 토큰
 └─ types/domain.ts      # 기능명세 기반 도메인 타입 (백엔드 확정 전 가안)
 ```
@@ -244,10 +243,11 @@ src/
 
 - `.env` 의 `VITE_API_BASE_URL` 설정 후 `VITE_USE_MOCK=false`
 - 인증·동의 API는 Swagger의 `/auth/signup`, `/auth/login`, `/auth/google`, `/resident/consents` 경로를 사용합니다 (`VITE_API_BASE_URL`에 `/api` 포함). 실제 서버 호출은 별도 검증이 필요합니다.
-- 홈은 최근 검색 주소를 로컬 저장소에서 표시합니다. 주소 검색 화면은 작업 중이며 실제 취약도 분석 API는 아직 연결되지 않았습니다.
+- 홈은 기존에 로컬 저장소에 저장된 최근 분석 주소가 있을 때 표시합니다. 현재 주소 검색·상세주소 입력 흐름에서는 분석 API가 연결되지 않아 새 주소를 저장하지 않습니다.
 - 인증 외 API 경로·응답 형태는 `src/api/*.ts`, `src/types/domain.ts` 에 **가안**으로 작성 (`TODO(백엔드)` 검색). 스펙 확정 시 이 두 곳을 확인
 - 응답이 `{ data, message }` 형태로 감싸져 있으면 `src/lib/http.ts` 반환부만 수정
-- 주소 검색(RISK-01)은 `VITE_JUSO_API_KEY` 입력 시 실제 검색. CORS 문제 시 백엔드 프록시로 이동
+- 주소 검색(RISK-01)은 실제 모드에서 인증이 필요한 `GET /api/resident/addresses/search`와 선택 시 `GET /api/resident/addresses/coordinates`를 사용합니다. 검색 요청에는 `keyword`, `currentPage`를 전달하며 페이지 크기 10은 서버가 정합니다. 목업 모드에서는 로컬 주소와 예시 좌표를 반환합니다.
+- 선택 주소·좌표·상세주소·거주 층은 주소 입력 초안에 유지되며 새로고침하면 초기화됩니다. 취약도 분석 API는 아직 호출하지 않습니다.
 
 ## 10. 배포
 

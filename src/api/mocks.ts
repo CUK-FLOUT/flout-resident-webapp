@@ -22,6 +22,7 @@ export const mockAddresses: AddressCandidate[] = [
   {
     roadAddress: '경기도 부천시 원미구 부천로 00',
     jibunAddress: '경기도 부천시 원미구 심곡동 000-0',
+    buildingName: '심곡주택',
     zipCode: '14600',
     buildingManagementNo: '4119010100100000000000001',
   },
@@ -32,6 +33,14 @@ export const mockAddresses: AddressCandidate[] = [
     buildingManagementNo: '4119010100100000000000002',
   },
 ];
+
+/** 페이지네이션 검증용 주소 검색 데이터. */
+export const mockAddressSearchExtra = Array.from({ length: 11 }, (_, i) => ({
+  roadAddress: `경기도 부천시 원미구 중동로 ${i + 1}`,
+  jibunAddress: `경기도 부천시 원미구 중동 ${i + 1}`,
+  buildingName: '중동주택',
+  zipCode: '14500',
+}));
 
 export const mockAssessmentHigh: RiskAssessment = {
   id: 'ra-001',

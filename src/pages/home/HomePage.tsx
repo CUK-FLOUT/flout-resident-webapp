@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
 import { PATHS } from '@/constants/paths';
 import { recentAddressStorage } from '@/lib/storage';
+import { useAddressDraft } from '@/stores/addressDraft';
 
 const steps = [
   ['침수 취약도 확인', '우리 집 위험도를 먼저 확인해요.'],
@@ -42,7 +43,10 @@ export default function HomePage() {
       </section>
       <button
         type="button"
-        onClick={() => navigate(PATHS.addressSearch)}
+        onClick={() => {
+          useAddressDraft.getState().startNewSearch();
+          navigate(PATHS.addressSearch);
+        }}
         className="border-border mt-[18px] flex min-h-[76px] w-full items-center gap-3 rounded-lg border px-4 py-3 text-left"
       >
         <span className="text-primary flex size-7 shrink-0 items-center justify-center">

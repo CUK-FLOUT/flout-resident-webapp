@@ -1,194 +1,309 @@
-import { useState } from 'react';
-import { Check, MapPin, Search } from 'lucide-react';
-import { generatePath, useNavigate } from 'react-router';
-import { useAddressSearch, useCreateAssessment } from '@/api/risk';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { MapPinOff, Search } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router';
+import { useAddressCoordinates, useAddressSearch, type AddressSearchItem } from '@/api/risk';
 import { Screen } from '@/components/layout';
 import { Button, TextField } from '@/components/ui';
-import { RISK_LEVEL } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
-import { recentAddressStorage } from '@/lib/storage';
-import { env } from '@/lib/env';
+import { ApiError } from '@/lib/http';
+import { getPrimaryAddress } from '@/lib/address';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import type { AddressCandidate } from '@/types/domain';
+import { useAddressDraft } from '@/stores/addressDraft';
 
-/**
- * Figma: 01 홈화면 (1115:2381)
- * 기능명세: RISK-01 주소 검색 → RISK-02~06 분석 → 취약도 결과 이동
- */
+function isBucheon(address: AddressSearchItem) {
+  const values = [address.roadAddress, address.jibunAddress].filter((value) => value?.trim());
+  return (
+    values.length > 0 &&
+    values.every((value) => /^(?:(?:경기도|경기)\s+)?부천시(?:\s|$)/.test(value.trim()))
+  );
+}
+
+// 서버는 부천시 결과만 반환하므로 명시적인 타 지역 검색어만 별도 안내합니다.
+function explicitlyOutsideBucheon(keyword: string) {
+  const text = keyword.trim();
+  if (/(?:^|\s)부천시(?:\s|$)/.test(text)) return false;
+  return (
+    /^(?:서울(?:시|특별시)?|인천(?:시|광역시)?|부산(?:시|광역시)?|대구(?:시|광역시)?|광주(?:시|광역시)?|대전(?:시|광역시)?|울산(?:시|광역시)?|세종(?:시|특별자치시)?|제주(?:도|특별자치도)?)(?:\s|$)/.test(
+      text,
+    ) || /^(?:(?:경기도|경기)\s+)?(?!부천시\b)[가-힣]+시(?:\s|$)/.test(text)
+  );
+}
+
+function searchErrorMessage(error: unknown) {
+  if (!(error instanceof ApiError)) return '주소 검색에 실패했어요. 다시 시도해 주세요.';
+  if (error.status === 401) return '로그인이 필요해요. 다시 로그인해 주세요.';
+  if (error.code === 'COMMON_400_2') return '검색어를 확인해 주세요.';
+  if (error.code === 'ADDRESS_502_2')
+    return '주소 검색 서비스에 연결하지 못했어요. 다시 시도해 주세요.';
+  if (error.code === 'ADDRESS_503_2' || error.code === 'TIMEOUT')
+    return '주소 검색 응답이 늦어지고 있어요. 다시 시도해 주세요.';
+  return '주소 검색에 실패했어요. 다시 시도해 주세요.';
+}
+
 export default function AddressSearchPage() {
   const navigate = useNavigate();
-  const [keyword, setKeyword] = useState('');
+  const location = useLocation();
+  const selectAddress = useAddressDraft((state) => state.selectAddress);
+  const keyword = useAddressDraft((state) => state.searchKeyword);
+  const revision = useAddressDraft((state) => state.searchRevision);
+  const setKeyword = useAddressDraft((state) => state.setSearchKeyword);
+  const setSearchScrollY = useAddressDraft((state) => state.setSearchScrollY);
+  const [coordinateError, setCoordinateError] = useState<{
+    address: AddressSearchItem;
+    message: string;
+  } | null>(null);
+  const sequence = useRef(0);
+  const selecting = useRef(false);
+  const loadingNext = useRef(false);
+  const sentinel = useRef<HTMLDivElement>(null);
+  const restoredLocation = useRef<string | null>(null);
+  const coordinates = useAddressCoordinates();
   const debounced = useDebouncedValue(keyword.trim());
-  const search = useAddressSearch(debounced);
-  const assess = useCreateAssessment();
-  const recent = recentAddressStorage.list();
+  const current = keyword.trim() === debounced && debounced.length > 0;
+  const search = useAddressSearch(debounced, revision, current);
+  const { hasNextPage, isFetching, fetchNextPage } = search;
+  const pages = current ? (search.data?.pages ?? []) : [];
+  const unique = new Map<string, AddressSearchItem>();
+  for (const address of pages.flatMap((page) => page.addresses)) {
+    const key = JSON.stringify([address.roadAddress, address.jibunAddress, address.zipCode]);
+    if (!unique.has(key)) unique.set(key, address);
+  }
+  const addresses = [...unique.values()];
+  const outside =
+    current &&
+    !search.isFetching &&
+    !search.isError &&
+    !search.hasNextPage &&
+    ((addresses.length === 0 && explicitlyOutsideBucheon(debounced)) ||
+      (addresses.length > 0 && addresses.every((address) => !isBucheon(address))));
+  const empty =
+    current &&
+    !outside &&
+    pages.length > 0 &&
+    addresses.length === 0 &&
+    !search.hasNextPage &&
+    !search.isFetching &&
+    !search.isError;
+  const emptyStateClass =
+    'flex flex-col items-center gap-3 pt-[clamp(56px,13dvh,110px)] pb-10 text-center';
 
-  const goResult = (assessmentId: string) =>
-    navigate(generatePath(PATHS.riskResult, { assessmentId }));
-
-  const handleSelect = (address: AddressCandidate) => {
-    // 취약도 분석 API는 현재 Swagger에 없어 목업에서만 기존 흐름을 유지합니다.
-    if (!env.useMock) return;
-    assess.mutate(address, {
-      onSuccess: (result) => {
-        recentAddressStorage.push({
-          address: result.house.address,
-          riskLabel: RISK_LEVEL[result.riskLevel].label,
-          assessmentId: result.id,
-        });
-        goResult(result.id);
-      },
+  useEffect(() => {
+    if (
+      !location.state?.restoreAddressSearch ||
+      restoredLocation.current === location.key ||
+      !current ||
+      pages.length === 0
+    ) return;
+    const scrollY = useAddressDraft.getState().searchScrollY;
+    const frame = requestAnimationFrame(() => {
+      restoredLocation.current = location.key;
+      window.scrollTo(0, scrollY);
     });
-  };
+    return () => cancelAnimationFrame(frame);
+  }, [location.key, location.state, current, pages.length]);
 
-  const showCandidates = debounced.length >= 2 && !assess.isPending;
+  const loadMore = useCallback(() => {
+    if (!current || !hasNextPage || isFetching || loadingNext.current) return;
+    loadingNext.current = true;
+    void fetchNextPage({ cancelRefetch: false }).finally(() => {
+      loadingNext.current = false;
+    });
+  }, [current, hasNextPage, isFetching, fetchNextPage]);
+
+  useEffect(() => {
+    const element = sentinel.current;
+    if (
+      !element ||
+      !current ||
+      outside ||
+      !search.hasNextPage ||
+      search.isFetching ||
+      search.isFetchNextPageError ||
+      typeof IntersectionObserver === 'undefined'
+    )
+      return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadMore();
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [
+    current,
+    outside,
+    search.hasNextPage,
+    search.isFetching,
+    search.isFetchNextPageError,
+    pages.length,
+    loadMore,
+  ]);
+
+  useEffect(
+    () => () => {
+      sequence.current += 1;
+    },
+    [],
+  );
+
+  const choose = async (address: AddressSearchItem) => {
+    if (!current || !isBucheon(address) || selecting.current) return;
+    const requestSequence = sequence.current;
+    selecting.current = true;
+    setCoordinateError(null);
+    try {
+      const result = await coordinates.mutateAsync(getPrimaryAddress(address));
+      if (requestSequence !== sequence.current) return;
+      setSearchScrollY(window.scrollY);
+      selectAddress(address, result);
+      navigate(PATHS.addressDetail);
+    } catch (error) {
+      if (requestSequence !== sequence.current) return;
+      const message =
+        error instanceof ApiError && error.status === 401
+          ? '로그인이 필요해요. 다시 로그인해 주세요.'
+          : '주소 좌표를 불러오지 못했어요. 다시 시도해 주세요.';
+      setCoordinateError({ address, message });
+    } finally {
+      selecting.current = false;
+    }
+  };
 
   return (
     <Screen
       header={{ title: '주소 검색', onBack: () => navigate(PATHS.home) }}
-      className="pt-20"
-      bottom={
-        <div className="flex gap-2">
-          <Button
-            variant="soft"
-            leftIcon={<Check size={16} />}
-            onClick={() => navigate(PATHS.applications)}
-          >
-            내 신청
-          </Button>
-          <Button
-            variant="soft"
-            leftIcon={<Check size={16} />}
-            onClick={() => navigate(PATHS.notifications)}
-          >
-            알림
-          </Button>
-        </div>
-      }
+      tab="home"
+      className="pt-4"
     >
-      {!env.useMock && (
-        <p id="analysis-unavailable" role="status" className="text-caption text-muted">
-          취약도 분석 서비스를 준비하고 있어요. 현재 검색된 주소는 선택할 수 없어요.
+      <p className="text-body text-muted">도로명, 건물명 또는 지번으로 검색해 주세요.</p>
+      <div className="relative mt-4">
+        <Search
+          size={20}
+          className="text-muted pointer-events-none absolute top-3 left-3 z-10"
+          aria-hidden
+        />
+        <TextField
+          aria-label="주소 검색어"
+          size="md"
+          placeholder="도로명, 건물명 또는 지번"
+          value={keyword}
+          maxLength={100}
+          onChange={(e) => {
+            sequence.current += 1;
+            restoredLocation.current = location.key;
+            setCoordinateError(null);
+            setKeyword(e.target.value);
+          }}
+          autoComplete="off"
+          enterKeyHint="search"
+          className="pl-7"
+        />
+      </div>
+      {current && search.isFetching && !search.isFetchingNextPage && (
+        <p role="status" className="text-caption text-muted mt-4">
+          검색 중…
         </p>
       )}
-      <p className="text-caption text-body-text">반지하 침수 예방 서비스</p>
-      <h1 className="text-title text-ink mt-3">
-        우리 집,
-        <br />비 오기 전에 확인해요.
-      </h1>
-
-      <div className="relative mt-6">
-        <TextField
-          label="주소 검색"
-          placeholder="주소를 입력해주세요"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          enterKeyHint="search"
-          autoComplete="off"
-          rightSlot={<Search size={20} className="text-muted mr-3" aria-hidden />}
-          helperText={assess.isPending ? '공공데이터로 침수 취약도를 분석하고 있어요…' : undefined}
-          errorText={assess.isError ? '분석에 실패했어요. 다시 선택해 주세요.' : undefined}
-        />
-
-        {showCandidates && (
-          <ul
-            role="listbox"
-            aria-label="주소 검색 결과"
-            className="border-border bg-surface absolute inset-x-0 top-full z-10 mt-1 max-h-72 overflow-y-auto rounded-md border"
+      {current && search.isError && !search.isFetchNextPageError && (
+        <div role="alert" className="text-body text-danger mt-4">
+          <p>{searchErrorMessage(search.error)}</p>
+          <Button variant="text" size="md" fullWidth={false} onClick={() => void search.refetch()}>
+            다시 시도
+          </Button>
+        </div>
+      )}
+      {outside && (
+        <div role="status" className={emptyStateClass}>
+          <MapPinOff size={24} className="text-muted" aria-hidden />
+          <p className="text-label text-ink font-bold">현재 부천시 주소만 지원합니다.</p>
+          <p className="text-caption text-muted">부천시 내 도로명 또는 지번주소를 검색해 주세요.</p>
+        </div>
+      )}
+      {empty && (
+        <div role="status" className={emptyStateClass}>
+          <p className="text-body text-muted">
+            검색 결과가 없어요. 도로명이나 지번을 다시 확인해 주세요.
+          </p>
+        </div>
+      )}
+      {coordinates.isPending && (
+        <p role="status" className="text-caption text-muted mt-4">
+          선택한 주소의 위치를 확인하고 있어요…
+        </p>
+      )}
+      {coordinateError && (
+        <div role="alert" className="text-body text-danger mt-4">
+          <p>{coordinateError.message}</p>
+          <Button
+            variant="text"
+            size="md"
+            fullWidth={false}
+            onClick={() => void choose(coordinateError.address)}
           >
-            {search.isFetching && <li className="text-caption text-muted p-4">검색 중…</li>}
-            {search.isError && !search.isFetching && (
-              <li className="text-caption text-danger p-4" role="alert">
-                <p>주소 검색에 실패했어요. 다시 시도해 주세요.</p>
-                <button
-                  type="button"
-                  className="text-primary mt-2 underline"
-                  onClick={() => void search.refetch()}
+            다시 시도
+          </Button>
+        </div>
+      )}
+      {current && !outside && !empty && pages.length > 0 && (
+        <section className="mt-4" aria-label="검색 결과">
+          <h2 className="text-caption text-muted">검색 결과</h2>
+          <ul className="mt-4">
+            {addresses.map((address) => {
+              const allowed = isBucheon(address);
+              return (
+                <li
+                  key={JSON.stringify([address.roadAddress, address.jibunAddress, address.zipCode])}
+                  className="border-border border-b"
                 >
-                  다시 시도
-                </button>
-              </li>
-            )}
-            {!search.isError && search.data?.length === 0 && (
-              <li className="text-caption text-muted p-4">
-                검색 결과가 없어요. 도로명과 건물번호로 검색해 보세요.
-              </li>
-            )}
-            {search.data?.map((a) => (
-              <li key={a.buildingManagementNo} role="option" aria-selected={false}>
-                <button
-                  type="button"
-                  disabled={!env.useMock}
-                  aria-describedby={!env.useMock ? 'analysis-unavailable' : undefined}
-                  onClick={() => handleSelect(a)}
-                  className="active:bg-soft flex w-full items-start gap-2 px-4 py-3 text-left disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <MapPin size={16} className="text-primary mt-1 shrink-0" aria-hidden />
-                  <span className="flex flex-col">
-                    <span className="text-label text-ink">{a.roadAddress}</span>
-                    <span className="text-caption text-muted">{a.jibunAddress}</span>
-                  </span>
-                </button>
-              </li>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => void choose(address)}
+                    disabled={!allowed || coordinates.isPending}
+                    className="flex w-full flex-col gap-1 py-3 text-left disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <span className="text-label text-ink font-bold">
+                      {getPrimaryAddress(address)}
+                    </span>
+                    {address.roadAddress?.trim() && address.jibunAddress?.trim() && (
+                      <span className="text-caption text-muted">지번 · {address.jibunAddress}</span>
+                    )}
+                    {address.buildingName?.trim() && (
+                      <span className="text-caption text-muted">
+                        건물명 · {address.buildingName}
+                      </span>
+                    )}
+                    {!allowed && (
+                      <span className="text-caption text-muted">
+                        부천시 주소만 선택할 수 있어요.
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
-        )}
-      </div>
-
-      {recent.length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-label text-ink">최근 확인한 주소</h2>
-          <ul className="mt-3 flex flex-col gap-3">
-            {recent.map((r) => (
-              <li key={r.assessmentId}>
-                <button
-                  type="button"
-                  onClick={() => goResult(r.assessmentId)}
-                  className="flex w-full items-center justify-between gap-3 text-left"
-                >
-                  <span className="text-label text-ink truncate">{r.address}</span>
-                  <span className="text-body text-body-text shrink-0">
-                    침수 취약도 {r.riskLabel}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          {search.isFetchNextPageError && (
+            <p role="alert" className="text-caption text-danger mt-3">
+              다음 검색 결과를 불러오지 못했어요.
+            </p>
+          )}
+          {search.hasNextPage && (
+            <div ref={sentinel}>
+              <Button
+                variant="secondary"
+                size="md"
+                className="mt-4"
+                loading={search.isFetchingNextPage}
+                loadingText="불러오는 중…"
+                onClick={loadMore}
+              >
+                {search.isFetchNextPageError ? '다시 시도' : '검색 결과 더 보기'}
+              </Button>
+            </div>
+          )}
         </section>
       )}
-
-      <section className="mt-10">
-        <h2 className="text-section text-ink">주소를 확인한 다음에는</h2>
-        <ol className="mt-6 flex flex-col gap-8">
-          <Step
-            n={1}
-            title="침수 취약도 확인"
-            desc="공공 데이터를 기반으로 위험 요인과 점검 필요도를 확인해요."
-          />
-          <Step
-            n={2}
-            title="필요하면 현장점검 신청"
-            desc="전문가가 직접 주택을 확인하고 예방조치를 안내해요."
-          />
-        </ol>
-      </section>
     </Screen>
-  );
-}
-
-function Step({ n, title, desc }: { n: number; title: string; desc: string }) {
-  return (
-    <li className="flex items-center gap-4">
-      <span
-        aria-hidden
-        className="bg-primary text-section text-on-primary flex size-10 shrink-0 items-center justify-center rounded-full"
-      >
-        {n}
-      </span>
-      <span className="flex flex-col gap-1">
-        <span className="text-label text-ink">{title}</span>
-        <span className="text-body text-body-text">{desc}</span>
-      </span>
-    </li>
   );
 }

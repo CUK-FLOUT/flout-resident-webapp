@@ -16,7 +16,7 @@ export const queryClient = new QueryClient({
 });
 
 /**
- * VITE_USE_MOCK=true 이면 목업을, 아니면 실제 API를 호출합니다.
+ * 개발 환경에서 VITE_USE_MOCK=true 이면 목업을, 아니면 실제 API를 호출합니다.
  * @example withMock(() => mockResult, () => http.get('/...'))
  */
 export function withMock<T>(mock: () => T, real: () => Promise<T>): Promise<T> {

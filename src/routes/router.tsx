@@ -29,6 +29,7 @@ const routes: RouteObject[] = [
       // 홈·취약도·예방 가이드
       { path: PATHS.home, element: <HomePage /> },
       { path: PATHS.addressSearch, lazy: page(() => import('@/pages/home/AddressSearchPage')) },
+      { path: PATHS.addressDetail, lazy: page(() => import('@/pages/home/AddressDetailPage')) },
       { path: PATHS.riskResult, lazy: page(() => import('@/pages/risk/RiskResultPage')) },
       { path: PATHS.guideLoading, lazy: page(() => import('@/pages/guide/GuideLoadingPage')) },
       { path: PATHS.guide, lazy: page(() => import('@/pages/guide/GuidePage')) },

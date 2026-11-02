@@ -23,6 +23,7 @@ export interface BottomSheetProps {
   /** Dim 클릭으로 닫기 허용 여부 */
   dismissible?: boolean;
   className?: string;
+  contentClassName?: string;
 }
 
 export function BottomSheet({
@@ -35,6 +36,7 @@ export function BottomSheet({
   footer,
   dismissible = true,
   className,
+  contentClassName,
 }: BottomSheetProps) {
   const titleId = useId();
 
@@ -96,7 +98,9 @@ export function BottomSheet({
           </button>
         </header>
 
-        <div className="px-gutter flex-1 overflow-y-auto py-4">{children}</div>
+        <div className={cn('px-gutter min-h-0 flex-1 overflow-y-auto', contentClassName ?? 'py-4')}>
+          {children}
+        </div>
 
         {footer && <div className="px-gutter pt-2 pb-4">{footer}</div>}
       </section>

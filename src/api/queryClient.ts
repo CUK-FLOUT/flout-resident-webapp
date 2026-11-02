@@ -16,7 +16,7 @@ export const queryClient = new QueryClient({
 });
 
 /**
- * VITE_USE_MOCK=true 이면 목업을, 아니면 실제 API를 호출합니다.
+ * 개발 환경에서 VITE_USE_MOCK=true 이면 목업을, 아니면 실제 API를 호출합니다.
  * @example withMock(() => mockResult, () => http.get('/...'))
  */
 export function withMock<T>(mock: () => T, real: () => Promise<T>): Promise<T> {
@@ -26,6 +26,7 @@ export function withMock<T>(mock: () => T, real: () => Promise<T>): Promise<T> {
 /** 쿼리 키는 여기서만 정의합니다. invalidate 할 때 오타 방지. */
 export const queryKeys = {
   address: (keyword: string) => ['address', keyword] as const,
+  serviceAccess: (applicationId: string | undefined) => ['service-access', applicationId] as const,
   assessment: (id: string) => ['assessment', id] as const,
   guide: (assessmentId: string) => ['guide', assessmentId] as const,
   applications: () => ['applications'] as const,

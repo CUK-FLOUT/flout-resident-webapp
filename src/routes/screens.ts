@@ -81,8 +81,15 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaName: '01-1 주소 검색 · 검색 결과 선택',
     figmaNodes: ['2020:1503'],
     specs: ['RISK-01'],
-    next: ['riskResult'],
-    status: 'wip',
+    next: ['addressDetail'],
+    status: 'done',
+    group: '홈·취약도',
+  },
+  addressDetail: {
+    figmaName: '01-3 주소 확인 · 상세 주소 입력',
+    figmaNodes: ['1787:1529'],
+    specs: ['RISK-01'],
+    status: 'done',
     group: '홈·취약도',
   },
   riskResult: {

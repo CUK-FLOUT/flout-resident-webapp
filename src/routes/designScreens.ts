@@ -50,7 +50,7 @@ export const DESIGN_SCREENS: DesignScreen[] = [
   {
     nodeId: '1787:1529',
     name: '01-3 주소 확인 · 상세 주소 입력',
-    relatedRoute: 'addressSearch',
+    route: 'addressDetail',
   },
   {
     nodeId: '2178:3549',

@@ -1,8 +1,14 @@
 import { ChevronRight, ClipboardCheck, FileText, HardHat, MapPin, Search } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useState } from 'react';
+import { generatePath, useNavigate } from 'react-router';
+import { useServiceAccess, type Service as ServiceKind } from '@/api/serviceAccess';
+import { serviceAccessMock } from '@/api/serviceAccessMock';
+import { ServiceAccessDialog } from '@/components/ServiceAccess';
 import { Screen } from '@/components/layout';
 import { PATHS } from '@/constants/paths';
+import { env } from '@/lib/env';
 import { recentAddressStorage } from '@/lib/storage';
+import { useAddressDraft } from '@/stores/addressDraft';
 
 const steps = [
   ['침수 취약도 확인', '우리 집 위험도를 먼저 확인해요.'],
@@ -13,6 +19,23 @@ const steps = [
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const [service, setService] = useState<ServiceKind | null>(null);
+  const inspectionAccess = useServiceAccess('inspection');
+  const supportAccess = useServiceAccess('support');
+  const constructionAccess = useServiceAccess('construction');
+  const openService = (selected: ServiceKind) => {
+    const access = { inspection: inspectionAccess, support: supportAccess, construction: constructionAccess }[selected];
+    if (access.status !== 'allowed') {
+      setService(selected);
+      return;
+    }
+    if (selected === 'inspection') navigate(PATHS.inspectionApply);
+    else if (env.isDev && env.useMock) {
+      navigate(generatePath(selected === 'support' ? PATHS.support : PATHS.construction, {
+        applicationId: serviceAccessMock.applicationId,
+      }));
+    }
+  };
   const recent = recentAddressStorage.list()[0];
   return (
     <Screen header={{ title: '홈', onBack: false }} tab="home">
@@ -42,7 +65,10 @@ export default function HomePage() {
       </section>
       <button
         type="button"
-        onClick={() => navigate(PATHS.addressSearch)}
+        onClick={() => {
+          useAddressDraft.getState().startNewSearch();
+          navigate(PATHS.addressSearch);
+        }}
         className="border-border mt-[18px] flex min-h-[76px] w-full items-center gap-3 rounded-lg border px-4 py-3 text-left"
       >
         <span className="text-primary flex size-7 shrink-0 items-center justify-center">
@@ -60,17 +86,17 @@ export default function HomePage() {
         <Service
           icon={<ClipboardCheck size={24} />}
           label="현장점검하기"
-          onClick={() => navigate(PATHS.inspectionApply)}
+          onClick={() => openService('inspection')}
         />
         <Service
           icon={<FileText size={24} />}
           label="지원하기"
-          onClick={() => navigate(PATHS.applications)}
+          onClick={() => openService('support')}
         />
         <Service
           icon={<HardHat size={24} />}
           label="시공하기"
-          onClick={() => navigate(PATHS.applications)}
+          onClick={() => openService('construction')}
         />
       </section>
       <section className="mt-[18px]">
@@ -89,6 +115,7 @@ export default function HomePage() {
           ))}
         </ol>
       </section>
+      {service && <ServiceAccessDialog service={service} onClose={() => setService(null)} />}
     </Screen>
   );
 }

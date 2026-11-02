@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { createBrowserRouter, type RouteObject } from 'react-router';
 import { AppLayout } from '@/components/layout';
+import { ServiceAccessGuard } from '@/components/ServiceAccess';
 import { PATHS } from '@/constants/paths';
 import { env } from '@/lib/env';
 import HomePage from '@/pages/home/HomePage';
@@ -29,6 +30,7 @@ const routes: RouteObject[] = [
       // 홈·취약도·예방 가이드
       { path: PATHS.home, element: <HomePage /> },
       { path: PATHS.addressSearch, lazy: page(() => import('@/pages/home/AddressSearchPage')) },
+      { path: PATHS.addressDetail, lazy: page(() => import('@/pages/home/AddressDetailPage')) },
       { path: PATHS.riskResult, lazy: page(() => import('@/pages/risk/RiskResultPage')) },
       { path: PATHS.guideLoading, lazy: page(() => import('@/pages/guide/GuideLoadingPage')) },
       { path: PATHS.guide, lazy: page(() => import('@/pages/guide/GuidePage')) },
@@ -40,16 +42,12 @@ const routes: RouteObject[] = [
 
       // 현장점검 신청
       {
-        path: PATHS.inspectionApply,
-        lazy: page(() => import('@/pages/inspection/InspectionApplyPage')),
-      },
-      {
-        path: PATHS.inspectionSchedule,
-        lazy: page(() => import('@/pages/inspection/InspectionSchedulePage')),
-      },
-      {
-        path: PATHS.inspectionConfirm,
-        lazy: page(() => import('@/pages/inspection/InspectionConfirmPage')),
+        element: <ServiceAccessGuard service="inspection" />,
+        children: [
+          { path: PATHS.inspectionApply, lazy: page(() => import('@/pages/inspection/InspectionApplyPage')) },
+          { path: PATHS.inspectionSchedule, lazy: page(() => import('@/pages/inspection/InspectionSchedulePage')) },
+          { path: PATHS.inspectionConfirm, lazy: page(() => import('@/pages/inspection/InspectionConfirmPage')) },
+        ],
       },
       {
         path: PATHS.inspectionComplete,
@@ -92,12 +90,14 @@ const routes: RouteObject[] = [
       },
 
       // 지원
-      { path: PATHS.support, lazy: page(() => import('@/pages/support/SupportPage')) },
+      { element: <ServiceAccessGuard service="support" />, children: [
+        { path: PATHS.support, lazy: page(() => import('@/pages/support/SupportPage')) },
       {
         path: PATHS.supportRequirements,
         lazy: page(() => import('@/pages/support/SupportRequirementsPage')),
       },
       { path: PATHS.supportApply, lazy: page(() => import('@/pages/support/SupportApplyPage')) },
+      ] },
       {
         path: PATHS.supportComplete,
         lazy: page(() => import('@/pages/support/SupportCompletePage')),
@@ -109,10 +109,9 @@ const routes: RouteObject[] = [
       },
 
       // 시공
-      {
-        path: PATHS.construction,
-        lazy: page(() => import('@/pages/construction/ConstructionSchedulePage')),
-      },
+      { element: <ServiceAccessGuard service="construction" />, children: [
+        { path: PATHS.construction, lazy: page(() => import('@/pages/construction/ConstructionSchedulePage')) },
+      ] },
       {
         path: PATHS.constructionProgress,
         lazy: page(() => import('@/pages/construction/ConstructionProgressPage')),

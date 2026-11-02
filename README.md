@@ -31,8 +31,6 @@ npm run dev            # http://localhost:5173
 
 실제 인증 API를 사용하려면 `VITE_USE_MOCK=false`와 `VITE_API_BASE_URL`을 설정합니다. Google 로그인은 `VITE_GOOGLE_CLIENT_ID`와 Google 측 허용 출처 설정도 필요합니다. 환경변수 변경 후 개발 서버를 다시 시작하세요.
 
-홈 서비스 진입 조건은 개발 서버에서 `VITE_USE_MOCK=true`일 때 `src/api/serviceAccessMock.ts`의 `risk`, `inspection`, `support` 값을 바꿔 확인할 수 있습니다. 지원·시공 경로의 테스트 신청 ID도 이 파일에서 설정합니다. 운영 빌드에서는 이 설정과 모든 API 목업을 사용하지 않습니다.
-
 | 스크립트            | 설명                                      |
 | ------------------- | ----------------------------------------- |
 | `npm run dev`       | 개발 서버                                 |
@@ -84,7 +82,7 @@ main ← feat/작업이름  (PR 머지 후 브랜치 삭제)
 | 화면             | 온보딩 · 로그인 · 회원가입 · 정보 제공 동의 · 홈 · 주소 검색 및 상세주소 입력 구현. 다른 화면의 상태는 `/__screens` 참고                                   | `src/pages`                            |
 | 개발용 화면 목록 | `/__screens`                                                                                                                                                | `src/pages/dev`                        |
 | 도메인 타입      | 노션 기능명세(RISK · INSPECTION · STATUS · RESULT · SUPPORT · CONSTRUCTION · NOTI) 기반                                                                     | `src/types/domain.ts`                  |
-| API 레이어       | fetch 래퍼(타임아웃·에러 처리·토큰), 도메인별 React Query 훅, 목업 스위치, 도로명주소 API 연동                                                              | `src/api`, `src/lib/http.ts`           |
+| API 레이어       | fetch 래퍼(타임아웃·에러 처리·토큰), 도메인별 React Query 훅, 목업 스위치, 백엔드 주소 검색·좌표 조회 API 연동                                           | `src/api`, `src/lib/http.ts`           |
 | 상태             | 현장점검 신청 3단계 폼 draft 스토어                                                                                                                         | `src/stores/inspectionDraft.ts`        |
 | GitHub           | PR 템플릿, 이슈 템플릿(기능·버그), CI(`npm ci` → lint → build), Vercel SPA rewrite                                                                          | `.github`, `vercel.json`               |
 
@@ -110,7 +108,6 @@ main ← feat/작업이름  (PR 머지 후 브랜치 삭제)
 - [ ] 백엔드 API 스펙 확정 → `src/api/*`, `src/types/domain.ts` 반영 (`TODO(백엔드)` 검색)
 - [ ] 이메일·Google 인증 및 정보 제공 동의 실제 서버 연동 검증
 - [ ] 로고 에셋 — Figma 'FLOUT' 로고를 `public/` 에 내보내 온보딩·파비콘 교체 (현재 임시 아이콘)
-- [ ] 도로명주소 API 승인키 발급 및 운영 도메인 등록
 - [ ] 배포처 결정 (Vercel 기준 `vercel.json` 준비됨)
 - [ ] 기획 확인 — 물 유입 위치 선택지에 '화장실'(Figma 에만 있음) 포함 여부
 - [ ] `.prettierrc` 에 `"tailwindStylesheet": "./src/styles/index.css"` 추가 후 `npm run format` (커스텀 토큰 클래스 정렬)
@@ -175,15 +172,12 @@ src/
 │  ├─ authMock.ts       #   인증 목업 및 탭별 목업 세션
 │  ├─ queryClient.ts    #   QueryClient, queryKeys, withMock()
 │  ├─ risk.ts           #   RISK  주소 검색 · 취약도 분석 · 예방 가이드
-│  ├─ serviceAccess.ts  #   서비스 진입 조건 조회 및 React Query 훅
-│  ├─ serviceAccessMock.ts # 개발 전용 서비스 진입 상태
 │  ├─ applications.ts   #   INSPECTION / STATUS / RESULT / SUPPORT / CONSTRUCTION
 │  ├─ notifications.ts  #   NOTI
 │  └─ mocks.ts          #   VITE_USE_MOCK=true 일 때 쓰는 데이터 (Figma 예시 문구)
 ├─ components/
 │  ├─ ui/               # 디자인 시스템 컴포넌트
 │  ├─ layout/           # AppLayout, AppHeader, Screen(헤더+본문+하단 CTA)
-│  ├─ ServiceAccess.tsx # 서비스 진입 안내 및 라우트 가드
 │  └─ dev/              # ScreenPlaceholder (미구현 화면용)
 ├─ constants/
 │  ├─ paths.ts          # 라우트 경로 패턴 (PATHS)
@@ -249,12 +243,11 @@ src/
 
 - `.env` 의 `VITE_API_BASE_URL` 설정 후 `VITE_USE_MOCK=false`
 - 인증·동의 API는 Swagger의 `/auth/signup`, `/auth/login`, `/auth/google`, `/resident/consents` 경로를 사용합니다 (`VITE_API_BASE_URL`에 `/api` 포함). 실제 서버 호출은 별도 검증이 필요합니다.
-- 홈은 최근 분석 주소를 로컬 저장소에서 표시합니다. 주소 검색과 상세주소 입력 후의 실제 취약도 분석 API는 아직 연결되지 않았습니다.
+- 홈은 기존에 로컬 저장소에 저장된 최근 분석 주소가 있을 때 표시합니다. 현재 주소 검색·상세주소 입력 흐름에서는 분석 API가 연결되지 않아 새 주소를 저장하지 않습니다.
 - 인증 외 API 경로·응답 형태는 `src/api/*.ts`, `src/types/domain.ts` 에 **가안**으로 작성 (`TODO(백엔드)` 검색). 스펙 확정 시 이 두 곳을 확인
 - 응답이 `{ data, message }` 형태로 감싸져 있으면 `src/lib/http.ts` 반환부만 수정
 - 주소 검색(RISK-01)은 실제 모드에서 인증이 필요한 `GET /api/resident/addresses/search`와 선택 시 `GET /api/resident/addresses/coordinates`를 사용합니다. 검색 요청에는 `keyword`, `currentPage`를 전달하며 페이지 크기 10은 서버가 정합니다. 목업 모드에서는 로컬 주소와 예시 좌표를 반환합니다.
 - 선택 주소·좌표·상세주소·거주 층은 주소 입력 초안에 유지되며 새로고침하면 초기화됩니다. 취약도 분석 API는 아직 호출하지 않습니다.
-- 서비스 진입 조건은 실제 모드에서 신청 ID가 있는 지원 경로에 한해 신청 상세 API의 점검 상태와 결과 공개 여부를 확인합니다. 홈의 신청 ID 조회, 취약도 분석 상태와 지원 승인 상태 API는 아직 연결되지 않아 확인 불가로 안내합니다.
 
 ## 10. 배포
 

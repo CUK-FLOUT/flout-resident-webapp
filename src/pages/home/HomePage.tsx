@@ -1,12 +1,7 @@
 import { ChevronRight, ClipboardCheck, FileText, HardHat, MapPin, Search } from 'lucide-react';
-import { useState } from 'react';
-import { generatePath, useNavigate } from 'react-router';
-import { useServiceAccess, type Service as ServiceKind } from '@/api/serviceAccess';
-import { serviceAccessMock } from '@/api/serviceAccessMock';
-import { ServiceAccessDialog } from '@/components/ServiceAccess';
+import { useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
 import { PATHS } from '@/constants/paths';
-import { env } from '@/lib/env';
 import { recentAddressStorage } from '@/lib/storage';
 import { useAddressDraft } from '@/stores/addressDraft';
 
@@ -19,23 +14,6 @@ const steps = [
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [service, setService] = useState<ServiceKind | null>(null);
-  const inspectionAccess = useServiceAccess('inspection');
-  const supportAccess = useServiceAccess('support');
-  const constructionAccess = useServiceAccess('construction');
-  const openService = (selected: ServiceKind) => {
-    const access = { inspection: inspectionAccess, support: supportAccess, construction: constructionAccess }[selected];
-    if (access.status !== 'allowed') {
-      setService(selected);
-      return;
-    }
-    if (selected === 'inspection') navigate(PATHS.inspectionApply);
-    else if (env.isDev && env.useMock) {
-      navigate(generatePath(selected === 'support' ? PATHS.support : PATHS.construction, {
-        applicationId: serviceAccessMock.applicationId,
-      }));
-    }
-  };
   const recent = recentAddressStorage.list()[0];
   return (
     <Screen header={{ title: '홈', onBack: false }} tab="home">
@@ -86,17 +64,17 @@ export default function HomePage() {
         <Service
           icon={<ClipboardCheck size={24} />}
           label="현장점검하기"
-          onClick={() => openService('inspection')}
+          onClick={() => navigate(PATHS.inspectionApply)}
         />
         <Service
           icon={<FileText size={24} />}
           label="지원하기"
-          onClick={() => openService('support')}
+          onClick={() => navigate(PATHS.applications)}
         />
         <Service
           icon={<HardHat size={24} />}
           label="시공하기"
-          onClick={() => openService('construction')}
+          onClick={() => navigate(PATHS.applications)}
         />
       </section>
       <section className="mt-[18px]">
@@ -115,7 +93,6 @@ export default function HomePage() {
           ))}
         </ol>
       </section>
-      {service && <ServiceAccessDialog service={service} onClose={() => setService(null)} />}
     </Screen>
   );
 }

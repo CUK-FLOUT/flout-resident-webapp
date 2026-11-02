@@ -26,7 +26,6 @@ export function withMock<T>(mock: () => T, real: () => Promise<T>): Promise<T> {
 /** 쿼리 키는 여기서만 정의합니다. invalidate 할 때 오타 방지. */
 export const queryKeys = {
   address: (keyword: string) => ['address', keyword] as const,
-  serviceAccess: (applicationId: string | undefined) => ['service-access', applicationId] as const,
   assessment: (id: string) => ['assessment', id] as const,
   guide: (assessmentId: string) => ['guide', assessmentId] as const,
   applications: () => ['applications'] as const,

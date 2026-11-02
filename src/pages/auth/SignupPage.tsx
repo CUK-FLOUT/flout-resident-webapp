@@ -1,15 +1,17 @@
-import { useState, type SubmitEvent } from 'react';
+﻿import { useState, type SubmitEvent } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
 import { Button, TextField } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
+import { useSignup } from '@/api/auth';
 
 /**
  * Figma: 회원가입 · 자체 계정 (1115:4798)
  */
 export default function SignupPage() {
   const navigate = useNavigate();
+  const signup = useSignup();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,25 +21,18 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [agreePrivacy, setAgreePrivacy] = useState(false);
-
   const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
 
   const canSubmit =
-    email.trim() !== '' &&
-    password !== '' &&
-    passwordConfirm !== '' &&
-    name.trim() !== '' &&
-    agreeTerms &&
-    agreePrivacy;
+    email.trim() !== '' && password !== '' && passwordConfirm !== '' && name.trim() !== '';
 
-  function handleSignup(e: SubmitEvent<HTMLFormElement>) {
+  async function handleSignup(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
 
     if (!canSubmit) {
-      setError('모든 항목을 입력하고 필수 약관에 동의해 주세요.');
+      setError('모든 항목을 입력해 주세요.');
       return;
     }
 
@@ -46,7 +41,24 @@ export default function SignupPage() {
       return;
     }
 
-    // TODO(auth): 추후 회원가입 API 연결
+    if (!/^(?=.*[A-Za-z])(?=.*\d)\S{8,64}$/.test(password)) {
+      setError('비밀번호는 공백 없이 영문과 숫자를 포함해 8~64자로 입력해 주세요.');
+      return;
+    }
+    setPending(true);
+    try {
+      await signup.mutateAsync({
+        email: email.trim(),
+        password,
+        passwordConfirm,
+        name: name.trim(),
+      });
+      navigate(PATHS.login, { replace: true, state: { signupComplete: true } });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '회원가입에 실패했어요.');
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -56,12 +68,18 @@ export default function SignupPage() {
         onBack: () => navigate(PATHS.login),
       }}
       bottom={
-        <Button type="submit" form="signup-form" disabled={!canSubmit}>
+        <Button
+          type="submit"
+          form="signup-form"
+          disabled={!canSubmit}
+          loading={pending}
+          loadingText="가입 중…"
+        >
           회원가입
         </Button>
       }
     >
-      <form id="signup-form" onSubmit={handleSignup} className="flex flex-col pt-12">
+      <form id="signup-form" onSubmit={handleSignup} className="flex flex-col pt-6">
         <h1 className="text-ink mb-8 text-[24px] font-bold">계정을 만들어 시작하세요</h1>
 
         <div className="flex flex-col gap-5">
@@ -121,60 +139,6 @@ export default function SignupPage() {
             onChange={(e) => setName(e.target.value)}
           />
         </div>
-
-        <section className="mt-8">
-          <h2 className="text-ink mb-4 text-[18px] font-bold">서비스 이용 동의</h2>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <input
-                id="agree-terms"
-                type="checkbox"
-                checked={agreeTerms}
-                onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="accent-primary h-6 w-6 shrink-0"
-              />
-
-              <label htmlFor="agree-terms" className="text-ink flex-1 text-sm">
-                이용약관 동의 (필수)
-              </label>
-
-              <button
-                type="button"
-                className="text-primary text-sm underline"
-                onClick={() => {
-                  // TODO: 이용약관 상세 화면 연결
-                }}
-              >
-                보기
-              </button>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <input
-                id="agree-privacy"
-                type="checkbox"
-                checked={agreePrivacy}
-                onChange={(e) => setAgreePrivacy(e.target.checked)}
-                className="accent-primary h-6 w-6 shrink-0"
-              />
-
-              <label htmlFor="agree-privacy" className="text-ink flex-1 text-sm">
-                개인정보 수집 및 이용 동의 (필수)
-              </label>
-
-              <button
-                type="button"
-                className="text-primary text-sm underline"
-                onClick={() => {
-                  // TODO: 개인정보 처리방침 상세 화면 연결
-                }}
-              >
-                보기
-              </button>
-            </div>
-          </div>
-        </section>
 
         <button
           type="button"

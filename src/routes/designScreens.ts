@@ -40,22 +40,22 @@ export const DESIGN_SCREENS: DesignScreen[] = [
   {
     nodeId: '2020:1503',
     name: '01-1 주소 검색 · 검색 결과 선택',
-    relatedRoute: 'home',
+    route: 'addressSearch',
   },
   {
     nodeId: '2108:1558',
     name: '01-2 부천시 외 주소 안내',
-    relatedRoute: 'home',
+    relatedRoute: 'addressSearch',
   },
   {
     nodeId: '1787:1529',
     name: '01-3 주소 확인 · 상세 주소 입력',
-    relatedRoute: 'home',
+    relatedRoute: 'addressSearch',
   },
   {
     nodeId: '2178:3549',
     name: '01-4 부천시가 아닐때',
-    relatedRoute: 'home',
+    relatedRoute: 'addressSearch',
   },
   {
     nodeId: '1584:1531',

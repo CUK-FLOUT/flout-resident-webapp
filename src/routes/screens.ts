@@ -36,7 +36,7 @@ export const figmaNodeUrl = (nodeId: string) =>
 export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
   /* ── 진입·인증 ── */
   onboarding: {
-    figmaName: '온보딩',
+    figmaName: '온보딩 · 로그인 방식 선택',
     figmaNodes: ['1115:4758'],
     specs: [],
     next: ['login', 'signup'],
@@ -44,7 +44,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '진입·인증',
   },
   login: {
-    figmaName: '로그인 · 이메일 및 Google',
+    figmaName: '로그인 · 이메일·Google',
     figmaNodes: ['1116:1389'],
     specs: [],
     next: ['consent'],
@@ -52,7 +52,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '진입·인증',
   },
   signup: {
-    figmaName: '회원가입 · 자체 계정',
+    figmaName: '회원가입 · 이메일 계정',
     figmaNodes: ['1115:4798'],
     specs: [],
     next: ['consent'],
@@ -71,15 +71,15 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
   /* ── 홈·취약도 ── */
   home: {
     figmaName: '01 홈화면',
-    figmaNodes: ['1115:2381'],
+    figmaNodes: ['2167:2693'],
     specs: ['RISK-01'],
     next: ['riskResult', 'applications', 'notifications'],
     status: 'done',
     group: '홈·취약도',
   },
   riskResult: {
-    figmaName: '02 취약도 결과 (높음·주의) / 01. 취약도 결과 - 낮음',
-    figmaNodes: ['1115:2530', '1115:4451'],
+    figmaName: '02-1 취약도 결과 · 높음',
+    figmaNodes: ['1115:2530', '1584:1865', '1115:4451', '1787:1610'],
     specs: ['RISK-02', 'RISK-03', 'RISK-04', 'RISK-05', 'RISK-06', 'RISK-08', 'RISK-09'],
     next: ['inspectionApply', 'guideLoading'],
     status: 'done',
@@ -88,7 +88,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
 
   /* ── 예방 가이드 (취약도 낮음 플로우) ── */
   guideLoading: {
-    figmaName: '02. 예방 가이드 생성 중',
+    figmaName: '02-4 맞춤 가이드 생성 중',
     figmaNodes: ['1115:4498'],
     specs: ['RISK-07'],
     next: ['guide'],
@@ -96,24 +96,24 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '예방 가이드',
   },
   guide: {
-    figmaName: '03. 맞춤 예방 가이드 상세',
+    figmaName: '02-5 맞춤 예방 가이드·체크리스트',
     figmaNodes: ['1115:4538'],
     specs: ['RISK-07'],
-    sheets: [{ figmaName: '04. 해결 여부 확인 바텀시트', figmaNode: '1115:4592' }],
+    sheets: [{ figmaName: '02-6 해결 여부 확인 바텀시트', figmaNode: '1115:4592' }],
     next: ['guideResolved', 'guideUnresolved'],
     status: 'todo',
     group: '예방 가이드',
   },
   guideUnresolved: {
-    figmaName: '05. 미해결 사유 선택',
-    figmaNodes: ['1115:4670'],
+    figmaName: '이전 화면 · 미해결 사유 선택 (현재 디자인 없음)',
+    figmaNodes: [],
     specs: ['RISK-09'],
     next: ['inspectionApply'],
     status: 'todo',
     group: '예방 가이드',
   },
   guideResolved: {
-    figmaName: '06. 해결 완료',
+    figmaName: '02-7 예방가이드 해결 완료',
     figmaNodes: ['1115:4716'],
     specs: [],
     next: ['home'],
@@ -123,7 +123,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
 
   /* ── 현장점검 신청 ── */
   inspectionApply: {
-    figmaName: '03 현장점검 신청 (1/3 주택 상황)',
+    figmaName: '03-1 현장점검하기_현장점검 신청',
     figmaNodes: ['1115:4333'],
     specs: ['INSPECTION-01', 'INSPECTION-02', 'INSPECTION-03', 'INSPECTION-04', 'INSPECTION-10'],
     next: ['inspectionSchedule'],
@@ -131,7 +131,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '현장점검 신청',
   },
   inspectionSchedule: {
-    figmaName: '03-2 현장점검 신청 (날짜입력)',
+    figmaName: '03-2 현장점검하기_현장점검 신청',
     figmaNodes: ['1115:2571'],
     specs: ['INSPECTION-05'],
     next: ['inspectionConfirm'],
@@ -139,7 +139,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '현장점검 신청',
   },
   inspectionConfirm: {
-    figmaName: '03-3 현장점검 신청 (신청 정보확인)',
+    figmaName: '03-3 현장점검하기_신청 정보 확인',
     figmaNodes: ['1115:2623'],
     specs: ['INSPECTION-06', 'INSPECTION-07'],
     next: ['inspectionComplete'],
@@ -147,7 +147,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '현장점검 신청',
   },
   inspectionComplete: {
-    figmaName: '04-1 접수 완료',
+    figmaName: '03-4 현장점검하기_접수 완료',
     figmaNodes: ['1115:2706'],
     specs: ['INSPECTION-08', 'NOTI-01'],
     next: ['inspectionNextSteps', 'applicationHub'],
@@ -155,7 +155,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '현장점검 신청',
   },
   inspectionNextSteps: {
-    figmaName: '04-2 이후 진행 절차',
+    figmaName: '03-5 현장점검하기_진행 절차',
     figmaNodes: ['1115:2765'],
     specs: ['INSPECTION-09'],
     next: ['applications'],
@@ -165,15 +165,15 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
 
   /* ── 내 신청 ── */
   applications: {
-    figmaName: '05 내 신청',
-    figmaNodes: ['1115:2816'],
+    figmaName: '이전 화면 · 내 신청 (현재 디자인 없음)',
+    figmaNodes: [],
     specs: ['STATUS-01'],
     next: ['applicationHub', 'applicationsAll'],
     status: 'todo',
     group: '내 신청',
   },
   applicationsAll: {
-    figmaName: '05-2 전체 신청 내역',
+    figmaName: '06-1 내 신청',
     figmaNodes: ['1115:2862'],
     specs: ['STATUS-01'],
     next: ['applicationHub'],
@@ -181,7 +181,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '내 신청',
   },
   applicationHub: {
-    figmaName: '06-1 신청 상세 · 진행 허브',
+    figmaName: '03-6현장점검하기_접수이후',
     figmaNodes: ['1115:2936'],
     specs: ['STATUS-02', 'STATUS-05', 'STATUS-06'],
     next: ['applicationInfo', 'visit', 'result', 'supportStatus', 'construction'],
@@ -189,14 +189,14 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '내 신청',
   },
   applicationInfo: {
-    figmaName: '06-2 신청 정보',
+    figmaName: '03-7 현장점검하기_점검 신청 내역',
     figmaNodes: ['1115:2993'],
     specs: ['INSPECTION-06'],
     status: 'todo',
     group: '내 신청',
   },
   visit: {
-    figmaName: '07-1 방문 일정',
+    figmaName: '03-8 현장점검하기_점검예정',
     figmaNodes: ['1115:3024'],
     specs: ['STATUS-03', 'NOTI-02', 'NOTI-03'],
     next: ['visitPrepare'],
@@ -204,7 +204,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '내 신청',
   },
   visitPrepare: {
-    figmaName: '07-2 방문 전 안내',
+    figmaName: '03-9 현장점검하기_방문 전 안내',
     figmaNodes: ['1115:3077'],
     specs: ['STATUS-04'],
     status: 'todo',
@@ -213,7 +213,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
 
   /* ── 점검 결과 ── */
   result: {
-    figmaName: '08-1 현장점검 결과 · 요약',
+    figmaName: '03-11 현장점검하기_점검 결과 보기',
     figmaNodes: ['1115:3111'],
     specs: ['RESULT-01', 'RESULT-02', 'NOTI-04'],
     next: ['resultPoints', 'resultRecommendations'],
@@ -221,7 +221,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '점검 결과',
   },
   resultPoints: {
-    figmaName: '08-2 취약지점 상세 · 현장사진',
+    figmaName: '03-12 현장점검하기_취약점',
     figmaNodes: ['1115:3140'],
     specs: ['RESULT-03', 'RESULT-04'],
     next: ['resultRecommendations'],
@@ -229,7 +229,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '점검 결과',
   },
   resultRecommendations: {
-    figmaName: '08-3 전문가 권장 예방조치',
+    figmaName: '03-13 현장점검하기_권장 예방조치',
     figmaNodes: ['1115:3194'],
     specs: ['RESULT-05', 'RESULT-06', 'RESULT-08'],
     next: ['support'],
@@ -239,15 +239,15 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
 
   /* ── 지원 ── */
   support: {
-    figmaName: '09-1 지원 안내',
+    figmaName: '04-1 지원하기_지원사업',
     figmaNodes: ['1115:3218'],
     specs: ['RESULT-07', 'SUPPORT-01'],
     next: ['supportRequirements'],
-    status: 'todo',
+    status: 'done',
     group: '지원',
   },
   supportRequirements: {
-    figmaName: '09-2 지원 조건 · 준비서류',
+    figmaName: '04-2 지원하기_신청전확인',
     figmaNodes: ['1115:3253'],
     specs: [
       'SUPPORT-02',
@@ -258,40 +258,53 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
       'SUPPORT-07',
       'SUPPORT-08',
     ],
-    sheets: [{ figmaName: '10 Bottom Sheet 지원 신청', figmaNode: '1115:3305' }],
+    next: ['supportApply'],
+    status: 'done',
+    group: '지원',
+  },
+  supportApply: {
+    figmaName: '04-3 지원하기_신청하기',
+    figmaNodes: ['1115:3305'],
+    specs: [],
     next: ['supportComplete'],
-    status: 'todo',
+    status: 'done',
     group: '지원',
   },
   supportComplete: {
-    figmaName: '11 지원 신청 완료',
+    figmaName: '04-4 지원하기_접수완료',
     figmaNodes: ['1115:3486'],
     specs: ['SUPPORT-09', 'NOTI-05'],
     next: ['supportStatus'],
-    status: 'todo',
+    status: 'done',
     group: '지원',
   },
   supportStatus: {
-    figmaName: '12-1 행정 검토 중 / 12-2 임대인 동의 필요 / 12-3 승인 / 12-4 미승인',
-    figmaNodes: ['1115:3550', '1115:3605', '1115:3669', '1115:3722'],
-    specs: ['CONSTRUCTION-01', 'CONSTRUCTION-02', 'CONSTRUCTION-03', 'NOTI-06'],
-    next: ['construction'],
-    status: 'todo',
+    figmaName: '04-5 지원하기_지원검토',
+    figmaNodes: ['1115:3550', '2020:1642', '1115:3669', '1115:3722'],
+    specs: ['CONSTRUCTION-01', 'CONSTRUCTION-02', 'NOTI-06'],
+    next: ['supportConsent', 'construction'],
+    status: 'done',
+    group: '지원',
+  },
+  supportConsent: {
+    figmaName: '04-6 지원하기_지원동의_세입자',
+    figmaNodes: ['1115:3605', '1859:1512', '1115:3652', '2199:2701'],
+    specs: ['SUPPORT-07', 'CONSTRUCTION-03'],
+    status: 'done',
     group: '지원',
   },
 
   /* ── 시공 ── */
   construction: {
-    figmaName: '13 시공 일정',
-    figmaNodes: ['1115:3773'],
+    figmaName: '05-1 시공하기_시공예정',
+    figmaNodes: ['1115:3773', '1115:3827'],
     specs: ['CONSTRUCTION-04', 'NOTI-07'],
-    sheets: [{ figmaName: '13-1 방문전 확인', figmaNode: '1115:3827' }],
     next: ['constructionProgress'],
     status: 'todo',
     group: '시공',
   },
   constructionProgress: {
-    figmaName: '14 시공진행',
+    figmaName: '05-3 시공하기_시공진행',
     figmaNodes: ['1115:3951'],
     specs: ['CONSTRUCTION-05'],
     next: ['constructionComplete'],
@@ -299,7 +312,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '시공',
   },
   constructionComplete: {
-    figmaName: '15. 시공 완료',
+    figmaName: '05-4 시공결과',
     figmaNodes: ['1115:4034'],
     specs: ['CONSTRUCTION-06', 'CONSTRUCTION-07', 'NOTI-08'],
     next: ['home'],
@@ -309,10 +322,9 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
 
   /* ── 알림 ── */
   notifications: {
-    figmaName: '16 알림',
+    figmaName: '07-1 알림 목록',
     figmaNodes: ['1115:4101'],
     specs: ['NOTI-01', 'NOTI-02', 'NOTI-03', 'NOTI-04', 'NOTI-05', 'NOTI-06', 'NOTI-07', 'NOTI-08'],
-    sheets: [{ figmaName: '16-1 바텀시트 (알림 상세)', figmaNode: '1115:4183' }],
     status: 'todo',
     group: '알림',
   },

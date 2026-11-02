@@ -1,11 +1,13 @@
 import type { StatusTone } from '@/components/ui';
 import type {
   ApplicationStage,
+  ConsentStatus,
   ExistingFacility,
   InspectionNeed,
   NotificationType,
   RiskFactorCode,
   RiskLevel,
+  SupportDecision,
   Tenure,
   VisitTimeSlot,
   VulnerabilityType,
@@ -68,6 +70,10 @@ export const TENURE_OPTIONS = [
   { value: 'OTHER', label: '기타' },
 ] as const satisfies readonly { value: Tenure; label: string }[];
 
+export const TENURE_LABEL = Object.fromEntries(
+  TENURE_OPTIONS.map((o) => [o.value, o.label]),
+) as Record<Tenure, string>;
+
 export const YES_NO_UNKNOWN_OPTIONS = [
   { value: 'YES', label: '있음' },
   { value: 'NO', label: '없음' },
@@ -96,6 +102,10 @@ export const VISIT_TIME_OPTIONS = [
   { value: 'AFTERNOON', label: '오후 1~6시' },
   { value: 'ANYTIME', label: '상관없음' },
 ] as const satisfies readonly { value: VisitTimeSlot; label: string }[];
+
+export const VISIT_TIME_LABEL = Object.fromEntries(
+  VISIT_TIME_OPTIONS.map((o) => [o.value, o.label]),
+) as Record<VisitTimeSlot, string>;
 
 export const VULNERABILITY_TYPE_LABEL: Record<VulnerabilityType, string> = {
   WINDOW_OPENING: '창문·개구부',
@@ -150,8 +160,21 @@ export const APPLICATION_STAGE: Record<
   COMPLETED: { label: '완료', headline: '예방시설 설치가 모두 끝났어요.', tone: 'success' },
 };
 
-/** 지원 진행 단계 표시 (Figma 10 · Feedback & progress) */
-export const SUPPORT_STEPS = ['접수', '검토', '동의', '결과'] as const;
+/** 지원 진행 단계 표시 (Figma 04-5 progress-bar) */
+export const SUPPORT_STEPS = ['접수', '검토', '동의', '일정', '결과'] as const;
+
+export const CONSENT_STATUS_LABEL: Record<ConsentStatus, string> = {
+  NOT_REQUIRED: '불필요',
+  REQUIRED: '제출 필요',
+  SUBMITTED: '확인 중',
+  CONFIRMED: '확인 완료',
+};
+
+export const SUPPORT_DECISION_LABEL: Record<SupportDecision, string> = {
+  PENDING: '지원 검토 중',
+  APPROVED: '지원 승인',
+  REJECTED: '지원 미승인',
+};
 
 export const NOTIFICATION_LABEL: Record<NotificationType, string> = {
   INSPECTION_RECEIVED: '점검 신청 접수',

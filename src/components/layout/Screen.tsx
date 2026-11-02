@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 import { AppHeader, type AppHeaderProps } from './AppHeader';
+import { BottomNav, type BottomNavTab } from './BottomNav';
 
 /**
  * 화면 기본 구조 (Figma: 03 · Layout & spacing)
- *   Header 56  →  Scroll viewport (좌우 20px)  →  Bottom CTA 84 (하단 고정)
+ *   Header 56  →  Scroll viewport (좌우 20px)  →  Bottom CTA 84  →  하단탭 84 (하단 고정)
  * 본문 스크롤과 고정 행동 영역을 분리합니다.
  *
  * @example
@@ -21,16 +22,23 @@ export interface ScreenProps {
   className?: string;
   /** 본문 좌우 여백 제거 (지도·전체폭 이미지 등) */
   bleed?: boolean;
+  /** 하단탭 표시 + 선택된 탭. 생략하면 하단탭 없음 */
+  tab?: BottomNavTab;
 }
 
-export function Screen({ header, bottom, children, className, bleed }: ScreenProps) {
+export function Screen({ header, bottom, children, className, bleed, tab }: ScreenProps) {
   return (
     <>
       {header && <AppHeader {...header} />}
       <main className={cn('flex flex-1 flex-col', !bleed && 'px-gutter', 'pb-6', className)}>
         {children}
       </main>
-      {bottom && <BottomCTA>{bottom}</BottomCTA>}
+      {(bottom || tab) && (
+        <div className="sticky bottom-0 z-10">
+          {bottom && <BottomCTA>{bottom}</BottomCTA>}
+          {tab && <BottomNav active={tab} />}
+        </div>
+      )}
     </>
   );
 }
@@ -47,4 +55,9 @@ export function BottomCTA({ children, className }: { children: ReactNode; classN
       {children}
     </div>
   );
+}
+
+/** 로딩·에러·빈 상태 안내 문구 (본문 가운데) */
+export function StateMessage({ children }: { children: ReactNode }) {
+  return <p className="text-body text-muted pt-10 text-center">{children}</p>;
 }

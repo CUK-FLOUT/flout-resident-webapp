@@ -41,8 +41,10 @@ export const PATHS = {
   // 지원 (SUPPORT)
   support: '/applications/:applicationId/support',
   supportRequirements: '/applications/:applicationId/support/requirements',
+  supportApply: '/applications/:applicationId/support/apply',
   supportComplete: '/applications/:applicationId/support/complete',
   supportStatus: '/applications/:applicationId/support/status',
+  supportConsent: '/applications/:applicationId/support/consent',
 
   // 시공 (CONSTRUCTION)
   construction: '/applications/:applicationId/construction',

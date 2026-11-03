@@ -3,6 +3,8 @@ import { ApiError, http } from '@/lib/http';
 import type { PreventionGuide, UnresolvedReason } from '@/types/domain';
 import { mockAddresses, mockAddressSearchExtra, mockGuide } from '@/api/mocks';
 import { queryKeys, withMock } from '@/api/queryClient';
+import { env } from '@/lib/env';
+import { mockDelay } from '@/api/mocks';
 
 /* ── RISK-01 주소 검색 (Swagger AddressSearchResult) ─────────────── */
 export interface AddressSearchItem {
@@ -114,26 +116,28 @@ export function useAddressCoordinates() {
 
 /* ── RISK-07 예방 가이드 (취약도 낮음 플로우) ─────────────────────── */
 
-export const getGuide = (assessmentId: string) =>
-  withMock(
-    () => mockGuide,
-    () => http.get<PreventionGuide>(`/risk-assessments/${assessmentId}/guide`),
-  );
+// TODO(백엔드): 확정된 가이드 생성·조회 API와 응답을 연결합니다.
+export async function getGuide(assessmentId: string): Promise<PreventionGuide> {
+  if (!env.useMock) throw new Error('맞춤 예방 가이드 서비스는 준비 중이에요.');
+  await mockDelay();
+  return { ...mockGuide, assessmentId, items: mockGuide.items.map((item) => ({ ...item })) };
+}
 
 export function useGuide(assessmentId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.guide(assessmentId ?? ''),
     queryFn: () => getGuide(assessmentId!),
     enabled: Boolean(assessmentId),
+    retry: false,
   });
 }
 
-export const reportGuideOutcome = (input: {
+export const reportGuideOutcome = async (input: {
   guideId: string;
   resolved: boolean;
   reasons?: UnresolvedReason[];
-}) =>
-  withMock<void>(
-    () => undefined,
-    () => http.post<void>(`/guides/${input.guideId}/outcome`, input),
-  );
+}): Promise<void> => {
+  void input;
+  // TODO(백엔드): 해결 여부 저장 API가 확정되면 연결합니다.
+  if (!env.useMock) throw new Error('가이드 결과 저장 서비스는 준비 중이에요.');
+};

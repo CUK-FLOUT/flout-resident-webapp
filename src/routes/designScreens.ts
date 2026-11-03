@@ -11,7 +11,16 @@ export interface DesignScreen {
   relatedRoute?: PathKey;
   status?: 'done' | 'wip' | 'todo';
   sampleApplicationId?: string;
-  preview?: 'risk-loading' | 'risk-high' | 'risk-caution' | 'risk-low' | 'risk-upper';
+  preview?:
+    | 'risk-loading'
+    | 'risk-high'
+    | 'risk-caution'
+    | 'risk-low'
+    | 'risk-upper'
+    | 'guide-loading'
+    | 'guide-list'
+    | 'guide-sheet'
+    | 'guide-resolved';
 }
 
 export const DESIGN_SCREENS: DesignScreen[] = [
@@ -90,21 +99,25 @@ export const DESIGN_SCREENS: DesignScreen[] = [
     nodeId: '1115:4498',
     name: '02-4 맞춤 가이드 생성 중',
     route: 'guideLoading',
+    preview: 'guide-loading',
   },
   {
     nodeId: '1115:4538',
     name: '02-5 맞춤 예방 가이드·체크리스트',
     route: 'guide',
+    preview: 'guide-list',
   },
   {
     nodeId: '1115:4592',
     name: '02-6 해결 여부 확인 바텀시트',
-    relatedRoute: 'guide',
+    route: 'guide',
+    preview: 'guide-sheet',
   },
   {
     nodeId: '1115:4716',
     name: '02-7 예방가이드 해결 완료',
     route: 'guideResolved',
+    preview: 'guide-resolved',
   },
   {
     nodeId: '1115:4333',

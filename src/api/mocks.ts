@@ -84,10 +84,26 @@ export const mockGuide: PreventionGuide = {
     },
     {
       id: 'gi-2',
+      title: '출입문 하단 틈 막기',
+      description:
+        '물막이판이나 모래주머니를 준비하고 출입문 아래 틈을 확인해 주세요. 설치 방법은 제품 안내를 따라요.',
+      estimatedMinutes: 10,
+      done: false,
+    },
+    {
+      id: 'gi-3',
       title: '전기·가전 높은 곳으로 옮기기',
       description:
         '멀티탭과 가전은 바닥보다 높은 곳으로 옮겨 주세요. 젖은 전기기기는 만지지 말고 안전을 먼저 확인해요.',
       estimatedMinutes: 10,
+      done: false,
+    },
+    {
+      id: 'gi-4',
+      title: '비상 연락처·대피 경로 확인',
+      description:
+        '가족과 관할 부서 연락처를 저장하고, 비가 많이 오면 이동할 수 있는 안전한 경로를 함께 확인해 주세요.',
+      estimatedMinutes: 5,
       done: false,
     },
   ],

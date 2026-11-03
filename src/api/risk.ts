@@ -1,12 +1,7 @@
-import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+﻿import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { ApiError, http } from '@/lib/http';
-import type {
-  AddressCandidate,
-  PreventionGuide,
-  RiskAssessment,
-  UnresolvedReason,
-} from '@/types/domain';
-import { mockAddresses, mockAddressSearchExtra, mockAssessmentHigh, mockAssessmentLow, mockGuide } from '@/api/mocks';
+import type { PreventionGuide, UnresolvedReason } from '@/types/domain';
+import { mockAddresses, mockAddressSearchExtra, mockGuide } from '@/api/mocks';
 import { queryKeys, withMock } from '@/api/queryClient';
 
 /* ── RISK-01 주소 검색 (Swagger AddressSearchResult) ─────────────── */
@@ -115,36 +110,6 @@ export async function getAddressCoordinates(address: string): Promise<AddressCoo
 
 export function useAddressCoordinates() {
   return useMutation({ mutationFn: getAddressCoordinates });
-}
-
-/* ── RISK-02~06 취약도 분석 요청 · 결과 조회 ─────────────────────── */
-
-// TODO(백엔드): 엔드포인트 확정 후 경로 수정
-export const createAssessment = (address: AddressCandidate) =>
-  withMock(
-    () => (address.roadAddress.includes('소사') ? mockAssessmentLow : mockAssessmentHigh),
-    () =>
-      http.post<RiskAssessment>('/risk-assessments', {
-        buildingManagementNo: address.buildingManagementNo,
-      }),
-  );
-
-export function useCreateAssessment() {
-  return useMutation({ mutationFn: createAssessment });
-}
-
-export const getAssessment = (id: string) =>
-  withMock(
-    () => (id === mockAssessmentLow.id ? mockAssessmentLow : mockAssessmentHigh),
-    () => http.get<RiskAssessment>(`/risk-assessments/${id}`),
-  );
-
-export function useAssessment(id: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.assessment(id ?? ''),
-    queryFn: () => getAssessment(id!),
-    enabled: Boolean(id),
-  });
 }
 
 /* ── RISK-07 예방 가이드 (취약도 낮음 플로우) ─────────────────────── */

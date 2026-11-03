@@ -14,6 +14,7 @@ export const PATHS = {
   home: '/',
   addressSearch: '/address/search',
   addressDetail: '/address/detail',
+  riskLoading: '/risk/loading',
   riskResult: '/risk/:assessmentId',
   guideLoading: '/risk/:assessmentId/guide/loading',
   guide: '/risk/:assessmentId/guide',
@@ -58,6 +59,8 @@ export const PATHS = {
 
   // 개발용 화면 목록 (dev 빌드에서만 노출)
   devScreens: '/__screens',
+  devScreensAlias: '/_screens',
+  devScreenPreview: '/__screens/preview/:screen',
 } as const;
 
 export type PathKey = keyof typeof PATHS;

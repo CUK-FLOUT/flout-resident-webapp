@@ -9,6 +9,9 @@ export interface DesignScreen {
   name: string;
   route?: PathKey;
   relatedRoute?: PathKey;
+  status?: 'done' | 'wip' | 'todo';
+  sampleApplicationId?: string;
+  preview?: 'risk-loading' | 'risk-high' | 'risk-caution' | 'risk-low' | 'risk-upper';
 }
 
 export const DESIGN_SCREENS: DesignScreen[] = [
@@ -46,6 +49,7 @@ export const DESIGN_SCREENS: DesignScreen[] = [
     nodeId: '2108:1558',
     name: '01-2 부천시 외 주소 안내',
     relatedRoute: 'addressSearch',
+    status: 'done',
   },
   {
     nodeId: '1787:1529',
@@ -53,33 +57,34 @@ export const DESIGN_SCREENS: DesignScreen[] = [
     route: 'addressDetail',
   },
   {
-    nodeId: '2178:3549',
-    name: '01-4 부천시가 아닐때',
-    relatedRoute: 'addressSearch',
-  },
-  {
     nodeId: '1584:1531',
     name: '02-0 취약도 분석 중',
+    route: 'riskLoading',
+    preview: 'risk-loading',
   },
   {
     nodeId: '1115:2530',
     name: '02-1 취약도 결과 · 높음',
     route: 'riskResult',
+    preview: 'risk-high',
   },
   {
     nodeId: '1584:1865',
     name: '02-1 취약도 결과 · 주의',
-    relatedRoute: 'riskResult',
+    route: 'riskResult',
+    preview: 'risk-caution',
   },
   {
     nodeId: '1115:4451',
     name: '02-2 취약도 결과 · 낮음',
-    relatedRoute: 'riskResult',
+    route: 'riskResult',
+    preview: 'risk-low',
   },
   {
     nodeId: '1787:1610',
     name: '02-3 취약도결과 · 2층 이상',
-    relatedRoute: 'riskResult',
+    route: 'riskResult',
+    preview: 'risk-upper',
   },
   {
     nodeId: '1115:4498',
@@ -203,31 +208,43 @@ export const DESIGN_SCREENS: DesignScreen[] = [
     nodeId: '1859:1512',
     name: '04-7 지원하기_지원동의_주택소유',
     relatedRoute: 'supportConsent',
+    status: 'done',
+    sampleApplicationId: '000006',
   },
   {
     nodeId: '1115:3652',
     name: '04-8 임대인 동의 자료 · 제출 완료',
     relatedRoute: 'supportConsent',
+    status: 'done',
+    sampleApplicationId: '000003',
   },
   {
     nodeId: '2199:2701',
     name: '04-8 주택 소유 증명 자료 · 제출 완료',
     relatedRoute: 'supportConsent',
+    status: 'done',
+    sampleApplicationId: '000006',
   },
   {
     nodeId: '2020:1642',
     name: '04-8 지원하기_일정 조율 중',
     relatedRoute: 'supportStatus',
+    status: 'done',
+    sampleApplicationId: '000005',
   },
   {
     nodeId: '1115:3669',
     name: '04-9 지원하기_승인',
     relatedRoute: 'supportStatus',
+    status: 'done',
+    sampleApplicationId: '000003',
   },
   {
     nodeId: '1115:3722',
     name: '04-10 지원 결과 · 미승인',
     relatedRoute: 'supportStatus',
+    status: 'done',
+    sampleApplicationId: '000004',
   },
   {
     nodeId: '1115:3773',

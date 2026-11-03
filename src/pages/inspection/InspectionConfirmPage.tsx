@@ -147,6 +147,12 @@ export default function InspectionConfirmPage() {
         receipt.applicationStatus !== 'INSPECTION_COMPLETED'
       )
         throw new Error('아직 접수가 확인되지 않았어요. 다시 시도해 주세요.');
+      const completedDraft = useInspectionDraft.getState();
+      if (
+        completedDraft.assessmentId === result.id &&
+        completedDraft.savedApplicationId === applicationId
+      )
+        completedDraft.reset();
       if (active.current && useAddressDraft.getState().result?.id === result.id)
         navigate(generatePath(PATHS.inspectionComplete, { applicationId: String(applicationId) }), {
           replace: true,

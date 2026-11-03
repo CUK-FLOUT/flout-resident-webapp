@@ -15,7 +15,9 @@ type MockRecord = {
 };
 const key = 'flout.mockInspectionDrafts';
 let memory: Record<string, MockRecord> = {};
+let memoryOnly = false;
 function read(): Record<string, MockRecord> {
+  if (memoryOnly) return memory;
   try {
     const stored = sessionStorage.getItem(key);
     return stored ? (JSON.parse(stored) as Record<string, MockRecord>) : memory;
@@ -25,10 +27,11 @@ function read(): Record<string, MockRecord> {
 }
 function write(records: Record<string, MockRecord>) {
   memory = records;
+  if (memoryOnly) return;
   try {
     sessionStorage.setItem(key, JSON.stringify(records));
   } catch {
-    /* 메모리 사용 */
+    memoryOnly = true;
   }
 }
 

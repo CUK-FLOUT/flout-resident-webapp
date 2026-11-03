@@ -30,6 +30,7 @@ const routes: RouteObject[] = [
       { path: PATHS.home, element: <HomePage /> },
       { path: PATHS.addressSearch, lazy: page(() => import('@/pages/home/AddressSearchPage')) },
       { path: PATHS.addressDetail, lazy: page(() => import('@/pages/home/AddressDetailPage')) },
+      { path: PATHS.riskLoading, lazy: page(() => import('@/pages/risk/RiskLoadingPage')) },
       { path: PATHS.riskResult, lazy: page(() => import('@/pages/risk/RiskResultPage')) },
       { path: PATHS.guideLoading, lazy: page(() => import('@/pages/guide/GuideLoadingPage')) },
       { path: PATHS.guide, lazy: page(() => import('@/pages/guide/GuidePage')) },
@@ -131,7 +132,14 @@ const routes: RouteObject[] = [
 
       // 개발용 화면 목록
       ...(env.isDev
-        ? [{ path: PATHS.devScreens, lazy: page(() => import('@/pages/dev/DevScreensPage')) }]
+        ? [
+            { path: PATHS.devScreens, lazy: page(() => import('@/pages/dev/DevScreensPage')) },
+            { path: PATHS.devScreensAlias, lazy: page(() => import('@/pages/dev/DevScreensPage')) },
+            {
+              path: PATHS.devScreenPreview,
+              lazy: page(() => import('@/pages/dev/DevScreenPreviewPage')),
+            },
+          ]
         : []),
 
       { path: '*', element: <NotFoundPage /> },

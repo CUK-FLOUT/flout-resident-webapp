@@ -1,4 +1,4 @@
-import type { PathKey } from '@/constants/paths';
+﻿import type { PathKey } from '@/constants/paths';
 
 /**
  * 화면 매니페스트 — Figma 주민용 최종디자인(1115:2380) 프레임 ↔ 라우트 ↔ 기능명세 ID.
@@ -89,6 +89,15 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaName: '01-3 주소 확인 · 상세 주소 입력',
     figmaNodes: ['1787:1529'],
     specs: ['RISK-01'],
+    next: ['riskLoading'],
+    status: 'done',
+    group: '홈·취약도',
+  },
+  riskLoading: {
+    figmaName: '02-0 취약도 분석 중',
+    figmaNodes: ['1584:1531'],
+    specs: ['RISK-02', 'RISK-03'],
+    next: ['riskResult'],
     status: 'done',
     group: '홈·취약도',
   },
@@ -96,7 +105,6 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaName: '02-1 취약도 결과 · 높음',
     figmaNodes: ['1115:2530', '1584:1865', '1115:4451', '1787:1610'],
     specs: ['RISK-02', 'RISK-03', 'RISK-04', 'RISK-05', 'RISK-06', 'RISK-08', 'RISK-09'],
-    next: ['inspectionApply', 'guideLoading'],
     status: 'done',
     group: '홈·취약도',
   },

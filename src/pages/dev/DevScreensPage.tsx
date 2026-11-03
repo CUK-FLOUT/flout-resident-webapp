@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { generatePath, Link } from 'react-router';
 import { Screen } from '@/components/layout';
 import { StatusText } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
@@ -36,7 +36,15 @@ export default function DevScreensPage() {
               prefix === '00' ? !/^0[1-7]/.test(screen.name) : screen.name.startsWith(prefix),
             ).map((screen) => {
               const route = screen.route ?? screen.relatedRoute;
-              const status = screen.route ? SCREENS[screen.route]?.status : undefined;
+              const status =
+                screen.status ?? (screen.route ? SCREENS[screen.route]?.status : undefined);
+              const target = screen.preview
+                ? generatePath(PATHS.devScreenPreview, { screen: screen.preview })
+                : route
+                  ? screen.sampleApplicationId
+                    ? PATHS[route].replace(':applicationId', screen.sampleApplicationId)
+                    : samplePath(PATHS[route])
+                  : undefined;
               return (
                 <li key={screen.nodeId} className="flex flex-col gap-2 py-3">
                   <div className="flex items-start justify-between gap-3">
@@ -49,12 +57,9 @@ export default function DevScreensPage() {
                       {status === 'done' ? '구현됨' : status === 'wip' ? '작업 중' : '구현 예정'}
                     </StatusText>
                   </div>
-                  {route ? (
-                    <Link
-                      to={samplePath(PATHS[route])}
-                      className="text-caption text-primary break-all underline"
-                    >
-                      {screen.route ? '화면 열기' : '관련 경로'} · {samplePath(PATHS[route])}
+                  {target ? (
+                    <Link to={target} className="text-caption text-primary break-all underline">
+                      화면 열기 · {target}
                     </Link>
                   ) : (
                     <span className="text-caption text-muted">경로 미연결</span>

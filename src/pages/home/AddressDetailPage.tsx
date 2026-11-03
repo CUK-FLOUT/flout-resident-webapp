@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Search } from 'lucide-react';
+﻿import { Search } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
 import { Button, TextField } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { getPrimaryAddress } from '@/lib/address';
+import { env } from '@/lib/env';
 import { useAddressDraft, type ResidenceFloor } from '@/stores/addressDraft';
 
 const floors: { value: ResidenceFloor; label: string }[] = [
@@ -16,11 +16,15 @@ const floors: { value: ResidenceFloor; label: string }[] = [
 export default function AddressDetailPage() {
   const navigate = useNavigate();
   const { address, coordinates, detail, floor, setDetail, setFloor } = useAddressDraft();
-  const [notice, setNotice] = useState(false);
+  const mockLevel = useAddressDraft((state) => state.mockLevel);
+  const setMockLevel = useAddressDraft((state) => state.setMockLevel);
   if (!address || !coordinates) return <Navigate to={PATHS.addressSearch} replace />;
   const canContinue = detail.trim().length > 0 && floor !== null;
   const returnToSearch = () =>
-    navigate(PATHS.addressSearch, { state: { restoreAddressSearch: true }, preventScrollReset: true });
+    navigate(PATHS.addressSearch, {
+      state: { restoreAddressSearch: true },
+      preventScrollReset: true,
+    });
 
   return (
     <Screen
@@ -28,7 +32,7 @@ export default function AddressDetailPage() {
       tab="home"
       className="pt-4"
       bottom={
-        <Button disabled={!canContinue} onClick={() => setNotice(true)}>
+        <Button disabled={!canContinue} onClick={() => navigate(PATHS.riskLoading)}>
           이 주소로 분석하기
         </Button>
       }
@@ -57,7 +61,6 @@ export default function AddressDetailPage() {
         value={detail}
         onChange={(e) => {
           setDetail(e.target.value);
-          setNotice(false);
         }}
         required
         containerClassName="mt-3"
@@ -78,7 +81,6 @@ export default function AddressDetailPage() {
                 checked={floor === option.value}
                 onChange={() => {
                   setFloor(option.value);
-                  setNotice(false);
                 }}
               />
               {option.label}
@@ -89,10 +91,19 @@ export default function AddressDetailPage() {
       <p className="text-caption text-ink mt-3">
         거주 층을 선택한 뒤 아래 버튼을 눌러 분석해 주세요.
       </p>
-      {notice && (
-        <p role="status" className="text-body text-muted mt-4">
-          입력한 주소가 준비됐어요. 침수 취약도 분석 서비스는 준비 중이에요.
-        </p>
+      {env.useMock && floor !== 'SECOND_OR_ABOVE' && (
+        <label className="text-caption text-muted mt-4 block">
+          개발용 목업 결과 선택
+          <select
+            className="border-border bg-surface text-ink mt-2 block h-11 w-full rounded-md border px-3"
+            value={mockLevel}
+            onChange={(e) => setMockLevel(e.target.value as typeof mockLevel)}
+          >
+            <option value="HIGH">높음</option>
+            <option value="CAUTION">주의</option>
+            <option value="LOW">낮음</option>
+          </select>
+        </label>
       )}
     </Screen>
   );

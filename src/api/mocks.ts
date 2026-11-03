@@ -267,3 +267,43 @@ export const mockNotifications: AppNotification[] = [
     read: true,
   },
 ];
+
+export const mockRiskContent = {
+  HIGH: {
+    label: '높음',
+    color: 'text-danger',
+    need: '점검 권장',
+    title: '취약도가 높아요',
+    message: '바로 현장점검을 신청해보세요!',
+    factors: [
+      '저지대 · 주변보다 낮은 지형',
+      '배수 · 우수관로 용량 부족',
+      '과거 침수 · 인근 신청 다수',
+    ],
+  },
+  CAUTION: {
+    label: '주의',
+    color: 'text-warning',
+    need: '점검 권장',
+    title: '침수에 주의가 필요해요',
+    message: '예방조치를 확인하고, 현장점검으로 우리 집 상태를 확인해 보세요.',
+    factors: [
+      '지형 · 일부 낮은 구간 확인',
+      '배수 · 주변 배수 상태 확인 필요',
+      '과거 침수 · 주변 이력 확인 필요',
+    ],
+  },
+  LOW: {
+    label: '낮음',
+    color: 'text-success',
+    need: '예방 가이드 먼저',
+    title: '취약도가 낮아도 예방은 필요해요',
+    message:
+      '침수 위험이 전혀 없다는 뜻은 아니에요. 먼저 예방 가이드를 따라 해보고, 해결되지 않으면 현장점검을 신청할 수 있어요.',
+    factors: [
+      '지형 · 주변과 비슷한 높이',
+      '배수 · 우수관로 용량 충분',
+      '과거 침수 · 인근 신청 없음',
+    ],
+  },
+} as const;

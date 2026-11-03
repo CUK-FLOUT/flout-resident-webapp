@@ -6,10 +6,11 @@ import { cn } from '@/lib/cn';
  * - primary   : 채움 버튼 (CTA) · 350 × 52 · radius 6
  * - secondary : 외곽선 버튼 (보조 CTA, 소셜 로그인)
  * - soft      : 홈 하단 행동 버튼 (soft 배경 + primary 외곽선)
+ * - muted     : 클릭 가능한 회색 버튼
  * - text      : 텍스트 버튼 ("닫고 더 해볼게요")
  * 비활성/로딩 상태는 border 색 배경 + muted 텍스트, 로딩 문구는 구체적으로 ("가이드 만드는 중…").
  */
-type Variant = 'primary' | 'secondary' | 'soft' | 'text';
+type Variant = 'primary' | 'secondary' | 'soft' | 'text' | 'muted';
 type Size = 'lg' | 'md';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -28,6 +29,7 @@ const variantClass: Record<Variant, string> = {
   secondary: 'border border-border bg-surface text-ink active:bg-page',
   soft: 'border border-primary bg-soft text-primary active:brightness-95',
   text: 'bg-transparent text-primary underline-offset-4 active:underline',
+  muted: 'bg-border text-muted',
 };
 
 const sizeClass: Record<Size, string> = {

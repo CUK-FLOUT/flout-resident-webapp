@@ -121,6 +121,51 @@ export interface InspectionRequestInput {
   preferredTimeSlot: VisitTimeSlot;
 }
 
+/** Swagger 현장점검 신청 API 모델. 기존 화면용 가안 타입과 분리합니다. */
+export interface InspectionApplicationRequest {
+  assessmentId: number;
+  guideId?: number;
+  address: string;
+  detailAddress: string;
+  latitude: number;
+  longitude: number;
+  contact: string;
+  applicantName: string;
+  occupancyType: 'OWNER' | 'TENANT' | 'ETC';
+  floodExperience: YesNoUnknown;
+  existingFacility: boolean;
+  requestReason?: string;
+  preferredVisitDate: string;
+  preferredTimeSlot: 'MORNING' | 'AFTERNOON' | 'ANY';
+  inflowLocations: ('WINDOW' | 'ENTRANCE' | 'BATHROOM' | 'DRAIN' | 'ETC' | 'UNKNOWN')[];
+}
+
+export interface InspectionDraftResponse {
+  applicationId: number;
+  inspectionId: number | null;
+  receiptNo: string;
+  status: 'DRAFT' | 'RECEIVED' | 'INSPECTION_COMPLETED';
+  submittedAt: string | null;
+}
+
+export interface InspectionReceipt {
+  applicationId: number;
+  receiptNumber: string;
+  applicant: { name: string; phone: string };
+  address: string;
+  detailAddress: string;
+  applicationStatus: 'DRAFT' | 'RECEIVED' | 'INSPECTION_COMPLETED';
+  inspectionStatus: string | null;
+  createdAt: string;
+  submittedAt?: string | null;
+  attachmentCount: number;
+}
+
+export interface InspectionUploadResponse {
+  inspectionId: number;
+  attachments: { attachmentId: number; filename: string; contentType: string; size: number }[];
+}
+
 /* ───────────────────────── 3. 진행상태 (STATUS-01 ~ 06) ───────────────────────── */
 
 /**

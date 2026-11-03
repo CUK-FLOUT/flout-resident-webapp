@@ -151,7 +151,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1115:4333'],
     specs: ['INSPECTION-01', 'INSPECTION-02', 'INSPECTION-03', 'INSPECTION-04', 'INSPECTION-10'],
     next: ['inspectionSchedule'],
-    status: 'todo',
+    status: 'done',
     group: '현장점검 신청',
   },
   inspectionSchedule: {
@@ -159,7 +159,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1115:2571'],
     specs: ['INSPECTION-05'],
     next: ['inspectionConfirm'],
-    status: 'todo',
+    status: 'done',
     group: '현장점검 신청',
   },
   inspectionConfirm: {
@@ -167,15 +167,15 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1115:2623'],
     specs: ['INSPECTION-06', 'INSPECTION-07'],
     next: ['inspectionComplete'],
-    status: 'todo',
+    status: 'done',
     group: '현장점검 신청',
   },
   inspectionComplete: {
     figmaName: '03-4 현장점검하기_접수 완료',
     figmaNodes: ['1115:2706'],
     specs: ['INSPECTION-08', 'NOTI-01'],
-    next: ['inspectionNextSteps', 'applicationHub'],
-    status: 'todo',
+    next: ['home', 'inspectionNextSteps'],
+    status: 'done',
     group: '현장점검 신청',
   },
   inspectionNextSteps: {

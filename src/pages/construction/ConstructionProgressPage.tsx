@@ -1,9 +1,50 @@
-import { ScreenPlaceholder } from '@/components/dev/ScreenPlaceholder';
+import illustration from '@/assets/construction-progress.svg';
+import { ConstructionScreen, InfoField } from './ConstructionScreen';
 
-/**
- * Figma: 14 시공진행 (1115:3951)
- * 기능명세: CONSTRUCTION-05
- */
 export default function ConstructionProgressPage() {
-  return <ScreenPlaceholder screen="constructionProgress" />;
+  return (
+    <ConstructionScreen>
+      {({ construction: { facility }, application: { id, request } }) => (
+        <>
+          <section className="flex flex-col gap-2">
+            <p className="text-caption flex items-center gap-2">
+              <span aria-hidden className="bg-success size-2 rounded-full" />
+              시공 진행
+            </p>
+            <h2 className="text-title">
+              {facility}을
+              <br />
+              설치하고 있어요.
+            </h2>
+            <p className="text-body">작업이 끝나면 설치 결과와 현장 사진을 확인할 수 있어요.</p>
+          </section>
+
+          <section className="bg-page relative h-[156px] overflow-hidden rounded-md p-4">
+            <p className="text-caption flex flex-col gap-1">
+              <span>현재 작업</span>
+              <span>{facility} 설치</span>
+            </p>
+            <img
+              src={illustration}
+              alt=""
+              width={180}
+              height={135}
+              className="absolute top-2.5 right-2.5"
+            />
+          </section>
+
+          <section className="flex flex-col gap-1.5">
+            <p className="text-caption">시공 진행 중</p>
+            <p className="text-section">{facility} 설치를 진행하고 있어요.</p>
+          </section>
+
+          <div aria-hidden className="bg-page h-px" />
+
+          <InfoField label="접수번호 / 주소">
+            {id} · {request.applicantName} / {request.address}
+          </InfoField>
+        </>
+      )}
+    </ConstructionScreen>
+  );
 }

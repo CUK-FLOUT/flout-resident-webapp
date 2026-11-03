@@ -315,7 +315,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1115:3773', '1115:3827'],
     specs: ['CONSTRUCTION-04', 'NOTI-07'],
     next: ['constructionProgress'],
-    status: 'todo',
+    status: 'done',
     group: '시공',
   },
   constructionProgress: {
@@ -323,7 +323,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1115:3951'],
     specs: ['CONSTRUCTION-05'],
     next: ['constructionComplete'],
-    status: 'todo',
+    status: 'done',
     group: '시공',
   },
   constructionComplete: {
@@ -331,7 +331,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1115:4034'],
     specs: ['CONSTRUCTION-06', 'CONSTRUCTION-07', 'NOTI-08'],
     next: ['home'],
-    status: 'todo',
+    status: 'done',
     group: '시공',
   },
 

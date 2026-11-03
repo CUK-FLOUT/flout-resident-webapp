@@ -7,10 +7,7 @@ import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import type { SupportRequirement } from '@/types/domain';
 
-/**
- * Figma: 04-2 지원하기_신청전확인 (1115:3253)
- * 기능명세: SUPPORT-02 신청 조건 · SUPPORT-03 준비 서류
- */
+
 export default function SupportRequirementsPage() {
   const { applicationId } = useParams<'applicationId'>();
   const navigate = useNavigate();

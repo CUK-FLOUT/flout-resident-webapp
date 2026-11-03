@@ -13,7 +13,7 @@ import type {
 import {
   mockApplicationDetailFor,
   mockApplications,
-  mockConstruction,
+  mockConstructionFor,
   mockResult,
   mockSupportPrograms,
   mockSupportProgress,
@@ -159,7 +159,7 @@ export function useConstruction(applicationId: string | undefined) {
     queryKey: queryKeys.construction(applicationId ?? ''),
     queryFn: () =>
       withMock(
-        () => mockConstruction,
+        () => mockConstructionFor(applicationId!),
         () => http.get<Construction>(`/applications/${applicationId}/construction`),
       ),
     enabled: Boolean(applicationId),

@@ -55,7 +55,7 @@ export function useApplications() {
     queryKey: queryKeys.applications(),
     queryFn: () =>
       withMock(
-        () => mockApplications,
+        () => (new URLSearchParams(location.search).has('empty') ? [] : mockApplications),
         () => http.get<ApplicationSummary[]>('/applications'),
       ),
   });

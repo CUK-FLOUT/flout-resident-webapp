@@ -13,7 +13,7 @@ export type BottomNavTab = 'home' | 'applications' | 'notifications';
 
 const tabs = [
   { key: 'home', label: '홈', to: PATHS.home, Icon: House },
-  { key: 'applications', label: '내 신청', to: PATHS.applications, Icon: ClipboardCheck },
+  { key: 'applications', label: '내 신청', to: PATHS.applicationsAll, Icon: ClipboardCheck },
   { key: 'notifications', label: '알림', to: PATHS.notifications, Icon: Bell },
 ] as const;
 

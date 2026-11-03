@@ -198,10 +198,17 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
   },
   applicationsAll: {
     figmaName: '06-1 내 신청',
-    figmaNodes: ['1115:2862'],
+    figmaNodes: ['1115:2862', '1373:431'],
     specs: ['STATUS-01'],
-    next: ['applicationHub'],
-    status: 'todo',
+    next: ['applicationDetail'],
+    status: 'done',
+    group: '내 신청',
+  },
+  applicationDetail: {
+    figmaName: '06-2 내 신청 · 공통 상세보기',
+    figmaNodes: ['2232:2653'],
+    specs: ['STATUS-02'],
+    status: 'done',
     group: '내 신청',
   },
   applicationHub: {

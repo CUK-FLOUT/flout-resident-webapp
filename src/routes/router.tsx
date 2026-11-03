@@ -72,6 +72,10 @@ const routes: RouteObject[] = [
         lazy: page(() => import('@/pages/applications/ApplicationsAllPage')),
       },
       {
+        path: PATHS.applicationDetail,
+        lazy: page(() => import('@/pages/applications/ApplicationDetailPage')),
+      },
+      {
         path: PATHS.applicationHub,
         lazy: page(() => import('@/pages/applications/ApplicationHubPage')),
       },

@@ -69,12 +69,12 @@ export default function HomePage() {
         <Service
           icon={<FileText size={24} />}
           label="지원하기"
-          onClick={() => navigate(PATHS.applications)}
+          onClick={() => navigate(PATHS.applicationsAll)}
         />
         <Service
           icon={<HardHat size={24} />}
           label="시공하기"
-          onClick={() => navigate(PATHS.applications)}
+          onClick={() => navigate(PATHS.applicationsAll)}
         />
       </section>
       <section className="mt-[18px]">

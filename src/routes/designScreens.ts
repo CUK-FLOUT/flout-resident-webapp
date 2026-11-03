@@ -10,7 +10,6 @@ export interface DesignScreen {
   route?: PathKey;
   relatedRoute?: PathKey;
   status?: 'done' | 'wip' | 'todo';
-  note?: string;
   sampleApplicationId?: string;
   preview?: 'risk-loading' | 'risk-high' | 'risk-caution' | 'risk-low' | 'risk-upper';
 }
@@ -51,13 +50,11 @@ export const DESIGN_SCREENS: DesignScreen[] = [
     name: '01-2 부천시 외 주소 안내',
     relatedRoute: 'addressSearch',
     status: 'done',
-    note: '주소 검색에서 부천시 외 주소를 검색하면 표시되는 안내입니다.',
   },
   {
     nodeId: '1787:1529',
     name: '01-3 주소 확인 · 상세 주소 입력',
     route: 'addressDetail',
-    note: '주소와 좌표가 없으면 주소 검색 화면으로 이동합니다.',
   },
   {
     nodeId: '1584:1531',

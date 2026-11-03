@@ -1,9 +1,153 @@
-import { ScreenPlaceholder } from '@/components/dev/ScreenPlaceholder';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { Screen } from '@/components/layout';
+import { Button, ChoiceGroup, ProgressBar, Textarea, TextField } from '@/components/ui';
+import { TENURE_OPTIONS, WATER_ENTRY_OPTIONS, YES_NO_UNKNOWN_OPTIONS } from '@/constants/labels';
+import { PATHS } from '@/constants/paths';
+import {
+  formatInspectionPhone,
+  inspectionPhoneError,
+  PHONE_TOO_LONG_MESSAGE,
+  step1Error,
+} from '@/lib/inspection';
+import { useAddressDraft } from '@/stores/addressDraft';
+import { useInspectionDraft } from '@/stores/inspectionDraft';
+import type { WaterEntryPoint } from '@/types/domain';
 
-/**
- * Figma: 03 현장점검 신청 (1/3 주택 상황) (1115:4333)
- * 기능명세: INSPECTION-01, INSPECTION-02, INSPECTION-03, INSPECTION-04, INSPECTION-10
- */
 export default function InspectionApplyPage() {
-  return <ScreenPlaceholder screen="inspectionApply" />;
+  const navigate = useNavigate();
+  const draft = useInspectionDraft();
+  const { result } = useAddressDraft();
+  const [error, setError] = useState('');
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  useEffect(() => {
+    if (result && useInspectionDraft.getState().assessmentId !== result.id) {
+      useInspectionDraft.getState().reset();
+      useInspectionDraft.getState().update({ assessmentId: result.id });
+    }
+  }, [result]);
+  if (!result)
+    return (
+      <Screen
+        header={{ title: '현장점검하기' }}
+        tab="home"
+        bottom={<Button onClick={() => navigate(PATHS.addressSearch)}>주소 검색하기</Button>}
+      >
+        <p className="text-body text-muted pt-10 text-center">
+          먼저 주소를 검색하고 침수 취약도를 확인해 주세요.
+        </p>
+      </Screen>
+    );
+  return (
+    <Screen
+      header={{ title: '현장점검하기' }}
+      tab="home"
+      bottom={
+        <Button
+          variant={step1Error(draft) ? 'muted' : 'primary'}
+          onClick={() => {
+            const message = step1Error(draft);
+            setPhoneTouched(true);
+            setError(
+              message && message === inspectionPhoneError(draft.phone) ? '' : (message ?? ''),
+            );
+            if (!message) navigate(PATHS.inspectionSchedule);
+          }}
+        >
+          다음
+        </Button>
+      }
+    >
+      <div className="flex flex-col gap-5 pt-4">
+        <div>
+          <p className="text-caption">주택 상황</p>
+          <h1 className="text-title mt-2">집 상태를 알려주세요.</h1>
+          <p className="text-body mt-2">현장점검을 위한 정보예요.</p>
+          <ProgressBar className="mt-3" value={1} max={3} label="신청 1 / 3" />
+        </div>
+        <h2 className="text-label text-center">신청자 정보 확인</h2>
+        <div className="grid grid-cols-2 gap-2">
+          <TextField
+            size="md"
+            label="신청자 · 필수"
+            value={draft.applicantName}
+            maxLength={50}
+            onChange={(e) => draft.update({ applicantName: e.target.value })}
+          />
+          <TextField
+            size="md"
+            label="연락처 · 필수"
+            type="tel"
+            inputMode="tel"
+            value={draft.phone}
+            errorText={
+              phoneTouched || inspectionPhoneError(draft.phone) === PHONE_TOO_LONG_MESSAGE
+                ? (inspectionPhoneError(draft.phone) ?? undefined)
+                : undefined
+            }
+            onBlur={() => setPhoneTouched(true)}
+            onChange={(e) => {
+              draft.update({ phone: formatInspectionPhone(e.target.value) });
+              if (error === '연락처를 입력해 주세요.') setError('');
+            }}
+          />
+        </div>
+        <ChoiceGroup
+          className="[&>p]:text-label"
+          label="거주 형태 · 필수"
+          options={TENURE_OPTIONS}
+          value={draft.tenure}
+          onChange={(tenure) => draft.update({ tenure })}
+        />
+        <ChoiceGroup
+          className="[&>p]:text-label"
+          label="과거 침수 경험이 있나요? · 필수"
+          options={YES_NO_UNKNOWN_OPTIONS}
+          value={draft.floodExperience}
+          onChange={(floodExperience) => draft.update({ floodExperience })}
+        />
+        <ChoiceGroup<WaterEntryPoint>
+          className="[&>p]:text-label"
+          label="물이 들어온 곳 · 여러 곳 선택 가능"
+          options={WATER_ENTRY_OPTIONS}
+          columns={2}
+          multiple
+          value={draft.waterEntryPoints}
+          onChange={(waterEntryPoints) => {
+            if (waterEntryPoints.includes('UNKNOWN')) {
+              waterEntryPoints = draft.waterEntryPoints.includes('UNKNOWN')
+                ? waterEntryPoints.filter((point) => point !== 'UNKNOWN')
+                : ['UNKNOWN'];
+            }
+            draft.update({ waterEntryPoints });
+          }}
+        />
+        <ChoiceGroup
+          className="[&>p]:text-label"
+          label="기존 침수방지시설 · 필수"
+          options={
+            [
+              { value: 'YES', label: '있음' },
+              { value: 'NO', label: '없음' },
+            ] as const
+          }
+          columns={2}
+          value={draft.facilityInstalled === null ? null : draft.facilityInstalled ? 'YES' : 'NO'}
+          onChange={(value) => draft.update({ facilityInstalled: value === 'YES' })}
+        />
+        <Textarea
+          label="점검 요청 사유 · 선택"
+          rows={2}
+          maxLength={2000}
+          value={draft.reason}
+          onChange={(e) => draft.update({ reason: e.target.value })}
+        />
+        {error && (
+          <p role="alert" className="text-body text-danger">
+            {error}
+          </p>
+        )}
+      </div>
+    </Screen>
+  );
 }

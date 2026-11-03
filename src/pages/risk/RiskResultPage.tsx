@@ -28,6 +28,7 @@ export default function RiskResultPage() {
       floor={floor}
       level={result.level}
       onBack={() => navigate(PATHS.addressDetail)}
+      onInspection={() => navigate(PATHS.inspectionApply)}
       onGuide={() => navigate(generatePath(PATHS.guideLoading, { assessmentId: result.id }))}
     />
   );
@@ -39,6 +40,7 @@ export function RiskResultView({
   floor,
   level,
   onBack,
+  onInspection,
   onGuide,
 }: {
   address: AddressSearchItem;
@@ -46,6 +48,7 @@ export function RiskResultView({
   floor: ResidenceFloor;
   level: MockRiskLevel;
   onBack: () => void;
+  onInspection?: () => void;
   onGuide?: () => void;
 }) {
   const upper = floor === 'SECOND_OR_ABOVE';
@@ -68,13 +71,17 @@ export function RiskResultView({
             {level === 'LOW' && (
               <Button
                 variant="secondary"
-                disabled
+                disabled={!onInspection}
+                onClick={onInspection}
                 className="disabled:border-border disabled:bg-surface disabled:text-ink disabled:border"
               >
                 가이드 없이 바로 현장점검 신청하기
               </Button>
             )}
-            <Button disabled={level !== 'LOW' || !onGuide} onClick={onGuide}>
+            <Button
+              disabled={level === 'LOW' ? !onGuide : !onInspection}
+              onClick={level === 'LOW' ? onGuide : onInspection}
+            >
               {level === 'LOW' ? '예방 가이드 보기' : '현장점검 신청하기'}
             </Button>
           </>

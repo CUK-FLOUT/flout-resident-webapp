@@ -25,6 +25,7 @@ interface RequestOptions {
   body?: unknown;
   signal?: AbortSignal;
   timeoutMs?: number;
+  headers?: Record<string, string>;
 }
 
 async function request<T>(method: Method, path: string, opts: RequestOptions = {}): Promise<T> {
@@ -33,7 +34,7 @@ async function request<T>(method: Method, path: string, opts: RequestOptions = {
     if (v !== undefined) url.searchParams.set(k, String(v));
   });
 
-  const headers = new Headers({ Accept: 'application/json' });
+  const headers = new Headers({ Accept: 'application/json', ...opts.headers });
   const token = tokenStorage.get();
   if (token) headers.set('Authorization', `Bearer ${token}`);
 

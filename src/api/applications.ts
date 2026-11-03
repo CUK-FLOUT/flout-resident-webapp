@@ -1,10 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { http } from '@/lib/http';
+import { env } from '@/lib/env';
+import {
+  createMockInspection,
+  getMockInspection,
+  updateMockInspection,
+  uploadMockInspection,
+} from '@/api/inspectionMock';
 import type {
   ApplicationDetail,
   ApplicationSummary,
   Construction,
-  InspectionRequestInput,
+  InspectionApplicationRequest,
+  InspectionDraftResponse,
+  InspectionReceipt,
+  InspectionUploadResponse,
   InspectionResult,
   SupportApplicationInput,
   SupportProgram,
@@ -21,32 +31,88 @@ import {
 } from './mocks';
 import { queryKeys, withMock } from './queryClient';
 
+type InspectionInput = Omit<InspectionApplicationRequest, 'assessmentId'> & {
+  assessmentId: number | string;
+};
+interface InspectionEnvelope<T> {
+  isSuccess: boolean;
+  message: string;
+  result: T;
+}
+function unwrapInspection<T>(envelope: InspectionEnvelope<T>): T {
+  if (!envelope?.isSuccess || envelope.result == null)
+    throw new Error(envelope?.message || '신청 정보를 처리하지 못했어요.');
+  return envelope.result;
+}
+export async function createInspectionDraft(
+  input: InspectionInput,
+): Promise<InspectionDraftResponse> {
+  if (env.useMock)
+    return createMockInspection({ ...input, assessmentId: String(input.assessmentId) });
+  if (
+    typeof input.assessmentId !== 'number' ||
+    !Number.isSafeInteger(input.assessmentId) ||
+    input.assessmentId <= 0
+  )
+    throw new Error('실제 취약도 분석 결과가 준비되지 않아 신청할 수 없어요.');
+  return unwrapInspection(
+    await http.post<InspectionEnvelope<InspectionDraftResponse>>('/resident/applications', input),
+  );
+}
+export async function uploadInspectionPhotos(
+  applicationId: number,
+  files: File[],
+  requestKey: string,
+): Promise<InspectionUploadResponse> {
+  if (env.useMock) return uploadMockInspection(applicationId, files, requestKey);
+  const form = new FormData();
+  files.forEach((file) => form.append('files', file));
+  return unwrapInspection(
+    await http.post<InspectionEnvelope<InspectionUploadResponse>>(
+      `/resident/applications/${applicationId}/attachments`,
+      form,
+      { headers: { 'Idempotency-Key': requestKey } },
+    ),
+  );
+}
+export async function getInspectionReceipt(applicationId: number): Promise<InspectionReceipt> {
+  if (env.useMock) return getMockInspection(applicationId);
+  return unwrapInspection(
+    await http.get<InspectionEnvelope<InspectionReceipt>>(
+      `/resident/applications/${applicationId}`,
+    ),
+  );
+}
+
+export function useInspectionSubmission() {
+  const createDraft = useMutation({ mutationFn: createInspectionDraft });
+  const updateMockDraft = useMutation({
+    mutationFn: ({ applicationId, input }: { applicationId: number; input: InspectionInput }) => {
+      if (!env.useMock) throw new Error('임시 신청 수정 API가 아직 준비되지 않았어요.');
+      return updateMockInspection(applicationId, {
+        ...input,
+        assessmentId: String(input.assessmentId),
+      });
+    },
+  });
+  const uploadPhotos = useMutation({
+    mutationFn: ({
+      applicationId,
+      files,
+      requestKey,
+    }: {
+      applicationId: number;
+      files: File[];
+      requestKey: string;
+    }) => uploadInspectionPhotos(applicationId, files, requestKey),
+  });
+  return { createDraft, updateMockDraft, uploadPhotos };
+}
+
 /**
  * 신청(접수번호) 1건을 중심으로 점검 → 결과 → 지원 → 시공이 이어집니다.
  * TODO(백엔드): 엔드포인트 경로는 가안입니다.
  */
-
-/* ── INSPECTION-07 현장점검 신청 제출 ─────────────────────────────── */
-
-export async function createInspectionRequest(input: InspectionRequestInput) {
-  const form = new FormData();
-  const { photos, ...rest } = input;
-  form.append('request', new Blob([JSON.stringify(rest)], { type: 'application/json' }));
-  photos.forEach((p) => form.append('photos', p));
-
-  return withMock(
-    () => ({ ...mockApplications[0], createdAt: new Date().toISOString() }),
-    () => http.post<ApplicationSummary>('/inspection-requests', form),
-  );
-}
-
-export function useCreateInspectionRequest() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: createInspectionRequest,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.applications() }),
-  });
-}
 
 /* ── STATUS-01 ~ 06 신청 내역 · 상세 ──────────────────────────────── */
 

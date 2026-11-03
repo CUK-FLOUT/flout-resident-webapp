@@ -1,8 +1,13 @@
-import { Navigate, useNavigate, useParams } from 'react-router';
+import { useState } from 'react';
+import { generatePath, Navigate, useNavigate, useParams } from 'react-router';
+import { mockGuide } from '@/api/mocks';
 import { Screen } from '@/components/layout';
 import { PATHS } from '@/constants/paths';
 import { RiskLoadingContent } from '@/pages/risk/RiskLoadingPage';
 import { RiskResultView } from '@/pages/risk/RiskResultPage';
+import { GuideLoadingView } from '@/pages/guide/GuideLoadingPage';
+import { GuideView } from '@/pages/guide/GuidePage';
+import { GuideResolvedView } from '@/pages/guide/GuideResolvedPage';
 import type { MockRiskLevel } from '@/api/riskAnalysis';
 import type { ResidenceFloor } from '@/stores/addressDraft';
 
@@ -23,7 +28,39 @@ const address = {
 export default function DevScreenPreviewPage() {
   const { screen } = useParams();
   const navigate = useNavigate();
+  const [checked, setChecked] = useState<string[]>(['gi-1', 'gi-2']);
   const goBack = () => navigate(PATHS.devScreens);
+
+  if (screen === 'guide-loading') return <GuideLoadingView onBack={goBack} />;
+  if (screen === 'guide-list' || screen === 'guide-sheet')
+    return (
+      <GuideView
+        key={screen}
+        items={mockGuide.items}
+        checked={checked}
+        onCheck={(id, value) =>
+          setChecked((current) =>
+            value ? [...new Set([...current, id])] : current.filter((item) => item !== id),
+          )
+        }
+        onBack={goBack}
+        onResolved={() =>
+          navigate(generatePath(PATHS.devScreenPreview, { screen: 'guide-resolved' }))
+        }
+        initialSheetOpen={screen === 'guide-sheet'}
+      />
+    );
+  if (screen === 'guide-resolved')
+    return (
+      <GuideResolvedView
+        address="부천시 ○○구 ○○로 00"
+        risk="낮음"
+        count={4}
+        total={4}
+        onGuide={() => navigate(generatePath(PATHS.devScreenPreview, { screen: 'guide-list' }))}
+        onHome={goBack}
+      />
+    );
 
   if (screen === 'risk-loading') {
     return (

@@ -1,5 +1,5 @@
 ﻿import { AlertTriangle, CloudRain, Droplet, MapPin } from 'lucide-react';
-import { Navigate, useNavigate, useParams } from 'react-router';
+import { generatePath, Navigate, useNavigate, useParams } from 'react-router';
 import { AlertCircle, CheckCircle, House } from 'lucide-react';
 import { mockRiskContent } from '@/api/mocks';
 import { Screen } from '@/components/layout';
@@ -28,6 +28,7 @@ export default function RiskResultPage() {
       floor={floor}
       level={result.level}
       onBack={() => navigate(PATHS.addressDetail)}
+      onGuide={() => navigate(generatePath(PATHS.guideLoading, { assessmentId: result.id }))}
     />
   );
 }
@@ -38,12 +39,14 @@ export function RiskResultView({
   floor,
   level,
   onBack,
+  onGuide,
 }: {
   address: AddressSearchItem;
   detail: string;
   floor: ResidenceFloor;
   level: MockRiskLevel;
   onBack: () => void;
+  onGuide?: () => void;
 }) {
   const upper = floor === 'SECOND_OR_ABOVE';
   const data = mockRiskContent[level];
@@ -71,7 +74,9 @@ export function RiskResultView({
                 가이드 없이 바로 현장점검 신청하기
               </Button>
             )}
-            <Button disabled>{level === 'LOW' ? '예방 가이드 보기' : '현장점검 신청하기'}</Button>
+            <Button disabled={level !== 'LOW' || !onGuide} onClick={onGuide}>
+              {level === 'LOW' ? '예방 가이드 보기' : '현장점검 신청하기'}
+            </Button>
           </>
         )
       }

@@ -105,6 +105,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaName: '02-1 취약도 결과 · 높음',
     figmaNodes: ['1115:2530', '1584:1865', '1115:4451', '1787:1610'],
     specs: ['RISK-02', 'RISK-03', 'RISK-04', 'RISK-05', 'RISK-06', 'RISK-08', 'RISK-09'],
+    next: ['guideLoading'],
     status: 'done',
     group: '홈·취약도',
   },
@@ -115,7 +116,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1115:4498'],
     specs: ['RISK-07'],
     next: ['guide'],
-    status: 'todo',
+    status: 'done',
     group: '예방 가이드',
   },
   guide: {
@@ -123,8 +124,8 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1115:4538'],
     specs: ['RISK-07'],
     sheets: [{ figmaName: '02-6 해결 여부 확인 바텀시트', figmaNode: '1115:4592' }],
-    next: ['guideResolved', 'guideUnresolved'],
-    status: 'todo',
+    next: ['guideResolved'],
+    status: 'done',
     group: '예방 가이드',
   },
   guideUnresolved: {
@@ -140,7 +141,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1115:4716'],
     specs: [],
     next: ['home'],
-    status: 'todo',
+    status: 'done',
     group: '예방 가이드',
   },
 

@@ -307,6 +307,8 @@ export interface Construction {
   contractor?: string;
   completedAt?: ISODateString;
   resultPhotoUrls: string[]; // CONSTRUCTION-06
+  location?: string;
+  resultNote?: string;
 }
 
 /* ───────────────────────── 7. 알림 (NOTI-01 ~ 08) ───────────────────────── */

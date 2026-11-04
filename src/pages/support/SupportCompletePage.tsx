@@ -7,10 +7,6 @@ import { SUPPORT_DECISION_LABEL } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
 import { formatDate } from '@/lib/date';
 
-/**
- * Figma: 04-4 지원하기_접수완료 (1115:3486)
- * 기능명세: SUPPORT-09 접수 확인, NOTI-05
- */
 export default function SupportCompletePage() {
   const { applicationId } = useParams<'applicationId'>();
   const navigate = useNavigate();

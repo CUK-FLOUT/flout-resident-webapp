@@ -245,14 +245,21 @@ export const mockApplicationDetailFor = (id: string): ApplicationDetail => ({
   request: { ...mockApplicationDetail.request, tenure: id === '000006' ? 'OWNER' : 'TENANT' },
 });
 
-export const mockConstruction: Construction = {
-  applicationId: '000002',
+export const mockConstructionFor = (applicationId: string): Construction => ({
+  applicationId,
   status: 'SCHEDULED',
   facility: '출입구 물막이판',
   scheduledAt: '2026-10-21T10:00:00+09:00',
   contractor: 'OO시공',
   resultPhotoUrls: [],
-};
+  location: '출입구',
+  ...(applicationId === '000007' && { status: 'IN_PROGRESS' as const }),
+  ...(applicationId === '000008' && {
+    status: 'COMPLETED' as const,
+    completedAt: '2026-10-21T15:00:00+09:00',
+    resultNote: '개폐 및 통행 확인 완료',
+  }),
+});
 
 export const mockNotifications: AppNotification[] = [
   {

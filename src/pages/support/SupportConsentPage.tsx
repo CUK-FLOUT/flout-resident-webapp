@@ -4,14 +4,7 @@ import { StepProgress } from '@/components/ui';
 import { CONSENT_STATUS_LABEL, SUPPORT_STEPS, TENURE_LABEL } from '@/constants/labels';
 import type { ApplicationDetail, SupportProgress } from '@/types/domain';
 
-/**
- * Figma: 04-6 지원동의_세입자 (1115:3605) · 04-7 지원동의_주택소유 (1859:1512)
- *        제출 후 카드: 04-8 임대인 동의 자료 (1115:3652) / 주택 소유 증명 자료 (2199:2701)
- * 기능명세: SUPPORT-07, CONSTRUCTION-03
- *
- * 세입자는 임대인 동의서, 소유자는 주택 소유 증명서를 제출합니다. 문구만 다르고 흐름은 같아요.
- * 로딩·에러 처리는 SupportStatusPage 가 맡고 이 뷰만 그립니다.
- */
+
 const COPY = {
   tenant: {
     name: '임대인 동의',

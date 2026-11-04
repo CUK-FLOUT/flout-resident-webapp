@@ -296,32 +296,52 @@ export const mockConstructionFor = (applicationId: string): Construction => ({
   }),
 });
 
+const today = new Date().toLocaleDateString('sv-SE');
+
 export const mockNotifications: AppNotification[] = [
   {
-    id: 'n-3',
+    id: 'n-5',
     type: 'CONSTRUCTION_COMPLETED',
     applicationId: '000008',
     title: '예방시설 설치가 완료됐어요.',
     body: '최종 설치 사진과 시공 결과가 등록됐어요.',
-    createdAt: '2026-10-18T09:00:00+09:00',
+    createdAt: `${today}T11:42:00+09:00`,
     read: false,
   },
   {
-    id: 'n-2',
+    id: 'n-4',
+    type: 'CONSTRUCTION_SCHEDULED',
+    applicationId: '000003',
+    title: '오늘 오전 10시에 시공이 예정되어 있어요.',
+    body: '방문 시간과 현장 출입 가능 여부를 확인해 주세요.',
+    createdAt: `${today}T08:00:00+09:00`,
+    read: false,
+  },
+  {
+    id: 'n-3',
     type: 'SUPPORT_DECIDED',
+    applicationId: '000003',
+    title: '지원 신청이 승인됐어요.',
+    body: '시공 일정이 등록되면 알림으로 다시 안내해 드려요.',
+    createdAt: '2026-10-17T14:20:00+09:00',
+    read: true,
+  },
+  {
+    id: 'n-2',
+    type: 'SUPPORT_RECEIVED',
     applicationId: '000002',
-    title: '지원 대상자로 확인됐어요.',
-    body: '시공 일정이 정해지면 다시 알려드릴게요.',
-    createdAt: '2026-10-10T09:00:00+09:00',
+    title: '제출한 신청서 검토가 시작됐어요.',
+    body: '지원 조건과 제출 서류를 담당자가 확인하고 있어요.',
+    createdAt: '2026-10-08T09:16:00+09:00',
     read: true,
   },
   {
     id: 'n-1',
-    type: 'INSPECTION_RECEIVED',
-    applicationId: '000001',
-    title: '현장점검 신청이 접수됐어요.',
-    body: '방문 일정이 정해지면 알려드릴게요.',
-    createdAt: '2026-09-01T10:00:00+09:00',
+    type: 'RESULT_REGISTERED',
+    applicationId: '000005',
+    title: '현장점검 결과가 등록됐어요.',
+    body: '취약지점과 전문가 권장 예방조치를 확인할 수 있어요.',
+    createdAt: '2026-10-03T16:05:00+09:00',
     read: true,
   },
 ];

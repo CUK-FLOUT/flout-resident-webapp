@@ -354,9 +354,9 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
   /* ── 알림 ── */
   notifications: {
     figmaName: '07-1 알림 목록',
-    figmaNodes: ['1115:4101'],
+    figmaNodes: ['1115:4101', '2255:2671'],
     specs: ['NOTI-01', 'NOTI-02', 'NOTI-03', 'NOTI-04', 'NOTI-05', 'NOTI-06', 'NOTI-07', 'NOTI-08'],
-    status: 'todo',
+    status: 'done',
     group: '알림',
   },
 };

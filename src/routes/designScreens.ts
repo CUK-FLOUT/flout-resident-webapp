@@ -287,6 +287,7 @@ export const DESIGN_SCREENS: DesignScreen[] = [
   {
     nodeId: '2232:2653',
     name: '06-2 내 신청 · 공통 상세보기',
+    route: 'applicationDetail',
   },
   {
     nodeId: '1373:431',

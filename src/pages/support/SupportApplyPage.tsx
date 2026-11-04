@@ -10,6 +10,7 @@ import { Screen, StateMessage } from '@/components/layout';
 import { Button, ChoiceGroup, TextField } from '@/components/ui';
 import { TENURE_LABEL, VISIT_TIME_OPTIONS, VULNERABILITY_TYPE_LABEL } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
+import { maskPhone } from '@/lib/phone';
 import type {
   ApplicationDetail,
   InspectionResult,
@@ -152,6 +153,3 @@ function ApplyForm({
     </Screen>
   );
 }
-
-/** 010-1234-0002 → 010-****-0002 */
-const maskPhone = (phone: string) => phone.replace(/-\d{3,4}-/, '-****-');

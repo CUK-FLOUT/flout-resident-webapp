@@ -112,17 +112,51 @@ export const mockGuide: PreventionGuide = {
 export const mockApplications: ApplicationSummary[] = [
   {
     id: '000001',
+    title: '현장점검 · 침수 위험 점검 신청',
     address: '부천시 OO구 OO로 00',
     stage: 'INSPECTION_RECEIVED',
-    createdAt: '2026-09-01T10:00:00+09:00',
-    updatedAt: '2026-09-01T10:00:00+09:00',
+    createdAt: '2026-09-07T10:00:00+09:00',
+    updatedAt: '2026-09-07T10:00:00+09:00',
   },
   {
     id: '000002',
+    title: '지원 · 물막이판 설치 지원',
     address: '부천시 OO구 OO길 12',
     stage: 'SUPPORT_REVIEW',
-    createdAt: '2026-08-12T10:00:00+09:00',
-    updatedAt: '2026-09-03T10:00:00+09:00',
+    createdAt: '2026-10-07T10:00:00+09:00',
+    updatedAt: '2026-10-07T10:00:00+09:00',
+  },
+  {
+    id: '000004',
+    title: '지원 · 물막이판 설치 지원',
+    address: '부천시 OO구 OO길 30',
+    stage: 'SUPPORT_REJECTED',
+    createdAt: '2026-10-06T10:00:00+09:00',
+    updatedAt: '2026-10-06T10:00:00+09:00',
+  },
+  {
+    id: '000003',
+    title: '시공 · 출입구 물막이판 설치',
+    address: '부천시 OO구 OO로 24',
+    stage: 'CONSTRUCTION_IN_PROGRESS',
+    createdAt: '2026-10-06T10:00:00+09:00',
+    updatedAt: '2026-10-06T10:00:00+09:00',
+  },
+  {
+    id: '000008',
+    title: '시공 · 출입구 물막이판',
+    address: '부천시 OO구 OO로 84',
+    stage: 'COMPLETED',
+    createdAt: '2026-10-06T10:00:00+09:00',
+    updatedAt: '2026-10-06T10:00:00+09:00',
+  },
+  {
+    id: '000005',
+    title: '현장점검 · 공개된 결과 확인',
+    address: '부천시 OO구 OO로 48',
+    stage: 'INSPECTION_COMPLETED',
+    createdAt: '2026-10-06T10:00:00+09:00',
+    updatedAt: '2026-10-06T10:00:00+09:00',
   },
 ];
 
@@ -241,6 +275,7 @@ export const mockSupportProgressFor = (applicationId: string): SupportProgress =
 
 export const mockApplicationDetailFor = (id: string): ApplicationDetail => ({
   ...mockApplicationDetail,
+  ...mockApplications.find((a) => a.id === id),
   id,
   request: { ...mockApplicationDetail.request, tenure: id === '000006' ? 'OWNER' : 'TENANT' },
 });

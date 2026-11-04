@@ -119,7 +119,7 @@ export const APPLICATION_STAGE: Record<
   ApplicationStage,
   { label: string; headline: string; tone: StatusTone }
 > = {
-  INSPECTION_RECEIVED: { label: '접수', headline: '방문 일정을 확인하고 있어요.', tone: 'success' },
+  INSPECTION_RECEIVED: { label: '접수', headline: '방문 일정을 확인하고 있어요.', tone: 'primary' },
   VISIT_SCHEDULED: {
     label: '방문일정 확정',
     headline: '전문가 방문 일정이 정해졌어요.',
@@ -136,7 +136,7 @@ export const APPLICATION_STAGE: Record<
     tone: 'primary',
   },
   SUPPORT_REVIEW: {
-    label: '행정 검토',
+    label: '지원 검토 중',
     headline: '제출한 내용을 검토하고 있어요.',
     tone: 'primary',
   },
@@ -146,7 +146,11 @@ export const APPLICATION_STAGE: Record<
     tone: 'warning',
   },
   SUPPORT_APPROVED: { label: '승인', headline: '지원 대상자로 확인됐어요.', tone: 'success' },
-  SUPPORT_REJECTED: { label: '미승인', headline: '이번 지원은 진행하기 어려워요.', tone: 'danger' },
+  SUPPORT_REJECTED: {
+    label: '지원 미승인',
+    headline: '이번 지원은 진행하기 어려워요.',
+    tone: 'danger',
+  },
   CONSTRUCTION_SCHEDULED: {
     label: '시공 예정',
     headline: '예방시설 시공 일정이 정해졌어요.',
@@ -157,7 +161,7 @@ export const APPLICATION_STAGE: Record<
     headline: '예방시설을 설치하고 있어요.',
     tone: 'primary',
   },
-  COMPLETED: { label: '완료', headline: '예방시설 설치가 모두 끝났어요.', tone: 'success' },
+  COMPLETED: { label: '전체 완료', headline: '예방시설 설치가 모두 끝났어요.', tone: 'success' },
 };
 
 /** 지원 진행 단계 표시 (Figma 04-5 progress-bar) */

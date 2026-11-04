@@ -195,6 +195,7 @@ export interface VisitSchedule {
 /** 신청 목록/상세 (STATUS-01, 02) */
 export interface ApplicationSummary {
   id: ID; // 접수번호 "000001"
+  title: string;
   address: string;
   stage: ApplicationStage;
   createdAt: ISODateString;

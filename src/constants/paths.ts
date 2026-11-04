@@ -32,6 +32,7 @@ export const PATHS = {
   applications: '/applications',
   applicationsAll: '/applications/all',
   applicationHub: '/applications/:applicationId',
+  applicationDetail: '/applications/:applicationId/detail',
   applicationInfo: '/applications/:applicationId/info',
   visit: '/applications/:applicationId/visit',
   visitPrepare: '/applications/:applicationId/visit/prepare',

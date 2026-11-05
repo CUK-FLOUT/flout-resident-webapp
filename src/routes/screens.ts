@@ -231,14 +231,23 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaNodes: ['1115:3024'],
     specs: ['STATUS-03', 'NOTI-02', 'NOTI-03'],
     next: ['visitPrepare'],
-    status: 'todo',
+    status: 'done',
     group: '내 신청',
   },
   visitPrepare: {
     figmaName: '03-9 현장점검하기_방문 전 안내',
     figmaNodes: ['1115:3077'],
     specs: ['STATUS-04'],
-    status: 'todo',
+    status: 'done',
+    group: '내 신청',
+  },
+
+  inspectionProgress: {
+    figmaName: '03-10 현장점검하기_점검진행',
+    figmaNodes: ['2215:2458'],
+    // 기존 소스에 대응 기능명세 ID가 없어 임의로 할당하지 않습니다.
+    specs: [],
+    status: 'done',
     group: '내 신청',
   },
 

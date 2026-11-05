@@ -171,6 +171,7 @@ export const DESIGN_SCREENS: DesignScreen[] = [
   {
     nodeId: '2215:2458',
     name: '03-10 현장점검하기_점검진행',
+    route: 'inspectionProgress',
   },
   {
     nodeId: '1115:3111',

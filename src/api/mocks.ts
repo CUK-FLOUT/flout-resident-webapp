@@ -4,11 +4,15 @@ import type {
   ApplicationDetail,
   ApplicationSummary,
   Construction,
+  InspectionApplicationDetail,
   InspectionResult,
   PreventionGuide,
   RiskAssessment,
+  SupportApplicationResponse,
+  SupportAttachmentResponse,
   SupportProgram,
   SupportProgress,
+  SupportReview,
 } from '@/types/domain';
 
 /**
@@ -120,7 +124,7 @@ export const mockApplications: ApplicationSummary[] = [
   },
   {
     id: '000002',
-    title: '지원 · 물막이판 설치 지원',
+    title: '지원 · 침수 예방시설 설치 지원',
     address: '부천시 OO구 OO길 12',
     stage: 'SUPPORT_REVIEW',
     createdAt: '2026-10-07T10:00:00+09:00',
@@ -128,7 +132,7 @@ export const mockApplications: ApplicationSummary[] = [
   },
   {
     id: '000004',
-    title: '지원 · 물막이판 설치 지원',
+    title: '지원 · 침수 예방시설 설치 지원',
     address: '부천시 OO구 OO길 30',
     stage: 'SUPPORT_REJECTED',
     createdAt: '2026-10-06T10:00:00+09:00',
@@ -216,9 +220,9 @@ export const mockResult: InspectionResult = {
   supportEligibility: 'CHECK_REQUIRED',
 };
 
-export const mockSupportPrograms: SupportProgram[] = [
+export const fixedSupportPrograms: SupportProgram[] = [
   {
-    id: 'sp-1',
+    id: '1',
     name: '침수 예방시설 설치 지원',
     description: '침수 예방을 위한 시설 설치와 관련해 지원 대상 여부를 검토할 수 있는 사업이에요.',
     target: '부천시 반지하 주택 거주 세대',
@@ -279,6 +283,68 @@ export const mockApplicationDetailFor = (id: string): ApplicationDetail => ({
   id,
   request: { ...mockApplicationDetail.request, tenure: id === '000006' ? 'OWNER' : 'TENANT' },
 });
+
+const MOCK_OWNER_APPLICATION_ID = 6;
+
+export const mockInspectionApplicationFor = (id: string): InspectionApplicationDetail => ({
+  applicationId: Number(id),
+  receiptNumber: id,
+  applicant: { name: mockApplicationDetail.request.applicantName, phone: '010-****-0002' },
+  address: mockApplicationDetail.request.address,
+  occupancyType: Number(id) === MOCK_OWNER_APPLICATION_ID ? 'OWNER' : 'TENANT',
+});
+
+export const mockSupportApplicationFor = (
+  applicationId: number,
+  programId: number,
+): SupportApplicationResponse => {
+  const isOwner = applicationId === MOCK_OWNER_APPLICATION_ID;
+  return {
+    supportApplicationId: applicationId,
+    applicationId,
+    programId,
+    status: isOwner ? 'SUBMITTED' : 'DRAFT',
+    submittedAt: isOwner ? '2026-10-07T10:00:00+09:00' : null,
+    receiptNumber: String(applicationId).padStart(6, '0'),
+    applicantName: mockApplicationDetail.request.applicantName,
+    programName: fixedSupportPrograms[0].name,
+    createdAt: '2026-10-07T10:00:00+09:00',
+  };
+};
+
+export const mockSupportAttachmentFor = (
+  supportApplicationId: number,
+  file: File,
+): SupportAttachmentResponse => ({
+  attachmentId: 1,
+  supportApplicationId,
+  attachmentType: 'LANDLORD_CONSENT',
+  fileName: file.name,
+  size: file.size,
+  contentType: file.type,
+  submittedAt: '2026-10-07T10:00:00+09:00',
+  status: 'SUBMITTED',
+});
+
+export const mockSupportReviewFor = (supportApplicationId: number): SupportReview => {
+  const isOwner = supportApplicationId === MOCK_OWNER_APPLICATION_ID;
+  return {
+    supportApplicationId,
+    applicationId: supportApplicationId,
+    receiptNo: String(supportApplicationId).padStart(6, '0'),
+    applicantName: mockApplicationDetail.request.applicantName,
+    address: mockApplicationDetail.request.address,
+    detailAddress: null,
+    programName: fixedSupportPrograms[0].name,
+    status: 'REVIEWING',
+    submittedAt: '2026-10-07T10:00:00+09:00',
+    requestedFacility: '출입구 물막이판',
+    occupancyType: isOwner ? 'OWNER' : 'TENANT',
+    preferredConstructionDate: '2026-10-21',
+    preferredTimeSlot: 'MORNING',
+    landlordConsentStatus: isOwner ? 'NOT_REQUIRED' : 'PENDING',
+  };
+};
 
 export const mockConstructionFor = (applicationId: string): Construction => ({
   applicationId,

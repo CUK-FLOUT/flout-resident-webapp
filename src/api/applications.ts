@@ -11,23 +11,32 @@ import type {
   ApplicationDetail,
   ApplicationSummary,
   Construction,
+  CreateSupportApplicationInput,
+  InspectionApplicationDetail,
   InspectionApplicationRequest,
   InspectionDraftResponse,
   InspectionReceipt,
   InspectionUploadResponse,
   InspectionResult,
   SupportApplicationInput,
+  SupportApplicationResponse,
+  SupportAttachmentResponse,
   SupportProgram,
   SupportProgress,
+  SupportReview,
 } from '@/types/domain';
 import {
+  fixedSupportPrograms,
   mockApplicationDetailFor,
   mockApplications,
   mockConstructionFor,
+  mockInspectionApplicationFor,
   mockResult,
-  mockSupportPrograms,
+  mockSupportApplicationFor,
+  mockSupportAttachmentFor,
   mockSupportProgress,
   mockSupportProgressFor,
+  mockSupportReviewFor,
 } from './mocks';
 import { queryKeys, withMock } from './queryClient';
 
@@ -159,12 +168,69 @@ export function useSupportPrograms(applicationId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.supportPrograms(applicationId ?? ''),
     queryFn: () =>
-      withMock(
-        () => mockSupportPrograms,
-        () => http.get<SupportProgram[]>(`/applications/${applicationId}/support-programs`),
+      withMock<SupportProgram[]>(
+        () => fixedSupportPrograms,
+        async () => fixedSupportPrograms,
       ),
     enabled: Boolean(applicationId),
   });
+}
+
+export function getInspectionApplication(applicationId: string) {
+  return withMock(
+    () => mockInspectionApplicationFor(applicationId),
+    async () =>
+      unwrapInspection(
+        await http.get<InspectionEnvelope<InspectionApplicationDetail>>(
+          `/resident/inspection-applications/${applicationId}`,
+        ),
+      ),
+  );
+}
+
+export function createSupportApplication(input: CreateSupportApplicationInput) {
+  return withMock(
+    () => mockSupportApplicationFor(input.applicationId, input.programId),
+    async () =>
+      unwrapInspection(
+        await http.post<InspectionEnvelope<SupportApplicationResponse>>(
+          '/resident/support-applications',
+          {
+            ...input,
+            requestedFacility: '출입구 물막이판',
+            preferredVisitTime:
+              input.preferredVisitTime === 'ANYTIME' ? 'ANY' : input.preferredVisitTime,
+          },
+        ),
+      ),
+  );
+}
+
+export function uploadSupportAttachment(supportApplicationId: number, file: File) {
+  const form = new FormData();
+  form.append('file', file);
+  return withMock(
+    () => mockSupportAttachmentFor(supportApplicationId, file),
+    async () =>
+      unwrapInspection(
+        await http.post<InspectionEnvelope<SupportAttachmentResponse>>(
+          `/resident/support-applications/${supportApplicationId}/attachments`,
+          form,
+        ),
+      ),
+  );
+}
+
+export function getSupportReview(supportApplicationId: number) {
+  return withMock(
+    () => mockSupportReviewFor(supportApplicationId),
+    async () =>
+      unwrapInspection(
+        await http.get<InspectionEnvelope<SupportReview>>(
+          `/resident/support-applications/${supportApplicationId}/review`,
+        ),
+      ),
+  );
 }
 
 export function useApplySupport() {

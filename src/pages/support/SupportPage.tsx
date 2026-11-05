@@ -19,8 +19,23 @@ export default function SupportPage() {
 
   if (isLoading) {
     return (
-      <Screen header={header} tab="home">
-        <StateMessage>지원사업을 불러오고 있어요…</StateMessage>
+      <Screen header={{ title: '지원사업 확인 중' }} tab="home">
+        <div role="status" className="flex flex-col items-center pt-14 text-center">
+          <div
+            className="border-border border-t-primary size-14 animate-spin rounded-full border-4"
+            aria-hidden
+          />
+          <h2 className="text-title text-ink mt-5">
+            우리 집에 맞는
+            <br />
+            지원사업을 찾고 있어요
+          </h2>
+          <p className="text-body text-muted mt-5">
+            점검 결과와 지원사업의 대상 조건을 확인하고 있어요.
+            <br />
+            잠시만 기다려 주세요.
+          </p>
+        </div>
       </Screen>
     );
   }

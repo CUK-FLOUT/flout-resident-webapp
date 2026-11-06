@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from 'react';
+import { useRef, useState, type SubmitEvent } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
@@ -22,9 +22,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  const submitting = useRef(false);
 
   async function handleLogin(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting.current) return;
     setError('');
 
     if (!email.trim() || !password) {
@@ -32,6 +34,15 @@ export default function LoginPage() {
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || email.trim().length > 100) {
+      setError('올바른 이메일을 100자 이내로 입력해 주세요.');
+      return;
+    }
+    if (password.length > 64) {
+      setError('비밀번호는 64자 이내로 입력해 주세요.');
+      return;
+    }
+    submitting.current = true;
     setPending(true);
     try {
       const result = await login.mutateAsync({ email: email.trim(), password });
@@ -40,6 +51,7 @@ export default function LoginPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : '로그인에 실패했어요.');
     } finally {
+      submitting.current = false;
       setPending(false);
     }
   }

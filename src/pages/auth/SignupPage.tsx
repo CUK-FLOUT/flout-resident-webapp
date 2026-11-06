@@ -1,4 +1,4 @@
-﻿import { useState, type SubmitEvent } from 'react';
+import { useRef, useState, type SubmitEvent } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
@@ -23,12 +23,14 @@ export default function SignupPage() {
 
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  const submitting = useRef(false);
 
   const canSubmit =
     email.trim() !== '' && password !== '' && passwordConfirm !== '' && name.trim() !== '';
 
   async function handleSignup(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting.current) return;
     setError('');
 
     if (!canSubmit) {
@@ -45,6 +47,15 @@ export default function SignupPage() {
       setError('비밀번호는 공백 없이 영문과 숫자를 포함해 8~64자로 입력해 주세요.');
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || email.trim().length > 100) {
+      setError('올바른 이메일을 100자 이내로 입력해 주세요.');
+      return;
+    }
+    if (name.trim().length > 50) {
+      setError('이름은 50자 이내로 입력해 주세요.');
+      return;
+    }
+    submitting.current = true;
     setPending(true);
     try {
       await signup.mutateAsync({
@@ -57,6 +68,7 @@ export default function SignupPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : '회원가입에 실패했어요.');
     } finally {
+      submitting.current = false;
       setPending(false);
     }
   }

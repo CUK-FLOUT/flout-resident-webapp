@@ -166,7 +166,8 @@ export const DESIGN_SCREENS: DesignScreen[] = [
   },
   {
     nodeId: '1565:1446',
-    name: '03-10 현장점검하기_결과등록',
+    name: '03-11 현장점검하기_결과등록',
+    route: 'resultRegistered',
   },
   {
     nodeId: '2215:2458',
@@ -175,17 +176,17 @@ export const DESIGN_SCREENS: DesignScreen[] = [
   },
   {
     nodeId: '1115:3111',
-    name: '03-11 현장점검하기_점검 결과 보기',
+    name: '03-12 현장점검하기_점검 결과 보기',
     route: 'result',
   },
   {
     nodeId: '1115:3140',
-    name: '03-12 현장점검하기_취약점',
+    name: '03-13 현장점검하기_취약점',
     route: 'resultPoints',
   },
   {
     nodeId: '1115:3194',
-    name: '03-13 현장점검하기_권장 예방조치',
+    name: '03-14 현장점검하기_권장 예방조치',
     route: 'resultRecommendations',
   },
   {

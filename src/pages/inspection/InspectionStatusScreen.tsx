@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
 
-/** 점검 상태 화면 전용: 공통 UI를 재사용하고 본문만 스크롤합니다. */
 export function InspectionStatusScreen({
   title,
   backTo,

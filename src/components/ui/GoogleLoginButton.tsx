@@ -4,6 +4,7 @@ import { useGoogleLogin, useLogin } from '@/api/auth';
 import { PATHS } from '@/constants/paths';
 import { env } from '@/lib/env';
 import { Button } from '@/components/ui/Button';
+import { enablePush } from '@/api/notifications';
 
 type GoogleIdentity = {
   initialize: (options: {
@@ -67,6 +68,7 @@ export function GoogleLoginButton({
             setPending(true);
             try {
               const result = await authenticateGoogle(credential);
+              if (!result.requiresConsent) void enablePush();
               navigate(result.requiresConsent ? PATHS.consent : PATHS.home, { replace: true });
             } catch (e) {
               setError(e instanceof Error ? e.message : 'Google 로그인에 실패했어요.');

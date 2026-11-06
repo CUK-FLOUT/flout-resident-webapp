@@ -1,7 +1,15 @@
-/** 환경변수는 이 파일을 통해서만 읽습니다. (.env.example 참고) */
 export const env = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api',
   jusoApiKey: import.meta.env.VITE_JUSO_API_KEY ?? '',
   useMock: import.meta.env.DEV && import.meta.env.VITE_USE_MOCK === 'true',
   isDev: import.meta.env.DEV,
+  firebase: {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? '',
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? '',
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '',
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? '',
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '',
+    appId: import.meta.env.VITE_FIREBASE_APP_ID ?? '',
+  },
+  firebaseVapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY ?? '',
 } as const;

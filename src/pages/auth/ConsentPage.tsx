@@ -6,6 +6,7 @@ import { Screen } from '@/components/layout';
 import { Button, CheckItem } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { useSaveConsent } from '@/api/auth';
+import { requestPushPermission, syncPushToken } from '@/api/notifications';
 
 export default function ConsentPage() {
   const navigate = useNavigate();
@@ -23,9 +24,11 @@ export default function ConsentPage() {
 
     setError('');
     setPending(true);
+    const permission = requestPushPermission();
     try {
       const result = await saveConsent.mutateAsync();
       if (result.requiresConsent) throw new Error('동의가 완료되지 않았어요. 다시 시도해 주세요.');
+      void permission.then(syncPushToken);
       navigate(PATHS.home, { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : '동의를 저장하지 못했어요.');

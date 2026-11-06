@@ -5,6 +5,7 @@ import { Screen } from '@/components/layout';
 import { Button, TextField } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { useLogin } from '@/api/auth';
+import { enablePush } from '@/api/notifications';
 import { GoogleLoginButton } from '@/components/ui/GoogleLoginButton';
 import { GoogleIcon } from '@/pages/auth/OnboardingPage';
 
@@ -45,6 +46,7 @@ export default function LoginPage() {
     setPending(true);
     try {
       const result = await login.mutateAsync({ email: email.trim(), password });
+      if (!result.requiresConsent) void enablePush();
       navigate(result.requiresConsent ? PATHS.consent : PATHS.home, { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : '로그인에 실패했어요.');

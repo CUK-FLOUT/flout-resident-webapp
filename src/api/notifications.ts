@@ -1,12 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { env } from '@/lib/env';
 import { http } from '@/lib/http';
+import { fcmTokenStorage } from '@/lib/storage';
 import type { AppNotification } from '@/types/domain';
 import { mockNotifications } from './mocks';
 import { queryKeys, withMock } from './queryClient';
-
-/* ── NOTI-01 ~ 08 알림 ─────────────────────────────────────────────
- * 발송(카카오 알림톡/SMS/푸시)은 백엔드 책임. 프론트는 알림함 목록·읽음 처리만 담당합니다.
- */
 
 export function useNotifications() {
   return useQuery({
@@ -17,6 +15,47 @@ export function useNotifications() {
         () => http.get<AppNotification[]>('/notifications'),
       ),
   });
+}
+
+export async function requestPushPermission() {
+  if ('Notification' in window) await Notification.requestPermission();
+}
+
+export async function syncPushToken() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  if (Notification.permission !== 'granted') return;
+
+  try {
+    const [{ initializeApp }, { getMessaging, getToken, isSupported }] = await Promise.all([
+      import('firebase/app'),
+      import('firebase/messaging'),
+    ]);
+    if (!(await isSupported())) return;
+
+    const token = await getToken(getMessaging(initializeApp(env.firebase)), {
+      vapidKey: env.firebaseVapidKey,
+      serviceWorkerRegistration: await navigator.serviceWorker.register(
+        '/firebase-messaging-sw.js',
+      ),
+    });
+    const previousToken = fcmTokenStorage.get();
+
+    await withMock<unknown>(
+      () => undefined,
+      () =>
+        http.put('/notifications/tokens', {
+          token,
+          previousToken: previousToken && previousToken !== token ? previousToken : undefined,
+        }),
+    );
+    fcmTokenStorage.set(token);
+  } catch (e) {
+    console.error('FCM 토큰 등록 실패', e);
+  }
+}
+
+export function enablePush() {
+  return requestPushPermission().then(syncPushToken);
 }
 
 export function useUnreadCount() {

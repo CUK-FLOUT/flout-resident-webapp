@@ -28,7 +28,13 @@ function safeRemove(key: string) {
 const KEYS = {
   token: 'flout.accessToken',
   recentAddresses: 'flout.recentAddresses',
+  fcmToken: 'flout.fcmToken',
 } as const;
+
+export const fcmTokenStorage = {
+  get: () => safeGet(KEYS.fcmToken),
+  set: (token: string) => safeSet(KEYS.fcmToken, token),
+};
 
 export const tokenStorage = {
   get: () => safeGet(KEYS.token),

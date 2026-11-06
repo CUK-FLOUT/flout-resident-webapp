@@ -1,7 +1,6 @@
 import entrancePhoto from '@/assets/inspection-results/entrance.png';
 import drainPhoto from '@/assets/inspection-results/drain.png';
 
-/** 03-11~03-14 UI 전용 목업. URL의 신청 ID는 각 페이지에서 유지합니다. */
 export const resultMock = {
   applicant: '정○○',
   address: '○○로 48',

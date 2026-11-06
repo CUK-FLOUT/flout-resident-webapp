@@ -4,10 +4,6 @@ import { PATHS } from '@/constants/paths';
 import { InspectionStatusScreen } from '@/pages/inspection/InspectionStatusScreen';
 import { resultMock } from './resultMock';
 
-/**
- * Figma: 03-14 현장점검하기_권장 예방조치 (1115:3194)
- * 기능명세: RESULT-05, RESULT-06, RESULT-08
- */
 export default function ResultRecommendationsPage() {
   const { applicationId = '000001' } = useParams<'applicationId'>();
   const navigate = useNavigate();
@@ -43,9 +39,6 @@ export default function ResultRecommendationsPage() {
             </li>
           ))}
         </ol>
-        <p className="text-body text-on-primary">
-          공공시설 문제가 확인된 경우 담당 검토로 전달돼요. 개인 주택 지원 신청과 별도로 진행됩니다.
-        </p>
       </div>
     </InspectionStatusScreen>
   );

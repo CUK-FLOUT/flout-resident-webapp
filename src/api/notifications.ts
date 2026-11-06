@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { env } from '@/lib/env';
-import { http } from '@/lib/http';
+import { ApiError, http } from '@/lib/http';
 import { fcmTokenStorage } from '@/lib/storage';
 import type { AppNotification } from '@/types/domain';
 import { mockNotifications } from './mocks';
@@ -12,7 +12,11 @@ export function useNotifications() {
     queryFn: () =>
       withMock(
         () => (new URLSearchParams(location.search).has('empty') ? [] : mockNotifications),
-        () => http.get<AppNotification[]>('/notifications'),
+        () =>
+          http.get<AppNotification[]>('/notifications').catch((e: unknown) => {
+            if (e instanceof ApiError && e.status === 404) return [];
+            throw e;
+          }),
       ),
   });
 }

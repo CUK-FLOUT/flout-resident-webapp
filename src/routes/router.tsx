@@ -94,6 +94,10 @@ const routes: RouteObject[] = [
       },
 
       // 점검 결과
+      {
+        path: PATHS.resultRegistered,
+        lazy: page(() => import('@/pages/result/ResultRegisteredPage')),
+      },
       { path: PATHS.result, lazy: page(() => import('@/pages/result/ResultSummaryPage')) },
       { path: PATHS.resultPoints, lazy: page(() => import('@/pages/result/ResultPointsPage')) },
       {

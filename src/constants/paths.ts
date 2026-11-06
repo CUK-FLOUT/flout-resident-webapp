@@ -39,6 +39,7 @@ export const PATHS = {
   inspectionProgress: '/applications/:applicationId/inspection/progress',
 
   // 점검 결과 · 맞춤 예방안 (RESULT)
+  resultRegistered: '/applications/:applicationId/result/registered',
   result: '/applications/:applicationId/result',
   resultPoints: '/applications/:applicationId/result/points',
   resultRecommendations: '/applications/:applicationId/result/recommendations',

@@ -245,35 +245,42 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
   inspectionProgress: {
     figmaName: '03-10 현장점검하기_점검진행',
     figmaNodes: ['2215:2458'],
-    // 기존 소스에 대응 기능명세 ID가 없어 임의로 할당하지 않습니다.
-    specs: [],
+    specs: ['HOME-01', 'INSPECTION-06'],
     status: 'done',
     group: '내 신청',
   },
 
   /* ── 점검 결과 ── */
+  resultRegistered: {
+    figmaName: '03-11 현장점검하기_결과등록',
+    figmaNodes: ['1565:1446'],
+    specs: [],
+    next: ['result', 'applicationInfo'],
+    status: 'done',
+    group: '점검 결과',
+  },
   result: {
-    figmaName: '03-11 현장점검하기_점검 결과 보기',
+    figmaName: '03-12 현장점검하기_점검 결과 보기',
     figmaNodes: ['1115:3111'],
     specs: ['RESULT-01', 'RESULT-02', 'NOTI-04'],
-    next: ['resultPoints', 'resultRecommendations'],
-    status: 'todo',
+    next: ['resultPoints'],
+    status: 'done',
     group: '점검 결과',
   },
   resultPoints: {
-    figmaName: '03-12 현장점검하기_취약점',
+    figmaName: '03-13 현장점검하기_취약점',
     figmaNodes: ['1115:3140'],
     specs: ['RESULT-03', 'RESULT-04'],
     next: ['resultRecommendations'],
-    status: 'todo',
+    status: 'done',
     group: '점검 결과',
   },
   resultRecommendations: {
-    figmaName: '03-13 현장점검하기_권장 예방조치',
+    figmaName: '03-14 현장점검하기_권장 예방조치',
     figmaNodes: ['1115:3194'],
     specs: ['RESULT-05', 'RESULT-06', 'RESULT-08'],
-    next: ['support'],
-    status: 'todo',
+    next: ['support', 'home'],
+    status: 'done',
     group: '점검 결과',
   },
 

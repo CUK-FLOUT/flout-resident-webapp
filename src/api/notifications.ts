@@ -12,7 +12,7 @@ export function useNotifications() {
     queryFn: () =>
       withMock(
         () => (new URLSearchParams(location.search).has('empty') ? [] : mockNotifications),
-        () => Promise.resolve<AppNotification[]>([]),
+        () => http.get<AppNotification[]>('/notifications'),
       ),
   });
 }

@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "test:auth": "node --test tests/auth.test.mjs"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",

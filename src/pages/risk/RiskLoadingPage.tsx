@@ -47,7 +47,11 @@ export default function RiskLoadingPage() {
   if (!detail.trim() || !floor) return <Navigate to={PATHS.addressDetail} replace />;
   return (
     <Screen
-      header={{ title: '취약도 분석', onBack: () => navigate(PATHS.addressDetail) }}
+      header={{
+        title: '취약도 분석',
+        onBack: () => navigate(PATHS.addressDetail),
+        className: 'px-5 [&_h1]:text-[18px] [&_svg]:size-6',
+      }}
       tab="home"
     >
       <div
@@ -82,21 +86,21 @@ export default function RiskLoadingPage() {
 
 export function RiskLoadingContent() {
   return (
-    <>
+    <div className="flex flex-col items-center pt-[clamp(24px,19dvh,152px)]">
       <div
-        className="border-soft border-t-primary size-14 animate-spin rounded-full border-4"
+        className="border-border border-t-primary mb-5 size-14 animate-spin rounded-full border-[5px] motion-reduce:animate-none"
         aria-hidden
       />
-      <h1 className="text-title mt-2">
+      <h1 className="text-title">
         입력한 주소의
         <br />
         침수 취약도를 분석하고 있어요
       </h1>
-      <p className="text-body text-muted">
+      <p className="text-body text-muted mt-5">
         지형·배수 환경과 주변 침수 이력을 확인하고 있어요.
         <br />
         잠시만 기다려 주세요.
       </p>
-    </>
+    </div>
   );
 }

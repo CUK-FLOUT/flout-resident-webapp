@@ -60,17 +60,24 @@ export default function LoginPage() {
     <Screen
       header={{
         title: '로그인',
+        className: 'px-5 [&_h1]:text-[18px] [&_svg]:size-6',
         onBack: () => navigate(PATHS.onboarding),
       }}
     >
-      <div className="flex flex-1 flex-col pt-[66px]">
-        <div className="mb-2.5 flex h-9 items-center gap-3">
-          <img src="/logo.svg" alt="" className="h-auto w-11 object-contain" />
+      <div className="flex flex-1 flex-col pt-[58px]">
+        <div className="relative flex h-[41px] items-start justify-center">
+          <img
+            src="/logo.svg"
+            alt=""
+            className="absolute top-0 left-[calc(50%-92px)] h-auto w-11 object-contain"
+          />
 
           <h1 className="text-primary text-title">FLOUT</h1>
         </div>
 
-        <p className="text-body-text text-body mb-7">우리 집의 침수 위험을 확인하고 예방하세요.</p>
+        <p className="text-body-text text-body mb-[33px] text-center">
+          우리 집의 침수 위험을 확인하고 예방하세요.
+        </p>
         {location.state?.signupComplete && (
           <p role="status" className="text-success mb-4">
             회원가입이 완료됐어요. 로그인해 주세요.
@@ -79,6 +86,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="flex flex-col gap-6">
           <TextField
+            containerClassName="[&>label]:text-[16px] [&>div]:pl-3"
             label={<span className="font-bold">이메일</span>}
             type="email"
             placeholder="이메일을 입력해 주세요"
@@ -88,6 +96,7 @@ export default function LoginPage() {
           />
 
           <TextField
+            containerClassName="[&>label]:text-[16px] [&>div]:pl-3"
             label={<span className="font-bold">비밀번호</span>}
             type={showPassword ? 'text' : 'password'}
             placeholder="비밀번호를 입력해 주세요"
@@ -121,7 +130,7 @@ export default function LoginPage() {
           <span className="text-body-text">아직 계정이 없으신가요?</span>
           <button
             type="button"
-            className="text-primary text-[15px] font-semibold underline"
+            className="text-primary text-[14px] font-bold underline"
             onClick={() => navigate(PATHS.signup)}
           >
             회원가입
@@ -137,7 +146,7 @@ export default function LoginPage() {
           <GoogleLoginButton
             mockLabel="구글로 로그인"
             mockIcon={<GoogleIcon />}
-            mockClassName="text-[14px] leading-[22px] font-medium"
+            mockClassName="text-[16px] leading-[22px] font-medium [&]:border-muted"
             googleContainerClassName="flex min-h-[52px] items-center justify-center"
           />
         </div>

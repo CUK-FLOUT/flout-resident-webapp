@@ -71,7 +71,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
   /* ── 홈·취약도 ── */
   home: {
     figmaName: '01 홈화면',
-    figmaNodes: ['2167:2693'],
+    figmaNodes: ['2167:2693', '2755:2722'],
     specs: ['RISK-01'],
     next: ['addressSearch', 'inspectionApply', 'applications', 'notifications'],
     status: 'done',
@@ -86,7 +86,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     group: '홈·취약도',
   },
   addressDetail: {
-    figmaName: '01-3 주소 확인 · 상세 주소 입력',
+    figmaName: '01-4 주소 확인 · 상세 주소 입력',
     figmaNodes: ['1787:1529'],
     specs: ['RISK-01'],
     next: ['riskLoading'],
@@ -95,7 +95,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
   },
   riskLoading: {
     figmaName: '02-0 취약도 분석 중',
-    figmaNodes: ['1584:1531'],
+    figmaNodes: ['2764:2817'],
     specs: ['RISK-02', 'RISK-03'],
     next: ['riskResult'],
     status: 'done',

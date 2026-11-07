@@ -64,7 +64,14 @@ export default function DevScreenPreviewPage() {
 
   if (screen === 'risk-loading') {
     return (
-      <Screen header={{ title: '취약도 분석', onBack: goBack }} tab="home">
+      <Screen
+        header={{
+          title: '취약도 분석',
+          onBack: goBack,
+          className: 'px-5 [&_h1]:text-[18px] [&_svg]:size-6',
+        }}
+        tab="home"
+      >
         <div className="flex flex-col items-center gap-5 pt-14 text-center" role="status">
           <RiskLoadingContent />
         </div>

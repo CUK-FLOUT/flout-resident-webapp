@@ -248,6 +248,32 @@ export function uploadSupportAttachment(supportApplicationId: number, file: File
   );
 }
 
+export function useSubmitSupport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      input,
+      supportApplicationId,
+      file,
+      onCreated,
+    }: {
+      input: CreateSupportApplicationInput;
+      supportApplicationId?: number;
+      file: File | null;
+      onCreated: (supportApplicationId: number) => void;
+    }) => {
+      let id = supportApplicationId;
+      if (!id) {
+        id = (await createSupportApplication(input)).supportApplicationId;
+        onCreated(id);
+      }
+      if (file) await uploadSupportAttachment(id, file);
+      return id;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.applications() }),
+  });
+}
+
 export function getSupportReview(supportApplicationId: number) {
   return withMock(
     () => mockSupportReviewFor(supportApplicationId),

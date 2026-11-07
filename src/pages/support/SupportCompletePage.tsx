@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { FileText, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router';
 import { useApplication, useSupportProgress } from '@/api/applications';
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui';
 import { SUPPORT_DECISION_LABEL } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
 import { formatDate } from '@/lib/date';
+import { useSupportDraft } from '@/stores/supportDraft';
 
 export default function SupportCompletePage() {
   const { applicationId } = useParams<'applicationId'>();
@@ -13,6 +15,9 @@ export default function SupportCompletePage() {
   const progress = useSupportProgress(applicationId);
   const application = useApplication(applicationId);
   const goHome = () => navigate(PATHS.home);
+  const setDraft = useSupportDraft((s) => s.setDraft);
+
+  useEffect(() => setDraft(null), [setDraft]);
 
   const header = {
     title: '지원하기',

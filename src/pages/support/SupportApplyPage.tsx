@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { generatePath, Navigate, useParams } from 'react-router';
+import { generatePath, Navigate, useNavigate, useParams } from 'react-router';
 import {
   useInspectionApplication,
   useRecommendedFacilities,
@@ -73,6 +73,7 @@ function ApplyForm({
   program: SupportProgram;
   facilityOptions: string[];
 }) {
+  const navigate = useNavigate();
   const { draft, setDraft } = useSupportDraft();
   const saved = draft?.applicationId === applicationId ? draft : null;
   const [selectedFacility, setSelectedFacility] = useState(saved?.facility ?? null);
@@ -92,9 +93,11 @@ function ApplyForm({
       bottom={
         <Button
           disabled={!filled}
-          onClick={() =>
-            filled && setDraft({ applicationId, facility, preferredDate, preferredTimeSlot })
-          }
+          onClick={() => {
+            if (!filled) return;
+            setDraft({ ...saved, applicationId, facility, preferredDate, preferredTimeSlot });
+            navigate(generatePath(PATHS.supportSubmit, { applicationId }));
+          }}
         >
           다음으로
         </Button>

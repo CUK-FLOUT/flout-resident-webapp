@@ -112,6 +112,7 @@ const routes: RouteObject[] = [
         lazy: page(() => import('@/pages/support/SupportRequirementsPage')),
       },
       { path: PATHS.supportApply, lazy: page(() => import('@/pages/support/SupportApplyPage')) },
+      { path: PATHS.supportSubmit, lazy: page(() => import('@/pages/support/SupportSubmitPage')) },
       {
         path: PATHS.supportComplete,
         lazy: page(() => import('@/pages/support/SupportCompletePage')),

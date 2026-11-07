@@ -234,9 +234,16 @@ export interface InspectionApplicationDetail {
   occupancyType: 'OWNER' | 'TENANT' | 'ETC';
 }
 
+export interface RecommendedFacilities {
+  applicationId: number;
+  recommendationCount: number;
+  facilities: string[];
+}
+
 export interface CreateSupportApplicationInput {
   applicationId: number;
   programId: number;
+  requestedFacility: string;
   preferredVisitDate: string;
   preferredVisitTime: VisitTimeSlot;
 }
@@ -272,7 +279,7 @@ export interface SupportReview {
   address: string;
   detailAddress: string | null;
   programName: string;
-  status: 'REVIEWING' | 'CONSENT_PENDING' | 'SCHEDULING';
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
   submittedAt: ISODateString;
   requestedFacility: string;
   occupancyType: 'OWNER' | 'TENANT' | 'ETC';

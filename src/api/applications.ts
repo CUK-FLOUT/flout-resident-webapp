@@ -18,6 +18,7 @@ import type {
   InspectionReceipt,
   InspectionUploadResponse,
   InspectionResult,
+  RecommendedFacilities,
   SupportApplicationInput,
   SupportApplicationResponse,
   SupportAttachmentResponse,
@@ -31,6 +32,7 @@ import {
   mockApplications,
   mockConstructionFor,
   mockInspectionApplicationFor,
+  mockRecommendedFacilitiesFor,
   mockResult,
   mockSupportApplicationFor,
   mockSupportAttachmentFor,
@@ -182,7 +184,19 @@ export function getInspectionApplication(applicationId: string) {
     async () =>
       unwrapInspection(
         await http.get<InspectionEnvelope<InspectionApplicationDetail>>(
-          `/resident/inspection-applications/${applicationId}`,
+          `/resident/applications/${applicationId}`,
+        ),
+      ),
+  );
+}
+
+export function getRecommendedFacilities(applicationId: string) {
+  return withMock(
+    () => mockRecommendedFacilitiesFor(applicationId),
+    async () =>
+      unwrapInspection(
+        await http.get<InspectionEnvelope<RecommendedFacilities>>(
+          `/resident/applications/${applicationId}/recommended-facilities`,
         ),
       ),
   );
@@ -197,7 +211,6 @@ export function createSupportApplication(input: CreateSupportApplicationInput) {
           '/resident/support-applications',
           {
             ...input,
-            requestedFacility: '출입구 물막이판',
             preferredVisitTime:
               input.preferredVisitTime === 'ANYTIME' ? 'ANY' : input.preferredVisitTime,
           },

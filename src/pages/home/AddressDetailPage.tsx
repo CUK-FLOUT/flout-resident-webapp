@@ -28,7 +28,11 @@ export default function AddressDetailPage() {
 
   return (
     <Screen
-      header={{ title: '상세 주소 입력', onBack: returnToSearch }}
+      header={{
+        title: '상세 주소 입력',
+        onBack: returnToSearch,
+        className: 'px-5 [&_h1]:text-[18px] [&_svg]:size-6',
+      }}
       tab="home"
       className="pt-4"
       bottom={
@@ -44,11 +48,11 @@ export default function AddressDetailPage() {
         우리 집에 맞는 침수 정보를 안내해요.
       </p>
       <div className="mt-3">
-        <p className="text-caption text-ink mb-2">주소 검색</p>
+        <p className="text-label text-ink mb-2 leading-5">주소 검색</p>
         <button
           type="button"
           onClick={returnToSearch}
-          className="border-border bg-surface text-body text-ink flex h-11 w-full items-center gap-2 rounded-md border px-3 text-left"
+          className="border-primary bg-surface text-body text-ink flex h-11 w-full items-center gap-2 rounded-md border px-3 text-left"
         >
           <Search size={20} className="text-muted shrink-0" aria-hidden />
           <span className="min-w-0 truncate">{getPrimaryAddress(address)}</span>
@@ -63,11 +67,11 @@ export default function AddressDetailPage() {
           setDetail(e.target.value);
         }}
         required
-        containerClassName="mt-3"
+        containerClassName="mt-3 [&>label]:leading-5 [&>div]:border-primary [&>div]:pl-3"
       />
-      <fieldset className="mt-3">
-        <legend className="text-caption text-ink">거주 층을 아래에서 선택해 주세요.</legend>
-        <div className="mt-3 flex flex-col gap-3">
+      <fieldset className="mt-11">
+        <legend className="sr-only">거주 층을 아래에서 선택해 주세요.</legend>
+        <div className="flex flex-col gap-[25px]">
           {floors.map((option) => (
             <label
               key={option.value}
@@ -88,9 +92,7 @@ export default function AddressDetailPage() {
           ))}
         </div>
       </fieldset>
-      <p className="text-caption text-ink mt-3">
-        거주 층을 선택한 뒤 아래 버튼을 눌러 분석해 주세요.
-      </p>
+      <p className="sr-only">거주 층을 선택한 뒤 아래 버튼을 눌러 분석해 주세요.</p>
       {env.useMock && floor !== 'SECOND_OR_ABOVE' && (
         <label className="text-caption text-muted mt-4 block">
           개발용 목업 결과 선택

@@ -50,23 +50,29 @@ export const DESIGN_SCREENS: DesignScreen[] = [
     route: 'home',
   },
   {
+    nodeId: '2755:2722',
+    name: '01-1 홈화면 진행 중인 신청 없음',
+    relatedRoute: 'home',
+    status: 'done',
+  },
+  {
     nodeId: '2020:1503',
     name: '01-1 주소 검색 · 검색 결과 선택',
     route: 'addressSearch',
   },
   {
     nodeId: '2108:1558',
-    name: '01-2 부천시 외 주소 안내',
+    name: '01-3 부천시 외 주소 안내',
     relatedRoute: 'addressSearch',
     status: 'done',
   },
   {
     nodeId: '1787:1529',
-    name: '01-3 주소 확인 · 상세 주소 입력',
+    name: '01-4 주소 확인 · 상세 주소 입력',
     route: 'addressDetail',
   },
   {
-    nodeId: '1584:1531',
+    nodeId: '2764:2817',
     name: '02-0 취약도 분석 중',
     route: 'riskLoading',
     preview: 'risk-loading',

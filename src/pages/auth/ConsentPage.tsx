@@ -38,74 +38,77 @@ export default function ConsentPage() {
   }
 
   return (
-    <Screen
-      header={{
-        title: '정보 제공 동의',
-        onBack: () => navigate(-1),
-      }}
-      bottom={
-        <Button
-          disabled={!canSubmit}
-          loading={pending}
-          loadingText="저장 중…"
-          onClick={handleSubmit}
-        >
-          동의하고 시작하기
-        </Button>
-      }
-    >
-      <div className="flex flex-col pt-10">
-        <p className="text-muted text-sm">서비스 시작 전</p>
+    <div className="flex min-h-dvh flex-col [&>div]:mb-[clamp(24px,calc(100dvh-666px),134px)] [&>div]:pb-1">
+      <Screen
+        header={{
+          title: '정보 제공 동의',
+          className: 'px-5 [&_h1]:text-[18px] [&_svg]:size-6',
+          onBack: () => navigate(-1),
+        }}
+        bottom={
+          <Button
+            disabled={!canSubmit}
+            loading={pending}
+            loadingText="저장 중…"
+            onClick={handleSubmit}
+          >
+            동의하고 시작하기
+          </Button>
+        }
+      >
+        <div className="flex flex-col pt-6">
+          <h1 className="text-ink text-title">
+            필요한 정보만 확인하고
+            <br />
+            동의해 주세요.
+          </h1>
 
-        <h1 className="text-ink mt-4 text-[24px] leading-snug font-bold">
-          필요한 정보만 확인하고
-          <br />
-          동의해 주세요.
-        </h1>
+          <h2 className="text-ink mt-[42px] text-[24px] leading-7 font-bold">동의 항목</h2>
 
-        <h2 className="text-ink mt-8 text-[18px] font-bold">동의 항목</h2>
+          <div className="mt-10 flex flex-col gap-10">
+            <CheckItem
+              variant="checklist"
+              checked={agreeThirdParty}
+              onChange={setAgreeThirdParty}
+              title={
+                <span className="font-bold">
+                  <span className="text-primary">필수</span> 개인정보 제3자 제공
+                </span>
+              }
+              description="현장점검 및 행정 처리를 위해 부천시에 제공해요."
+              className="[&>span:last-child>span:last-child]:text-muted px-0 py-0 [&>span:first-child]:mt-0 [&>span:first-child]:size-6"
+            />
 
-        <div className="mt-8 flex flex-col gap-5">
-          <CheckItem
-            variant="checklist"
-            checked={agreeThirdParty}
-            onChange={setAgreeThirdParty}
-            title={
-              <span className="font-bold">
-                <span className="text-primary">필수</span> 개인정보 제3자 제공
-              </span>
-            }
-            description="현장점검 및 행정 처리를 위해 부천시에 제공해요."
-            className="px-3 py-3 [&>span:first-child]:mt-1"
-          />
+            <CheckItem
+              variant="checklist"
+              checked={agreeRequiredNotice}
+              onChange={setAgreeRequiredNotice}
+              title={
+                <span className="font-bold">
+                  <span className="text-primary">필수</span> 진행상태 알림 수신
+                </span>
+              }
+              description="서비스 이용과 신청자 확인을 위해 사용해요"
+              className="[&>span:last-child>span:last-child]:text-muted px-0 py-0 [&>span:first-child]:mt-0 [&>span:first-child]:size-6"
+            />
+          </div>
+          {error && (
+            <p role="alert" className="text-danger mt-4">
+              {error}
+            </p>
+          )}
 
-          <CheckItem
-            variant="checklist"
-            checked={agreeRequiredNotice}
-            onChange={setAgreeRequiredNotice}
-            title={
-              <span className="font-bold">
-                <span className="text-primary">필수</span> 진행상태 알림 수신
-              </span>
-            }
-            description="서비스 이용과 신청자 확인을 위해 사용해요"
-            className="px-3 py-3 [&>span:first-child]:mt-1"
-          />
+          <div className="mt-[78px] flex items-center gap-3.5 px-3">
+            <Info className="text-primary size-[26px] shrink-0" />
+
+            <p className="text-muted text-body max-w-[255px]">
+              필수 항목에 동의하지 않으면
+              <br />
+              현장점검 및 지원 서비스를 이용할 수 없어요.
+            </p>
+          </div>
         </div>
-        {error && (
-          <p role="alert" className="text-danger mt-4">
-            {error}
-          </p>
-        )}
-
-        <div className="mt-8 flex items-start gap-3">
-          <Info className="text-primary mt-0.5 size-5 shrink-0" />
-
-          <p className="text-muted text-sm leading-relaxed">
-            필수 항목에 동의하지 않으면 현장점검 및 지원 서비스를 이용할 수 없어요.
-          </p>
-        </div>
-      </div>
-    </Screen>
+      </Screen>
+    </div>
   );
 }

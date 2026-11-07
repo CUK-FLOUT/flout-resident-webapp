@@ -221,16 +221,31 @@ export type ConsentStatus = 'NOT_REQUIRED' | 'REQUIRED' | 'SUBMITTED' | 'CONFIRM
 export type LandlordConsentStatus = 'PENDING' | 'VERIFIED' | 'NOT_REQUIRED';
 export type SupportApplicationStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
-export interface InspectionApplicationDetail {
-  applicationId: number;
-  receiptNumber: string;
-  applicant: { name: string; phone: string };
-  address: string;
+export interface InspectionApplicationDetail extends Omit<
+  InspectionReceipt,
+  'detailAddress' | 'inspectionStatus'
+> {
   detailAddress: string | null;
-  occupancyType: 'OWNER' | 'TENANT' | 'ETC';
-  progress?: {
-    stage: string | null;
-    support: { supportApplicationId: number; status: SupportApplicationStatus } | null;
+  occupancyType: InspectionApplicationRequest['occupancyType'];
+  floodExperience: YesNoUnknown;
+  inflowLocations: InspectionApplicationRequest['inflowLocations'];
+  existingFacility: boolean;
+  requestReason: string | null;
+  preferredVisitDate: string | null;
+  preferredTimeSlot: InspectionApplicationRequest['preferredTimeSlot'] | null;
+  inspectionStatus: 'RECEIVED' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | null;
+  resultPublished: boolean;
+  progress: {
+    stage: ApplicationStage | null;
+    visit: {
+      scheduledAt: ISODateString | null;
+      inspectorName: string | null;
+      preVisitNotice: string | null;
+    } | null;
+    support?: {
+      supportApplicationId: number;
+      status: SupportApplicationStatus;
+    } | null;
   } | null;
 }
 

@@ -4,9 +4,9 @@ import { generatePath, Link } from 'react-router';
 import { useApplications } from '@/api/applications';
 import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
-import { PATHS } from '@/constants/paths';
 import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/date';
+import { getApplicationListDestination } from '@/lib/inspectionApplication';
 import type { ApplicationListItem } from '@/types/domain';
 import { StageBadge } from './StageBadge';
 
@@ -100,7 +100,7 @@ function ApplicationCard({ item }: { item: ApplicationListItem }) {
       <div className="text-caption flex items-center justify-between">
         {showResult && <span className="text-body-text">현장점검 결과</span>}
         <Link
-          to={generatePath(showResult ? PATHS.result : PATHS.applicationDetail, {
+          to={generatePath(getApplicationListDestination(item.stage), {
             applicationId: item.id,
           })}
           className="text-primary ml-auto font-medium"

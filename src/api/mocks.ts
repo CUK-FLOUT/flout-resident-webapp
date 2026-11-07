@@ -293,17 +293,46 @@ const MOCK_SUPPORT_STATUS: Record<number, SupportApplicationStatus> = {
 export const mockInspectionApplicationFor = (id: string): InspectionApplicationDetail => {
   const applicationId = Number(id);
   const status = MOCK_SUPPORT_STATUS[applicationId];
+  const detail = mockApplicationDetailFor(String(applicationId).padStart(6, '0'));
+  const { request, stage, createdAt, hasResult } = detail;
+  const inspectionStatus =
+    stage === 'INSPECTION_RECEIVED'
+      ? 'RECEIVED'
+      : stage === 'VISIT_SCHEDULED'
+        ? 'SCHEDULED'
+        : stage === 'INSPECTION_IN_PROGRESS'
+          ? 'IN_PROGRESS'
+          : 'COMPLETED';
   return {
     applicationId,
-    receiptNumber: id,
-    applicant: { name: mockApplicationDetail.request.applicantName, phone: '010-****-0002' },
-    address: mockApplicationDetail.request.address,
+    receiptNumber: detail.id,
+    applicant: { name: request.applicantName, phone: '010-****-0002' },
+    address: request.address,
     detailAddress: null,
     occupancyType: applicationId === MOCK_OWNER_APPLICATION_ID ? 'OWNER' : 'TENANT',
+    floodExperience: request.floodExperience,
+    inflowLocations: request.waterEntryPoints.map((location) =>
+      location === 'OTHER' ? 'ETC' : location,
+    ),
+    existingFacility: request.existingFacility !== 'NONE',
+    requestReason: request.reason ?? null,
+    preferredVisitDate: request.preferredDate,
+    preferredTimeSlot: request.preferredTimeSlot === 'ANYTIME' ? 'ANY' : request.preferredTimeSlot,
+    attachmentCount: request.photoUrls.length,
+    applicationStatus: inspectionStatus === 'COMPLETED' ? 'INSPECTION_COMPLETED' : 'RECEIVED',
+    inspectionStatus,
+    resultPublished: hasResult,
+    createdAt,
+    submittedAt: null,
     progress: {
-      stage: applicationId === MOCK_CONSTRUCTION_APPLICATION_ID ? 'CONSTRUCTION_SCHEDULED' : null,
-      support: status ? { supportApplicationId: applicationId, status } : null,
-    },
+  stage: applicationId === MOCK_CONSTRUCTION_APPLICATION_ID
+    ? 'CONSTRUCTION_SCHEDULED'
+    : stage,
+  visit: null,
+  support: status
+    ? { supportApplicationId: applicationId, status }
+    : null,
+},
   };
 };
 

@@ -51,7 +51,6 @@ export const PATHS = {
   supportSubmit: '/applications/:applicationId/support/submit',
   supportComplete: '/applications/:applicationId/support/complete',
   supportStatus: '/applications/:applicationId/support/status',
-  supportConsent: '/applications/:applicationId/support/consent',
 
   // 시공 (CONSTRUCTION)
   construction: '/applications/:applicationId/construction',

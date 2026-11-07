@@ -10,10 +10,14 @@ import type {
   RecommendedFacilities,
   RiskAssessment,
   SupportApplicationResponse,
+  SupportApplicationStatus,
+  SupportApproval,
   SupportAttachmentResponse,
   SupportProgram,
   SupportProgress,
+  SupportRejection,
   SupportReview,
+  SupportSchedule,
 } from '@/types/domain';
 
 export const mockDelay = (ms = 400) => new Promise((r) => setTimeout(r, ms));
@@ -276,15 +280,32 @@ export const mockApplicationDetailFor = (id: string): ApplicationDetail => ({
 });
 
 const MOCK_OWNER_APPLICATION_ID = 6;
+const MOCK_CONSTRUCTION_APPLICATION_ID = 8;
+const MOCK_SUPPORT_STATUS: Record<number, SupportApplicationStatus> = {
+  2: 'SUBMITTED',
+  3: 'APPROVED',
+  4: 'REJECTED',
+  5: 'APPROVED',
+  6: 'SUBMITTED',
+  [MOCK_CONSTRUCTION_APPLICATION_ID]: 'APPROVED',
+};
 
-export const mockInspectionApplicationFor = (id: string): InspectionApplicationDetail => ({
-  applicationId: Number(id),
-  receiptNumber: id,
-  applicant: { name: mockApplicationDetail.request.applicantName, phone: '010-****-0002' },
-  address: mockApplicationDetail.request.address,
-  detailAddress: null,
-  occupancyType: Number(id) === MOCK_OWNER_APPLICATION_ID ? 'OWNER' : 'TENANT',
-});
+export const mockInspectionApplicationFor = (id: string): InspectionApplicationDetail => {
+  const applicationId = Number(id);
+  const status = MOCK_SUPPORT_STATUS[applicationId];
+  return {
+    applicationId,
+    receiptNumber: id,
+    applicant: { name: mockApplicationDetail.request.applicantName, phone: '010-****-0002' },
+    address: mockApplicationDetail.request.address,
+    detailAddress: null,
+    occupancyType: applicationId === MOCK_OWNER_APPLICATION_ID ? 'OWNER' : 'TENANT',
+    progress: {
+      stage: applicationId === MOCK_CONSTRUCTION_APPLICATION_ID ? 'CONSTRUCTION_SCHEDULED' : null,
+      support: status ? { supportApplicationId: applicationId, status } : null,
+    },
+  };
+};
 
 const MOCK_NO_FACILITY_APPLICATION_ID = 7;
 
@@ -349,6 +370,44 @@ export const mockSupportReviewFor = (supportApplicationId: number): SupportRevie
     landlordConsentStatus: isOwner ? 'NOT_REQUIRED' : 'PENDING',
   };
 };
+
+const mockSupportDecisionBase = (supportApplicationId: number) => ({
+  supportApplicationId,
+  applicationId: supportApplicationId,
+  receiptNo: String(supportApplicationId).padStart(6, '0'),
+  applicantName: mockApplicationDetail.request.applicantName,
+  address: mockApplicationDetail.request.address,
+  detailAddress: null,
+  programName: fixedSupportPrograms[0].name,
+  requestedFacility: '출입구 물막이판',
+});
+
+export const mockSupportApprovalFor = (id: number): SupportApproval => ({
+  ...mockSupportDecisionBase(id),
+  status: 'APPROVED',
+  approvedAt: '2026-10-14T10:00:00+09:00',
+  supportScope: '출입구 물막이판',
+  landlordConsentStatus: 'VERIFIED',
+  scheduledConstructionDate: null,
+  scheduledConstructionTime: null,
+});
+
+export const mockSupportRejectionFor = (id: number): SupportRejection => ({
+  ...mockSupportDecisionBase(id),
+  status: 'REJECTED',
+  rejectionReason: '자격 미달',
+  rejectedAt: '2026-10-14T10:00:00+09:00',
+  inspectionId: id,
+  inspectionResultPublished: true,
+});
+
+export const mockSupportScheduleFor = (id: number): SupportSchedule => ({
+  ...mockSupportDecisionBase(id),
+  status: 'APPROVED',
+  landlordConsentStatus: 'VERIFIED',
+  scheduledConstructionDate: null,
+  scheduledConstructionTime: null,
+});
 
 export const mockConstructionFor = (applicationId: string): Construction => ({
   applicationId,

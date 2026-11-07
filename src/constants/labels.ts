@@ -1,9 +1,9 @@
 import type { StatusTone } from '@/components/ui';
 import type {
   ApplicationStage,
-  ConsentStatus,
   ExistingFacility,
   InspectionNeed,
+  LandlordConsentStatus,
   NotificationType,
   RiskFactorCode,
   RiskLevel,
@@ -164,14 +164,12 @@ export const APPLICATION_STAGE: Record<
   COMPLETED: { label: '전체 완료', headline: '예방시설 설치가 모두 끝났어요.', tone: 'success' },
 };
 
-/** 지원 진행 단계 표시 (Figma 04-5 progress-bar) */
-export const SUPPORT_STEPS = ['접수', '검토', '동의', '일정', '결과'] as const;
+export const SUPPORT_STEPS = ['접수', '동의', '결과', '일정'] as const;
 
-export const CONSENT_STATUS_LABEL: Record<ConsentStatus, string> = {
+export const LANDLORD_CONSENT_LABEL: Record<LandlordConsentStatus, string> = {
   NOT_REQUIRED: '불필요',
-  REQUIRED: '제출 필요',
-  SUBMITTED: '확인 중',
-  CONFIRMED: '확인 완료',
+  PENDING: '확인 중',
+  VERIFIED: '확인 완료',
 };
 
 export const SUPPORT_DECISION_LABEL: Record<SupportDecision, string> = {

@@ -133,6 +133,8 @@ export interface InspectionUploadResponse {
 export type ApplicationStage =
   | 'INSPECTION_RECEIVED'
   | 'VISIT_SCHEDULED'
+  | 'INSPECTION_IN_PROGRESS'
+  | 'INSPECTION_RESULT_PENDING'
   | 'INSPECTION_COMPLETED'
   | 'SUPPORT_RECEIVED'
   | 'SUPPORT_REVIEW'
@@ -157,6 +159,11 @@ export interface ApplicationSummary {
   stage: ApplicationStage;
   createdAt: ISODateString;
   updatedAt: ISODateString;
+}
+
+export interface ApplicationListItem extends ApplicationSummary {
+  receiptNumber: string;
+  closed: boolean;
 }
 
 export interface ApplicationDetail extends ApplicationSummary {
@@ -214,17 +221,32 @@ export type ConsentStatus = 'NOT_REQUIRED' | 'REQUIRED' | 'SUBMITTED' | 'CONFIRM
 export type LandlordConsentStatus = 'PENDING' | 'VERIFIED' | 'NOT_REQUIRED';
 export type SupportApplicationStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
-export interface InspectionApplicationDetail {
-  applicationId: number;
-  receiptNumber: string;
-  applicant: { name: string; phone: string };
-  address: string;
+export interface InspectionApplicationDetail extends Omit<
+  InspectionReceipt,
+  'detailAddress' | 'inspectionStatus'
+> {
   detailAddress: string | null;
-  occupancyType: 'OWNER' | 'TENANT' | 'ETC';
-  progress?: {
-    stage: string | null;
+  occupancyType: InspectionApplicationRequest['occupancyType'];
+  floodExperience: YesNoUnknown;
+  inflowLocations: InspectionApplicationRequest['inflowLocations'];
+  existingFacility: boolean;
+  requestReason: string | null;
+  preferredVisitDate: string | null;
+  preferredTimeSlot: InspectionApplicationRequest['preferredTimeSlot'] | null;
+  inspectionStatus: 'RECEIVED' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | null;
+  resultPublished: boolean;
+  progress: {
+    stage: ApplicationStage | null;
     constructionId?: number | null;
-    support: { supportApplicationId: number; status: SupportApplicationStatus } | null;
+    visit: {
+      scheduledAt: ISODateString | null;
+      inspectorName: string | null;
+      preVisitNotice: string | null;
+    } | null;
+    support?: {
+      supportApplicationId: number;
+      status: SupportApplicationStatus;
+    } | null;
   } | null;
 }
 

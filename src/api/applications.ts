@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { http } from '@/lib/http';
+import { ApiError, http } from '@/lib/http';
 import { env } from '@/lib/env';
 import {
   createMockInspection,
@@ -9,7 +9,7 @@ import {
 } from '@/api/inspectionMock';
 import type {
   ApplicationDetail,
-  ApplicationSummary,
+  ApplicationListItem,
   ConstructionResult,
   ConstructionSchedule,
   CreateSupportApplicationInput,
@@ -125,17 +125,41 @@ export function useInspectionSubmission() {
   return { createDraft, updateMockDraft, uploadPhotos };
 }
 
+/* ── STATUS-01 ~ 06 신청 내역 · 상세 ──────────────────────────────── */
+
+type ResidentApplicationListItem = Omit<ApplicationListItem, 'id'> & { applicationId: number };
+
 export function useApplications() {
   return useQuery({
     queryKey: queryKeys.applications(),
-    queryFn: () =>
-      withMock(
-        () => (new URLSearchParams(location.search).has('empty') ? [] : mockApplications),
-        () => http.get<ApplicationSummary[]>('/applications'),
+    queryFn: ({ signal }) =>
+      withMock<ApplicationListItem[]>(
+        () =>
+          new URLSearchParams(location.search).has('empty')
+            ? []
+            : mockApplications.map((item) => ({
+                ...item,
+                receiptNumber: item.id,
+                closed: item.stage === 'COMPLETED' || item.stage === 'SUPPORT_REJECTED',
+              })),
+        async () => {
+          const items = unwrapInspection(
+            await http.get<InspectionEnvelope<ResidentApplicationListItem[]>>(
+              '/resident/applications',
+              { signal },
+            ),
+          );
+          if (!Array.isArray(items)) throw new Error('신청 목록 응답을 확인할 수 없어요.');
+          return items.map(({ applicationId, ...item }) => ({
+            ...item,
+            id: String(applicationId),
+          }));
+        },
       ),
   });
 }
 
+// 아래 상세 및 후속 기능의 엔드포인트는 가안입니다.
 export function useApplication(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.application(id ?? ''),
@@ -176,15 +200,27 @@ export function useSupportPrograms(applicationId: string | undefined) {
   });
 }
 
-export function getInspectionApplication(applicationId: string) {
+export function parseInspectionApplicationId(value: string | undefined) {
+  if (!value || !/^\d+$/.test(value)) return undefined;
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : undefined;
+}
+
+export function getInspectionApplication(applicationId: number, signal?: AbortSignal) {
   return withMock(
-    () => mockInspectionApplicationFor(applicationId),
-    async () =>
-      unwrapInspection(
-        await http.get<InspectionEnvelope<InspectionApplicationDetail>>(
-          `/resident/applications/${applicationId}`,
-        ),
-      ),
+    () => mockInspectionApplicationFor(String(applicationId)),
+    async () => {
+      const response = await http.get<InspectionEnvelope<InspectionApplicationDetail | null>>(
+        `/resident/applications/${applicationId}`,
+        { signal },
+      );
+      if (response?.isSuccess && response.result === null)
+        throw new ApiError(404, '신청 내역을 찾을 수 없어요.');
+      const application = unwrapInspection(response);
+      if (!application || application.applicationId !== applicationId)
+        throw new ApiError(502, '신청 상세 응답을 확인할 수 없어요.');
+      return application;
+    },
   );
 }
 
@@ -201,10 +237,11 @@ export function getRecommendedFacilities(applicationId: string) {
 }
 
 export function useInspectionApplication(applicationId: string | undefined) {
+  const id = parseInspectionApplicationId(applicationId);
   return useQuery({
-    queryKey: queryKeys.inspectionApplication(applicationId ?? ''),
-    queryFn: () => getInspectionApplication(applicationId!),
-    enabled: Boolean(applicationId),
+    queryKey: queryKeys.inspectionApplication(id === undefined ? '' : String(id)),
+    queryFn: ({ signal }) => getInspectionApplication(id!, signal),
+    enabled: id !== undefined,
   });
 }
 

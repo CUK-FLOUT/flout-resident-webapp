@@ -125,6 +125,16 @@ export const APPLICATION_STAGE: Record<
     headline: '전문가 방문 일정이 정해졌어요.',
     tone: 'primary',
   },
+  INSPECTION_IN_PROGRESS: {
+    label: '점검 진행 중',
+    headline: '현장점검을 진행하고 있어요.',
+    tone: 'primary',
+  },
+  INSPECTION_RESULT_PENDING: {
+    label: '결과 공개 대기',
+    headline: '현장점검 결과 공개를 기다리고 있어요.',
+    tone: 'primary',
+  },
   INSPECTION_COMPLETED: {
     label: '점검 완료',
     headline: '현장점검 결과가 나왔어요.',

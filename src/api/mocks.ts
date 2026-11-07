@@ -1,4 +1,5 @@
 import type {
+  ApplicationStage,
   AddressCandidate,
   AppNotification,
   ApplicationDetail,
@@ -286,7 +287,7 @@ const MOCK_CONSTRUCTION_STATUS: Record<number, ConstructionStatus> = {
   9: 'IN_PROGRESS',
   10: 'COMPLETED',
 };
-const MOCK_CONSTRUCTION_STAGE: Record<ConstructionStatus, string> = {
+const MOCK_CONSTRUCTION_STAGE: Record<ConstructionStatus, ApplicationStage> = {
   PENDING: 'SUPPORT_APPROVED',
   SCHEDULED: 'CONSTRUCTION_SCHEDULED',
   IN_PROGRESS: 'CONSTRUCTION_IN_PROGRESS',
@@ -307,16 +308,41 @@ export const mockInspectionApplicationFor = (id: string): InspectionApplicationD
   const applicationId = Number(id);
   const status = MOCK_SUPPORT_STATUS[applicationId];
   const constructionStatus = MOCK_CONSTRUCTION_STATUS[applicationId];
+  const detail = mockApplicationDetailFor(String(applicationId).padStart(6, '0'));
+  const { request, stage, createdAt, hasResult } = detail;
+  const inspectionStatus =
+    stage === 'INSPECTION_RECEIVED'
+      ? 'RECEIVED'
+      : stage === 'VISIT_SCHEDULED'
+        ? 'SCHEDULED'
+        : stage === 'INSPECTION_IN_PROGRESS'
+          ? 'IN_PROGRESS'
+          : 'COMPLETED';
   return {
     applicationId,
-    receiptNumber: id,
-    applicant: { name: mockApplicationDetail.request.applicantName, phone: '010-****-0002' },
-    address: mockApplicationDetail.request.address,
+    receiptNumber: detail.id,
+    applicant: { name: request.applicantName, phone: '010-****-0002' },
+    address: request.address,
     detailAddress: null,
     occupancyType: applicationId === MOCK_OWNER_APPLICATION_ID ? 'OWNER' : 'TENANT',
+    floodExperience: request.floodExperience,
+    inflowLocations: request.waterEntryPoints.map((location) =>
+      location === 'OTHER' ? 'ETC' : location,
+    ),
+    existingFacility: request.existingFacility !== 'NONE',
+    requestReason: request.reason ?? null,
+    preferredVisitDate: request.preferredDate,
+    preferredTimeSlot: request.preferredTimeSlot === 'ANYTIME' ? 'ANY' : request.preferredTimeSlot,
+    attachmentCount: request.photoUrls.length,
+    applicationStatus: inspectionStatus === 'COMPLETED' ? 'INSPECTION_COMPLETED' : 'RECEIVED',
+    inspectionStatus,
+    resultPublished: hasResult,
+    createdAt,
+    submittedAt: null,
     progress: {
-      stage: constructionStatus ? MOCK_CONSTRUCTION_STAGE[constructionStatus] : null,
+      stage: constructionStatus ? MOCK_CONSTRUCTION_STAGE[constructionStatus] : stage,
       constructionId: constructionStatus ? applicationId : null,
+      visit: null,
       support: status ? { supportApplicationId: applicationId, status } : null,
     },
   };

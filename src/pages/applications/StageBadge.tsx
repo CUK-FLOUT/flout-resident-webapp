@@ -12,15 +12,15 @@ const TONE_CLASS: Record<StatusTone, string> = {
 };
 
 export function StageBadge({ stage }: { stage: ApplicationStage }) {
-  const { label, tone } = APPLICATION_STAGE[stage];
+  const status = APPLICATION_STAGE[stage];
   return (
     <span
       className={cn(
         'shrink-0 rounded-md px-2 py-1 text-[12px] leading-5 font-medium',
-        TONE_CLASS[tone],
+        TONE_CLASS[status?.tone ?? 'muted'],
       )}
     >
-      {label}
+      {status?.label ?? '상태 확인 중'}
     </span>
   );
 }

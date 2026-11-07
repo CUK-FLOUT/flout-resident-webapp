@@ -10,9 +10,7 @@ import { useAddressDraft } from '@/stores/addressDraft';
 export default function HomePage() {
   const navigate = useNavigate();
   const { data, isLoading, isError, refetch } = useApplications();
-  const applications = data?.filter(
-    (item) => item.stage !== 'COMPLETED' && item.stage !== 'SUPPORT_REJECTED',
-  );
+  const applications = data?.filter((item) => !item.closed);
   const empty = applications?.length === 0;
   const searchAddress = () => {
     useAddressDraft.getState().startNewSearch();
@@ -106,13 +104,15 @@ export default function HomePage() {
                     <ClipboardCheck size={24} strokeWidth={1.5} aria-hidden />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="text-body text-ink block font-semibold">신청 {item.id}</span>
+                    <span className="text-body text-ink block font-semibold">
+                      신청 {item.receiptNumber}
+                    </span>
                     <span className="text-muted block truncate text-[12px] leading-[18px]">
                       {item.address}
                     </span>
                   </span>
                   <span className="bg-soft text-primary min-w-[82px] shrink-0 rounded-full px-2 py-1 text-center text-[12px] leading-5 font-semibold">
-                    {APPLICATION_STAGE[item.stage].label ?? '상태 확인 중'}
+                    {APPLICATION_STAGE[item.stage]?.label ?? '상태 확인 중'}
                   </span>
                   <ChevronRight size={16} className="text-primary shrink-0" aria-hidden />
                 </Link>

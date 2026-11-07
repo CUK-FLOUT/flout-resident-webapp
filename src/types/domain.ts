@@ -133,6 +133,8 @@ export interface InspectionUploadResponse {
 export type ApplicationStage =
   | 'INSPECTION_RECEIVED'
   | 'VISIT_SCHEDULED'
+  | 'INSPECTION_IN_PROGRESS'
+  | 'INSPECTION_RESULT_PENDING'
   | 'INSPECTION_COMPLETED'
   | 'SUPPORT_RECEIVED'
   | 'SUPPORT_REVIEW'
@@ -157,6 +159,11 @@ export interface ApplicationSummary {
   stage: ApplicationStage;
   createdAt: ISODateString;
   updatedAt: ISODateString;
+}
+
+export interface ApplicationListItem extends ApplicationSummary {
+  receiptNumber: string;
+  closed: boolean;
 }
 
 export interface ApplicationDetail extends ApplicationSummary {

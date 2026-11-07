@@ -10,7 +10,6 @@ import { useAddressDraft } from '@/stores/addressDraft';
 export default function HomePage() {
   const navigate = useNavigate();
   const { data, isLoading, isError, refetch } = useApplications();
-  // 내 신청 화면과 동일하게 전체 완료·지원 미승인은 진행 중 목록에서 제외합니다.
   const applications = data?.filter(
     (item) => item.stage !== 'COMPLETED' && item.stage !== 'SUPPORT_REJECTED',
   );
@@ -113,7 +112,7 @@ export default function HomePage() {
                     </span>
                   </span>
                   <span className="bg-soft text-primary min-w-[82px] shrink-0 rounded-full px-2 py-1 text-center text-[12px] leading-5 font-semibold">
-                    {APPLICATION_STAGE[item.stage].label}
+                    {APPLICATION_STAGE[item.stage].label ?? '상태 확인 중'}
                   </span>
                   <ChevronRight size={16} className="text-primary shrink-0" aria-hidden />
                 </Link>

@@ -1,6 +1,4 @@
-/**
- * localStorage 래퍼. 사파리 사생활 보호 모드 등에서 접근이 막혀도 앱이 죽지 않도록 try/catch 처리.
- */
+
 function safeGet(key: string): string | null {
   try {
     return window.localStorage.getItem(key);
@@ -28,7 +26,13 @@ function safeRemove(key: string) {
 const KEYS = {
   token: 'flout.accessToken',
   recentAddresses: 'flout.recentAddresses',
+  fcmToken: 'flout.fcmToken',
 } as const;
+
+export const fcmTokenStorage = {
+  get: () => safeGet(KEYS.fcmToken),
+  set: (token: string) => safeSet(KEYS.fcmToken, token),
+};
 
 export const tokenStorage = {
   get: () => safeGet(KEYS.token),

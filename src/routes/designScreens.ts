@@ -50,23 +50,29 @@ export const DESIGN_SCREENS: DesignScreen[] = [
     route: 'home',
   },
   {
+    nodeId: '2755:2722',
+    name: '01-1 홈화면 진행 중인 신청 없음',
+    relatedRoute: 'home',
+    status: 'done',
+  },
+  {
     nodeId: '2020:1503',
     name: '01-1 주소 검색 · 검색 결과 선택',
     route: 'addressSearch',
   },
   {
     nodeId: '2108:1558',
-    name: '01-2 부천시 외 주소 안내',
+    name: '01-3 부천시 외 주소 안내',
     relatedRoute: 'addressSearch',
     status: 'done',
   },
   {
     nodeId: '1787:1529',
-    name: '01-3 주소 확인 · 상세 주소 입력',
+    name: '01-4 주소 확인 · 상세 주소 입력',
     route: 'addressDetail',
   },
   {
-    nodeId: '1584:1531',
+    nodeId: '2764:2817',
     name: '02-0 취약도 분석 중',
     route: 'riskLoading',
     preview: 'risk-loading',
@@ -166,25 +172,27 @@ export const DESIGN_SCREENS: DesignScreen[] = [
   },
   {
     nodeId: '1565:1446',
-    name: '03-10 현장점검하기_결과등록',
+    name: '03-11 현장점검하기_결과등록',
+    route: 'resultRegistered',
   },
   {
     nodeId: '2215:2458',
     name: '03-10 현장점검하기_점검진행',
+    route: 'inspectionProgress',
   },
   {
     nodeId: '1115:3111',
-    name: '03-11 현장점검하기_점검 결과 보기',
+    name: '03-12 현장점검하기_점검 결과 보기',
     route: 'result',
   },
   {
     nodeId: '1115:3140',
-    name: '03-12 현장점검하기_취약점',
+    name: '03-13 현장점검하기_취약점',
     route: 'resultPoints',
   },
   {
     nodeId: '1115:3194',
-    name: '03-13 현장점검하기_권장 예방조치',
+    name: '03-14 현장점검하기_권장 예방조치',
     route: 'resultRecommendations',
   },
   {

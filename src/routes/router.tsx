@@ -88,8 +88,16 @@ const routes: RouteObject[] = [
         path: PATHS.visitPrepare,
         lazy: page(() => import('@/pages/applications/VisitPreparePage')),
       },
+      {
+        path: PATHS.inspectionProgress,
+        lazy: page(() => import('@/pages/applications/InspectionProgressPage')),
+      },
 
       // 점검 결과
+      {
+        path: PATHS.resultRegistered,
+        lazy: page(() => import('@/pages/result/ResultRegisteredPage')),
+      },
       { path: PATHS.result, lazy: page(() => import('@/pages/result/ResultSummaryPage')) },
       { path: PATHS.resultPoints, lazy: page(() => import('@/pages/result/ResultPointsPage')) },
       {

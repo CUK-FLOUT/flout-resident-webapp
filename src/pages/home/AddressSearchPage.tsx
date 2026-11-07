@@ -93,7 +93,8 @@ export default function AddressSearchPage() {
       restoredLocation.current === location.key ||
       !current ||
       pages.length === 0
-    ) return;
+    )
+      return;
     const scrollY = useAddressDraft.getState().searchScrollY;
     const frame = requestAnimationFrame(() => {
       restoredLocation.current = location.key;
@@ -172,9 +173,13 @@ export default function AddressSearchPage() {
 
   return (
     <Screen
-      header={{ title: '주소 검색', onBack: () => navigate(PATHS.home) }}
+      header={{
+        title: '주소 검색',
+        onBack: () => navigate(PATHS.home),
+        className: outside ? 'px-5 [&_h1]:text-[18px] [&_svg]:size-6' : undefined,
+      }}
       tab="home"
-      className="pt-4"
+      className={outside ? 'pt-[26px]' : 'pt-4'}
     >
       <p className="text-body text-muted">도로명, 건물명 또는 지번으로 검색해 주세요.</p>
       <div className="relative mt-4">
@@ -185,6 +190,7 @@ export default function AddressSearchPage() {
         />
         <TextField
           aria-label="주소 검색어"
+          containerClassName={outside ? '[&>div]:border-primary' : undefined}
           size="md"
           placeholder="도로명, 건물명 또는 지번"
           value={keyword}
@@ -214,10 +220,17 @@ export default function AddressSearchPage() {
         </div>
       )}
       {outside && (
-        <div role="status" className={emptyStateClass}>
+        <div
+          role="status"
+          className="flex flex-col items-center gap-3 pt-[clamp(80px,23dvh,184px)] pb-10 text-center"
+        >
           <MapPinOff size={24} className="text-muted" aria-hidden />
-          <p className="text-label text-ink font-bold">현재 부천시 주소만 지원합니다.</p>
-          <p className="text-caption text-muted">부천시 내 도로명 또는 지번주소를 검색해 주세요.</p>
+          <p className="text-ink text-[20px] leading-[22px] font-bold">
+            현재 부천시 주소만 지원합니다.
+          </p>
+          <p className="text-muted text-[15px] leading-[22px]">
+            부천시 내 도로명 또는 지번주소를 검색해 주세요.
+          </p>
         </div>
       )}
       {empty && (

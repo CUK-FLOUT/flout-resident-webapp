@@ -27,7 +27,7 @@ export function InspectionApplicationScreen({
       ? PATHS.applicationsAll
       : generatePath(PATHS[backTo], { applicationId: String(id) });
 
-  if (application.isLoading)
+  if (application.isPending)
     return (
       <InspectionStatusScreen title={title} backTo={fallback}>
         <p role="status" className="text-body text-muted pt-10 text-center">

@@ -1,5 +1,6 @@
+import { PATHS } from '@/constants/paths';
 import { env } from './env';
-import { tokenStorage } from './storage';
+import { hasTokenPair, tokenStorage, type AuthSession } from './storage';
 
 /**
  * fetch 래퍼. 모든 API 호출은 이 함수를 거칩니다.
@@ -28,15 +29,20 @@ interface RequestOptions {
   headers?: Record<string, string>;
 }
 
-async function request<T>(method: Method, path: string, opts: RequestOptions = {}): Promise<T> {
+async function requestOnce<T>(
+  method: Method,
+  path: string,
+  opts: RequestOptions,
+  accessToken?: string,
+): Promise<T> {
+  if (opts.signal?.aborted) throw opts.signal.reason;
   const url = new URL(`${env.apiBaseUrl}${path}`);
   Object.entries(opts.query ?? {}).forEach(([k, v]) => {
     if (v !== undefined) url.searchParams.set(k, String(v));
   });
 
   const headers = new Headers({ Accept: 'application/json', ...opts.headers });
-  const token = tokenStorage.get();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
+  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
 
   let body: BodyInit | undefined;
   if (opts.body instanceof FormData) {
@@ -76,14 +82,133 @@ async function request<T>(method: Method, path: string, opts: RequestOptions = {
 
   if (!res.ok) {
     const err = (data ?? {}) as { message?: string; code?: string };
-    if (res.status === 401) tokenStorage.clear();
-    throw new ApiError(res.status, err.message ?? '요청을 처리하지 못했어요.', err.code);
+    throw new ApiError(res.status, responseMessage(err.message), err.code);
   }
 
   return data as T;
 }
 
+function responseMessage(message: unknown) {
+  return typeof message === 'string' && message.trim() ? message : '요청을 처리하지 못했어요.';
+}
+
+/** 공개 인증 API는 Authorization과 401 복구를 거치지 않습니다. */
+async function postPublic<T>(path: string, body: unknown): Promise<T> {
+  const data = await requestOnce<{
+    isSuccess: boolean;
+    status?: number;
+    message?: string;
+    code?: string;
+    result?: T;
+  }>('POST', path, { body });
+  if (!data?.isSuccess)
+    throw new ApiError(data?.status ?? 200, responseMessage(data?.message), data?.code);
+  if (data.result == null) throw new ApiError(data.status ?? 200, '서버 응답을 확인할 수 없어요.');
+  return data.result;
+}
+
+function sameSession(a: AuthSession | null, b: AuthSession | null) {
+  if (!a || !b) return a === b;
+  return a.id === b.id && (a.id !== null || a.accessToken === b.accessToken);
+}
+
+function sameTokens(a: AuthSession | null, b: AuthSession | null) {
+  return (
+    sameSession(a, b) && a?.accessToken === b?.accessToken && a?.refreshToken === b?.refreshToken
+  );
+}
+
+let redirecting = false;
+
+function expireSession(expected: AuthSession | null) {
+  if (!sameTokens(tokenStorage.readSession(), expected)) return;
+  tokenStorage.clear();
+  if (!redirecting && window.location.pathname !== PATHS.login) {
+    redirecting = true;
+    window.location.replace(PATHS.login);
+  }
+}
+
+async function rotateSession(sent: AuthSession): Promise<AuthSession | null> {
+  const current = tokenStorage.readSession();
+  if (!current || !sameSession(current, sent)) return null;
+  if (!sameTokens(current, sent)) return current;
+  if (!current.id || !current.refreshToken) {
+    expireSession(current);
+    return null;
+  }
+  try {
+    const result = await postPublic<unknown>('/auth/refresh', {
+      refreshToken: current.refreshToken,
+    });
+    if (
+      !hasTokenPair(result) ||
+      !('role' in result) ||
+      result.role !== 'RESIDENT' ||
+      result.refreshToken === current.refreshToken
+    )
+      throw new ApiError(401, '재발급된 주민 인증 정보를 확인할 수 없어요.');
+    if (sameTokens(tokenStorage.readSession(), current)) {
+      if (!tokenStorage.rotate(current.id, result)) {
+        expireSession(current);
+        return null;
+      }
+    }
+  } catch {
+    expireSession(current);
+  }
+  const latest = tokenStorage.readSession();
+  return sameSession(latest, current) && !sameTokens(latest, current) ? latest : null;
+}
+
+let refreshing: { session: AuthSession; promise: Promise<AuthSession | null> } | undefined;
+
+async function recoverSession(sent: AuthSession | null): Promise<AuthSession | null> {
+  if (!sent) {
+    expireSession(null);
+    return null;
+  }
+  const current = tokenStorage.readSession();
+  if (!sameSession(current, sent)) return null;
+  if (!sameTokens(current, sent)) return current;
+  if (refreshing && sameSession(refreshing.session, sent)) return refreshing.promise;
+
+  const promise = navigator.locks
+    ? navigator.locks.request('flout.auth.refresh', () => rotateSession(sent))
+    : rotateSession(sent);
+  const attempt = { session: sent, promise };
+  refreshing = attempt;
+  try {
+    return await promise;
+  } catch {
+    expireSession(sent);
+    return null;
+  } finally {
+    if (refreshing === attempt) refreshing = undefined;
+  }
+}
+
+async function request<T>(method: Method, path: string, opts: RequestOptions = {}): Promise<T> {
+  const sent = tokenStorage.readSession();
+  try {
+    return await requestOnce<T>(method, path, opts, sent?.accessToken);
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 401 || env.useMock) throw error;
+    if (opts.signal?.aborted) throw opts.signal.reason;
+    const renewed = await recoverSession(sent);
+    const latest = tokenStorage.readSession();
+    if (!renewed || !latest || !sameSession(latest, renewed)) throw error;
+    try {
+      return await requestOnce<T>(method, path, opts, latest.accessToken);
+    } catch (retryError) {
+      if (retryError instanceof ApiError && retryError.status === 401) expireSession(latest);
+      throw retryError;
+    }
+  }
+}
+
 export const http = {
+  postPublic,
   get: <T>(path: string, opts?: Omit<RequestOptions, 'body'>) => request<T>('GET', path, opts),
   post: <T>(path: string, body?: unknown, opts?: RequestOptions) =>
     request<T>('POST', path, { ...opts, body }),

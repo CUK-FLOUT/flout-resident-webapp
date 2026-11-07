@@ -9,7 +9,7 @@ import {
 } from '@/api/inspectionMock';
 import type {
   ApplicationDetail,
-  ApplicationSummary,
+  ApplicationListItem,
   Construction,
   CreateSupportApplicationInput,
   InspectionApplicationDetail,
@@ -118,17 +118,41 @@ export function useInspectionSubmission() {
   return { createDraft, updateMockDraft, uploadPhotos };
 }
 
+/* ── STATUS-01 ~ 06 신청 내역 · 상세 ──────────────────────────────── */
+
+type ResidentApplicationListItem = Omit<ApplicationListItem, 'id'> & { applicationId: number };
+
 export function useApplications() {
   return useQuery({
     queryKey: queryKeys.applications(),
-    queryFn: () =>
-      withMock(
-        () => (new URLSearchParams(location.search).has('empty') ? [] : mockApplications),
-        () => http.get<ApplicationSummary[]>('/applications'),
+    queryFn: ({ signal }) =>
+      withMock<ApplicationListItem[]>(
+        () =>
+          new URLSearchParams(location.search).has('empty')
+            ? []
+            : mockApplications.map((item) => ({
+                ...item,
+                receiptNumber: item.id,
+                closed: item.stage === 'COMPLETED' || item.stage === 'SUPPORT_REJECTED',
+              })),
+        async () => {
+          const items = unwrapInspection(
+            await http.get<InspectionEnvelope<ResidentApplicationListItem[]>>(
+              '/resident/applications',
+              { signal },
+            ),
+          );
+          if (!Array.isArray(items)) throw new Error('신청 목록 응답을 확인할 수 없어요.');
+          return items.map(({ applicationId, ...item }) => ({
+            ...item,
+            id: String(applicationId),
+          }));
+        },
       ),
   });
 }
 
+// 아래 상세 및 후속 기능의 엔드포인트는 가안입니다.
 export function useApplication(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.application(id ?? ''),

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/date';
-import type { ApplicationStage, ApplicationSummary } from '@/types/domain';
+import type { ApplicationListItem } from '@/types/domain';
 import { StageBadge } from './StageBadge';
 
 const TABS = [
@@ -17,8 +17,6 @@ const TABS = [
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
-
-const CLOSED_STAGES: ApplicationStage[] = ['COMPLETED', 'SUPPORT_REJECTED'];
 
 export default function ApplicationsAllPage() {
   const { data, isLoading, isError, refetch } = useApplications();
@@ -45,9 +43,7 @@ export default function ApplicationsAllPage() {
     );
   }
 
-  const items = data.filter(
-    (a) => tab === 'all' || CLOSED_STAGES.includes(a.stage) === (tab === 'closed'),
-  );
+  const items = data.filter((a) => tab === 'all' || a.closed === (tab === 'closed'));
 
   return (
     <Screen header={header} tab="applications">
@@ -88,7 +84,7 @@ export default function ApplicationsAllPage() {
   );
 }
 
-function ApplicationCard({ item }: { item: ApplicationSummary }) {
+function ApplicationCard({ item }: { item: ApplicationListItem }) {
   const showResult = item.stage === 'INSPECTION_COMPLETED';
 
   return (
@@ -99,7 +95,7 @@ function ApplicationCard({ item }: { item: ApplicationSummary }) {
       </div>
       <p className="text-ink text-[15px] leading-6 font-semibold">{item.title}</p>
       <p className="text-caption text-muted">
-        {item.id} · {item.address}
+        {item.receiptNumber} · {item.address}
       </p>
       <div className="text-caption flex items-center justify-between">
         {showResult && <span className="text-body-text">현장점검 결과</span>}

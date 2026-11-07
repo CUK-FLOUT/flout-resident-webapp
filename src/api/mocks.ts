@@ -3,7 +3,8 @@ import type {
   AppNotification,
   ApplicationDetail,
   ApplicationSummary,
-  Construction,
+  ConstructionResult,
+  ConstructionStatus,
   InspectionApplicationDetail,
   InspectionResult,
   PreventionGuide,
@@ -280,19 +281,32 @@ export const mockApplicationDetailFor = (id: string): ApplicationDetail => ({
 });
 
 const MOCK_OWNER_APPLICATION_ID = 6;
-const MOCK_CONSTRUCTION_APPLICATION_ID = 8;
+const MOCK_CONSTRUCTION_STATUS: Record<number, ConstructionStatus> = {
+  8: 'SCHEDULED',
+  9: 'IN_PROGRESS',
+  10: 'COMPLETED',
+};
+const MOCK_CONSTRUCTION_STAGE: Record<ConstructionStatus, string> = {
+  PENDING: 'SUPPORT_APPROVED',
+  SCHEDULED: 'CONSTRUCTION_SCHEDULED',
+  IN_PROGRESS: 'CONSTRUCTION_IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+};
 const MOCK_SUPPORT_STATUS: Record<number, SupportApplicationStatus> = {
   2: 'SUBMITTED',
   3: 'APPROVED',
   4: 'REJECTED',
   5: 'APPROVED',
   6: 'SUBMITTED',
-  [MOCK_CONSTRUCTION_APPLICATION_ID]: 'APPROVED',
+  8: 'APPROVED',
+  9: 'APPROVED',
+  10: 'APPROVED',
 };
 
 export const mockInspectionApplicationFor = (id: string): InspectionApplicationDetail => {
   const applicationId = Number(id);
   const status = MOCK_SUPPORT_STATUS[applicationId];
+  const constructionStatus = MOCK_CONSTRUCTION_STATUS[applicationId];
   return {
     applicationId,
     receiptNumber: id,
@@ -301,7 +315,8 @@ export const mockInspectionApplicationFor = (id: string): InspectionApplicationD
     detailAddress: null,
     occupancyType: applicationId === MOCK_OWNER_APPLICATION_ID ? 'OWNER' : 'TENANT',
     progress: {
-      stage: applicationId === MOCK_CONSTRUCTION_APPLICATION_ID ? 'CONSTRUCTION_SCHEDULED' : null,
+      stage: constructionStatus ? MOCK_CONSTRUCTION_STAGE[constructionStatus] : null,
+      constructionId: constructionStatus ? applicationId : null,
       support: status ? { supportApplicationId: applicationId, status } : null,
     },
   };
@@ -409,21 +424,30 @@ export const mockSupportScheduleFor = (id: number): SupportSchedule => ({
   scheduledConstructionTime: null,
 });
 
-export const mockConstructionFor = (applicationId: string): Construction => ({
-  applicationId,
-  status: 'SCHEDULED',
-  facility: '출입구 물막이판',
-  scheduledAt: '2026-10-21T10:00:00+09:00',
-  contractor: 'OO시공',
-  resultPhotoUrls: [],
-  location: '출입구',
-  ...(applicationId === '000007' && { status: 'IN_PROGRESS' as const }),
-  ...(applicationId === '000008' && {
-    status: 'COMPLETED' as const,
-    completedAt: '2026-10-21T15:00:00+09:00',
-    resultNote: '개폐 및 통행 확인 완료',
-  }),
-});
+export const mockConstructionResultFor = (constructionId: number): ConstructionResult => {
+  const status = MOCK_CONSTRUCTION_STATUS[constructionId] ?? 'SCHEDULED';
+  const completed = status === 'COMPLETED';
+  return {
+    constructionId,
+    supportApplicationId: constructionId,
+    applicationId: constructionId,
+    receiptNo: String(constructionId).padStart(6, '0'),
+    applicantName: mockApplicationDetail.request.applicantName,
+    address: mockApplicationDetail.request.address,
+    detailAddress: null,
+    status,
+    requestedFacility: '출입구 물막이판',
+    supportScope: '출입구 물막이판 설치',
+    scheduledConstructionDate: '2026-10-21',
+    scheduledConstructionTime: '10:00:00',
+    completedAt: completed ? '2026-10-21T11:30:00+09:00' : null,
+    finalInstallationResult: completed ? '출입구 물막이판 설치 · 개폐 및 통행 확인 완료' : null,
+    updatedAt: '2026-10-21T10:00:00+09:00',
+    workHistory: [{ status, changedAt: '2026-10-21T10:00:00+09:00' }],
+    beforePhotos: [],
+    photos: [],
+  };
+};
 
 const today = new Date().toLocaleDateString('sv-SE');
 

@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Check, ChevronRight, Info, MapPin } from 'lucide-react';
-import { generatePath, Navigate } from 'react-router';
+import { useConstructionSchedule } from '@/api/applications';
 import { BottomSheet, Button } from '@/components/ui';
-import { PATHS } from '@/constants/paths';
-import { formatDate, formatMonthDay, formatTime, formatWeekday } from '@/lib/date';
+import { formatDate, formatMonthDay, formatTime, formatWeekday, joinDateTime } from '@/lib/date';
 import { ConstructionScreen, InfoField } from './ConstructionScreen';
 
 const checklist = (facility: string) => [
@@ -24,14 +23,13 @@ export default function ConstructionSchedulePage() {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
-    <ConstructionScreen>
-      {({ construction, application }) => {
-        const { applicationId, status, scheduledAt, facility } = construction;
-        if (status !== 'SCHEDULED') {
-          const to =
-            status === 'COMPLETED' ? PATHS.constructionComplete : PATHS.constructionProgress;
-          return <Navigate to={generatePath(to, { applicationId })} replace />;
-        }
+    <ConstructionScreen status="SCHEDULED" useDetail={useConstructionSchedule}>
+      {(construction) => {
+        const { receiptNo, address, requestedFacility: facility } = construction;
+        const scheduledAt = joinDateTime(
+          construction.scheduledConstructionDate,
+          construction.scheduledConstructionTime,
+        );
 
         return (
           <>
@@ -62,7 +60,7 @@ export default function ConstructionSchedulePage() {
               <p className="text-caption">시공 주소</p>
               <p className="text-label flex items-center gap-2">
                 <MapPin size={20} aria-hidden className="shrink-0" />
-                {application.request.address}
+                {address}
               </p>
             </section>
 
@@ -91,7 +89,7 @@ export default function ConstructionSchedulePage() {
 
             {scheduledAt && (
               <InfoField label="접수번호 / 확정 시공일·시간">
-                {applicationId} / {formatDate(scheduledAt)} · {scheduledAt.slice(11, 16)}
+                {receiptNo} / {formatDate(scheduledAt)} · {scheduledAt.slice(11, 16)}
               </InfoField>
             )}
 

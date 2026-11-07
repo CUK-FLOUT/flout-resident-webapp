@@ -1,10 +1,11 @@
+import { useConstructionResult } from '@/api/applications';
 import illustration from '@/assets/construction-progress.svg';
 import { ConstructionScreen, InfoField } from './ConstructionScreen';
 
 export default function ConstructionProgressPage() {
   return (
-    <ConstructionScreen>
-      {({ construction: { facility }, application: { id, request } }) => (
+    <ConstructionScreen status="IN_PROGRESS" useDetail={useConstructionResult}>
+      {({ requestedFacility: facility, receiptNo, applicantName, address }) => (
         <>
           <section className="flex flex-col gap-2">
             <p className="text-caption flex items-center gap-2">
@@ -41,7 +42,7 @@ export default function ConstructionProgressPage() {
           <div aria-hidden className="bg-page h-px" />
 
           <InfoField label="접수번호 / 주소">
-            {id} · {request.applicantName} / {request.address}
+            {receiptNo} · {applicantName} / {address}
           </InfoField>
         </>
       )}

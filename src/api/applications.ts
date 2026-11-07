@@ -10,7 +10,8 @@ import {
 import type {
   ApplicationDetail,
   ApplicationSummary,
-  Construction,
+  ConstructionResult,
+  ConstructionSchedule,
   CreateSupportApplicationInput,
   InspectionApplicationDetail,
   InspectionApplicationRequest,
@@ -32,7 +33,7 @@ import {
   fixedSupportPrograms,
   mockApplicationDetailFor,
   mockApplications,
-  mockConstructionFor,
+  mockConstructionResultFor,
   mockInspectionApplicationFor,
   mockRecommendedFacilitiesFor,
   mockResult,
@@ -335,28 +336,27 @@ export function useSupportProgress(applicationId: string | undefined) {
   });
 }
 
-export function useConstruction(applicationId: string | undefined) {
+function useConstructionDetail<T>(
+  constructionId: number,
+  detail: 'result' | 'schedule',
+  mock: () => T,
+) {
   return useQuery({
-    queryKey: queryKeys.construction(applicationId ?? ''),
+    queryKey: queryKeys.constructionDetail(constructionId, detail),
     queryFn: () =>
-      withMock(
-        () => mockConstructionFor(applicationId!),
-        () => http.get<Construction>(`/applications/${applicationId}/construction`),
+      withMock(mock, async () =>
+        unwrapInspection(
+          await http.get<InspectionEnvelope<T>>(
+            `/resident/constructions/${constructionId}${detail === 'schedule' ? '/schedule' : ''}`,
+          ),
+        ),
       ),
-    enabled: Boolean(applicationId),
+    enabled: Boolean(constructionId),
   });
 }
 
-/** CONSTRUCTION-07 주민 완료 확인 */
-export function useConfirmConstructionComplete() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (applicationId: string) =>
-      withMock<void>(
-        () => undefined,
-        () => http.post<void>(`/applications/${applicationId}/construction/confirm`),
-      ),
-    onSuccess: (_, applicationId) =>
-      qc.invalidateQueries({ queryKey: queryKeys.application(applicationId) }),
-  });
-}
+export const useConstructionSchedule = (id: number) =>
+  useConstructionDetail<ConstructionSchedule>(id, 'schedule', () => mockConstructionResultFor(id));
+
+export const useConstructionResult = (id: number) =>
+  useConstructionDetail<ConstructionResult>(id, 'result', () => mockConstructionResultFor(id));

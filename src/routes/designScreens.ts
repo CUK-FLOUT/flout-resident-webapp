@@ -264,21 +264,26 @@ export const DESIGN_SCREENS: DesignScreen[] = [
     nodeId: '1115:3773',
     name: '05-1 시공하기_시공예정',
     route: 'construction',
+    sampleApplicationId: '000008',
   },
   {
     nodeId: '1115:3827',
     name: '05-2 시공하기_방문전 안내',
     relatedRoute: 'construction',
+    status: 'done',
+    sampleApplicationId: '000008',
   },
   {
     nodeId: '1115:3951',
     name: '05-3 시공하기_시공진행',
     route: 'constructionProgress',
+    sampleApplicationId: '000009',
   },
   {
     nodeId: '1115:4034',
     name: '05-4 시공결과',
     route: 'constructionComplete',
+    sampleApplicationId: '000010',
   },
   {
     nodeId: '1115:2862',

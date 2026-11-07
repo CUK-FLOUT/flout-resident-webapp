@@ -1,16 +1,11 @@
 import type { ReactNode } from 'react';
 import { useParams } from 'react-router';
-import {
-  useApplication,
-  useConstruction,
-  useInspectionResult,
-  useSupportProgress,
-} from '@/api/applications';
+import { useApplication, useInspectionResult, useSupportProgress } from '@/api/applications';
 import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { APPLICATION_STAGE, SUPPORT_DECISION_LABEL } from '@/constants/labels';
 import { cn } from '@/lib/cn';
-import { formatDate, formatTime } from '@/lib/date';
+import { formatDate } from '@/lib/date';
 import { maskPhone } from '@/lib/phone';
 import type { ApplicationStage } from '@/types/domain';
 import { StageBadge } from './StageBadge';
@@ -26,7 +21,6 @@ export default function ApplicationDetailPage() {
   const idFrom = (target: ApplicationStage) => (reached(stage, target) ? applicationId : undefined);
   const result = useInspectionResult(idFrom('INSPECTION_COMPLETED'));
   const support = useSupportProgress(idFrom('SUPPORT_RECEIVED'));
-  const construction = useConstruction(idFrom('CONSTRUCTION_SCHEDULED'));
   const header = { title: '신청 상세' };
 
   if (application.isLoading) {
@@ -51,7 +45,6 @@ export default function ApplicationDetailPage() {
 
   const { title, address, createdAt, request } = application.data;
   const [category, name = title] = title.split(' · ');
-  const scheduledAt = construction.data?.scheduledAt;
 
   return (
     <Screen header={header} tab="applications">
@@ -83,15 +76,6 @@ export default function ApplicationDetailPage() {
           <Row label="신청 지원 시설">{support.data?.facility}</Row>
           <Row label="지원 검토 결과">
             {support.data && SUPPORT_DECISION_LABEL[support.data.decision]}
-          </Row>
-        </Section>
-
-        <Section title="시공 정보">
-          <Row label="확정 시공일">
-            {scheduledAt && `${formatDate(scheduledAt)} · ${formatTime(scheduledAt)}`}
-          </Row>
-          <Row label="최종 설치 결과">
-            {construction.data?.status === 'COMPLETED' && `${construction.data.facility} 설치 완료`}
           </Row>
         </Section>
       </div>

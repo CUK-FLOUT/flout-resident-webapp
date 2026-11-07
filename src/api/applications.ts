@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { http } from '@/lib/http';
+import { ApiError, http } from '@/lib/http';
 import { env } from '@/lib/env';
 import {
   createMockInspection,
@@ -199,15 +199,27 @@ export function useSupportPrograms(applicationId: string | undefined) {
   });
 }
 
-export function getInspectionApplication(applicationId: string) {
+export function parseInspectionApplicationId(value: string | undefined) {
+  if (!value || !/^\d+$/.test(value)) return undefined;
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : undefined;
+}
+
+export function getInspectionApplication(applicationId: number, signal?: AbortSignal) {
   return withMock(
-    () => mockInspectionApplicationFor(applicationId),
-    async () =>
-      unwrapInspection(
-        await http.get<InspectionEnvelope<InspectionApplicationDetail>>(
-          `/resident/applications/${applicationId}`,
-        ),
-      ),
+    () => mockInspectionApplicationFor(String(applicationId)),
+    async () => {
+      const response = await http.get<InspectionEnvelope<InspectionApplicationDetail | null>>(
+        `/resident/applications/${applicationId}`,
+        { signal },
+      );
+      if (response?.isSuccess && response.result === null)
+        throw new ApiError(404, '신청 내역을 찾을 수 없어요.');
+      const application = unwrapInspection(response);
+      if (!application || application.applicationId !== applicationId)
+        throw new ApiError(502, '신청 상세 응답을 확인할 수 없어요.');
+      return application;
+    },
   );
 }
 
@@ -224,10 +236,11 @@ export function getRecommendedFacilities(applicationId: string) {
 }
 
 export function useInspectionApplication(applicationId: string | undefined) {
+  const id = parseInspectionApplicationId(applicationId);
   return useQuery({
-    queryKey: queryKeys.inspectionApplication(applicationId ?? ''),
-    queryFn: () => getInspectionApplication(applicationId!),
-    enabled: Boolean(applicationId),
+    queryKey: queryKeys.inspectionApplication(id === undefined ? '' : String(id)),
+    queryFn: ({ signal }) => getInspectionApplication(id!, signal),
+    enabled: id !== undefined,
   });
 }
 

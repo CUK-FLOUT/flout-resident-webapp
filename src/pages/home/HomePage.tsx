@@ -5,6 +5,7 @@ import { Screen } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { APPLICATION_STAGE } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
+import { getApplicationListDestination } from '@/lib/inspectionApplication';
 import { useAddressDraft } from '@/stores/addressDraft';
 
 export default function HomePage() {
@@ -94,10 +95,9 @@ export default function HomePage() {
             {applications.map((item) => (
               <li key={item.id}>
                 <Link
-                  to={generatePath(
-                    item.stage === 'INSPECTION_COMPLETED' ? PATHS.result : PATHS.applicationDetail,
-                    { applicationId: item.id },
-                  )}
+                  to={generatePath(getApplicationListDestination(item.stage), {
+                    applicationId: item.id,
+                  })}
                   className="border-border flex min-h-14 items-center gap-2 rounded-[10px] border px-3 py-[5px]"
                 >
                   <span className="bg-soft text-primary flex size-11 shrink-0 items-center justify-center rounded-full">

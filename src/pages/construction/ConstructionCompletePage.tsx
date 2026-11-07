@@ -1,13 +1,18 @@
+import { useConstructionResult } from '@/api/applications';
 import placeholderPhoto from '@/assets/construction-result-placeholder.png';
-import { formatDate, formatTime } from '@/lib/date';
+import { formatDate, formatTime, joinDateTime } from '@/lib/date';
 import { ConstructionScreen, InfoField } from './ConstructionScreen';
 
 export default function ConstructionCompletePage() {
   return (
-    <ConstructionScreen>
-      {({ construction, application: { id, request } }) => {
-        const { facility, location, resultNote, scheduledAt, completedAt } = construction;
-        const photoDate = completedAt ?? scheduledAt;
+    <ConstructionScreen status="COMPLETED" useDetail={useConstructionResult}>
+      {(construction) => {
+        const { requestedFacility: facility, supportScope, photos } = construction;
+        const scheduledAt = joinDateTime(
+          construction.scheduledConstructionDate,
+          construction.scheduledConstructionTime,
+        );
+        const photoDate = photos[0]?.uploadedAt ?? construction.completedAt;
 
         return (
           <>
@@ -26,7 +31,7 @@ export default function ConstructionCompletePage() {
 
             <figure className="bg-page relative h-[205px] overflow-hidden rounded-lg">
               <img
-                src={construction.resultPhotoUrls[0] ?? placeholderPhoto}
+                src={photos[0]?.url ?? placeholderPhoto}
                 alt={`${facility} 설치 현장 사진`}
                 className="size-full object-cover"
               />
@@ -48,17 +53,10 @@ export default function ConstructionCompletePage() {
             <section className="flex flex-col gap-4">
               <p className="text-caption">설치 확인</p>
               <dl className="text-caption flex flex-col gap-3">
-                {[
-                  ['설치 위치', location],
-                  ['예방조치', `${facility} 설치`],
-                ]
-                  .filter(([, value]) => value)
-                  .map(([label, value]) => (
-                    <div key={label} className="flex justify-between gap-4">
-                      <dt>{label}</dt>
-                      <dd>{value}</dd>
-                    </div>
-                  ))}
+                <div className="flex justify-between gap-4">
+                  <dt>예방조치</dt>
+                  <dd>{supportScope || `${facility} 설치`}</dd>
+                </div>
                 <div className="flex justify-between gap-4">
                   <dt>시공 상태</dt>
                   <dd className="text-primary flex items-center gap-1.5">
@@ -70,11 +68,11 @@ export default function ConstructionCompletePage() {
             </section>
 
             <InfoField label="접수번호 / 주소">
-              {id} · {request.applicantName} / {request.address}
+              {construction.receiptNo} · {construction.applicantName} / {construction.address}
             </InfoField>
-            <InfoField label="최종 설치 결과">
-              {facility} 설치{resultNote && ` · ${resultNote}`}
-            </InfoField>
+            {construction.finalInstallationResult && (
+              <InfoField label="최종 설치 결과">{construction.finalInstallationResult}</InfoField>
+            )}
             <InfoField label="처리 상태">
               <span className="text-primary">전체 완료</span>
             </InfoField>

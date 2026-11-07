@@ -237,6 +237,7 @@ export interface InspectionApplicationDetail extends Omit<
   resultPublished: boolean;
   progress: {
     stage: ApplicationStage | null;
+    constructionId?: number | null;
     visit: {
       scheduledAt: ISODateString | null;
       inspectorName: string | null;
@@ -339,7 +340,40 @@ export interface SupportSchedule extends SupportDecisionBase {
 }
 
 export type SupportDecision = 'PENDING' | 'APPROVED' | 'REJECTED';
-export type ConstructionStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
+export type ConstructionStatus = 'PENDING' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
+
+export interface ConstructionSchedule {
+  constructionId: number;
+  supportApplicationId: number;
+  applicationId: number;
+  receiptNo: string;
+  applicantName: string;
+  address: string;
+  detailAddress: string | null;
+  status: ConstructionStatus;
+  requestedFacility: string;
+  supportScope: string | null;
+  scheduledConstructionDate: string | null;
+  scheduledConstructionTime: string | null;
+}
+
+export interface ConstructionPhoto {
+  photoId: number;
+  fileName: string;
+  url: string;
+  size: number;
+  contentType: string;
+  uploadedAt: ISODateString;
+}
+
+export interface ConstructionResult extends ConstructionSchedule {
+  completedAt: ISODateString | null;
+  finalInstallationResult: string | null;
+  updatedAt: ISODateString;
+  workHistory: { status: ConstructionStatus; changedAt: ISODateString }[];
+  beforePhotos: ConstructionPhoto[];
+  photos: ConstructionPhoto[];
+}
 
 export interface SupportProgress {
   applicationId: ID;
@@ -352,18 +386,6 @@ export interface SupportProgress {
   preferredDate: string;
   preferredTimeSlot: VisitTimeSlot;
   scheduledAt?: ISODateString;
-}
-
-export interface Construction {
-  applicationId: ID;
-  status: ConstructionStatus;
-  facility: string;
-  scheduledAt?: ISODateString;
-  contractor?: string;
-  completedAt?: ISODateString;
-  resultPhotoUrls: string[];
-  location?: string;
-  resultNote?: string;
 }
 
 export type NotificationType =

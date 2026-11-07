@@ -10,6 +10,9 @@ export const formatTime = (iso: string) => {
   return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${String(m).padStart(2, '0')}`;
 };
 
+export const joinDateTime = (date: string | null, time: string | null) =>
+  date && time ? `${date}T${time}` : null;
+
 export const formatWeekday = (iso: string) =>
   new Intl.DateTimeFormat('ko-KR', { weekday: 'long', timeZone: 'UTC' }).format(
     new Date(iso.slice(0, 10)),

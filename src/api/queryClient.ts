@@ -43,6 +43,7 @@ export const queryKeys = {
     ['support-applications', supportApplicationId, 'review'] as const,
   supportDetail: (supportApplicationId: number, detail: string) =>
     ['support-applications', supportApplicationId, detail] as const,
-  construction: (applicationId: string) => ['applications', applicationId, 'construction'] as const,
+  constructionDetail: (constructionId: number, detail: string) =>
+    ['constructions', constructionId, detail] as const,
   notifications: () => ['notifications'] as const,
 };

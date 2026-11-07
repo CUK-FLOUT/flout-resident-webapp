@@ -1,21 +1,36 @@
 import type { ReactNode } from 'react';
-import { useParams } from 'react-router';
-import { useApplication, useConstruction } from '@/api/applications';
+import type { UseQueryResult } from '@tanstack/react-query';
+import { generatePath, Navigate, useParams } from 'react-router';
+import { useInspectionApplication } from '@/api/applications';
 import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
-import type { ApplicationDetail, Construction } from '@/types/domain';
+import { PATHS } from '@/constants/paths';
+import type { ConstructionSchedule, ConstructionStatus } from '@/types/domain';
 
-export function ConstructionScreen({
+const header = { title: '시공하기' };
+
+const PATH_BY_STATUS: Record<ConstructionStatus, string> = {
+  PENDING: PATHS.supportStatus,
+  SCHEDULED: PATHS.construction,
+  IN_PROGRESS: PATHS.constructionProgress,
+  COMPLETED: PATHS.constructionComplete,
+};
+
+export function ConstructionScreen<T extends ConstructionSchedule>({
+  status,
+  useDetail,
   children,
 }: {
-  children: (data: { construction: Construction; application: ApplicationDetail }) => ReactNode;
+  status: ConstructionStatus;
+  useDetail: (constructionId: number) => UseQueryResult<T>;
+  children: (data: T) => ReactNode;
 }) {
   const { applicationId } = useParams<'applicationId'>();
-  const construction = useConstruction(applicationId);
-  const application = useApplication(applicationId);
-  const header = { title: '시공하기' };
+  const application = useInspectionApplication(applicationId);
+  const constructionId = application.data?.progress?.constructionId ?? 0;
+  const construction = useDetail(constructionId);
 
-  if (construction.isLoading || application.isLoading) {
+  if (application.isLoading || construction.isLoading) {
     return (
       <Screen header={header} tab="home">
         <StateMessage>시공 정보를 불러오고 있어요…</StateMessage>
@@ -23,17 +38,22 @@ export function ConstructionScreen({
     );
   }
 
-  if (!construction.data || !application.data) {
+  if (application.data && !constructionId) {
+    return (
+      <Screen header={header} tab="home">
+        <StateMessage>등록된 시공 정보가 없어요.</StateMessage>
+      </Screen>
+    );
+  }
+
+  if (!construction.data) {
     return (
       <Screen
         header={header}
         tab="home"
         bottom={
           <Button
-            onClick={() => {
-              construction.refetch();
-              application.refetch();
-            }}
+            onClick={() => (application.data ? construction.refetch() : application.refetch())}
           >
             다시 시도
           </Button>
@@ -44,11 +64,20 @@ export function ConstructionScreen({
     );
   }
 
+  if (construction.data.status !== status) {
+    return (
+      <Navigate
+        to={generatePath(PATH_BY_STATUS[construction.data.status], {
+          applicationId: applicationId!,
+        })}
+        replace
+      />
+    );
+  }
+
   return (
     <Screen header={header} tab="home">
-      <div className="text-ink flex flex-col gap-[18px] pt-5">
-        {children({ construction: construction.data, application: application.data })}
-      </div>
+      <div className="text-ink flex flex-col gap-[18px] pt-5">{children(construction.data)}</div>
     </Screen>
   );
 }

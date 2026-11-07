@@ -2,10 +2,11 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { QueryClient } from '@tanstack/react-query';
 import ts from 'typescript';
 
 const sources = Object.fromEntries(
-  ['api/auth', 'lib/http', 'lib/storage', 'constants/paths'].map((name) => [
+  ['api/auth', 'api/queryClient', 'lib/http', 'lib/storage', 'constants/paths'].map((name) => [
     name,
     ts.transpileModule(readFileSync(new URL(`../src/${name}.ts`, import.meta.url), 'utf8'), {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
@@ -13,13 +14,17 @@ const sources = Object.fromEntries(
   ]),
 );
 
-function harness(response, { network = false, stored = new Map(), locks } = {}) {
+function harness(
+  response,
+  { network = false, stored = new Map(), locks, schedule = setTimeout } = {},
+) {
   const requests = [];
   const redirects = [];
   const modules = {
     'lib/env': { env: { apiBaseUrl: 'https://api.flout.shop/api', useMock: false } },
+    'api/mocks': {},
     '@/api/authMock': {},
-    '@tanstack/react-query': { useMutation: (options) => options },
+    '@tanstack/react-query': { QueryClient, useMutation: (options) => options },
   };
   const location = {
     pathname: '/',
@@ -42,7 +47,7 @@ function harness(response, { network = false, stored = new Map(), locks } = {}) 
     Headers,
     FormData,
     AbortController,
-    setTimeout,
+    setTimeout: schedule,
     clearTimeout,
     fetch: async (url, options) => {
       const request = { url: String(url), ...options };
@@ -77,6 +82,7 @@ function harness(response, { network = false, stored = new Map(), locks } = {}) 
   return {
     api,
     http: load('lib/http').http,
+    queryClient: load('api/queryClient').queryClient,
     tokenStorage,
     requests,
     redirects,
@@ -285,6 +291,81 @@ test('a refresh 401 clears the session and moves to login once for all waiting r
   assert.equal(h.requests.length, 3);
   assert.deepEqual(h.tokens, []);
   assert.deepEqual(h.redirects, ['/login']);
+});
+
+const temporaryRefreshFailures = [
+  {
+    name: 'network failure',
+    expected: { status: 0, code: 'NETWORK' },
+    respond() {
+      throw new Error('offline');
+    },
+  },
+  {
+    name: 'timeout',
+    expected: { status: 0, code: 'TIMEOUT' },
+    schedule: (callback) => setTimeout(callback, 0),
+    respond: ({ signal }) =>
+      new Promise((_, reject) => {
+        signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+      }),
+  },
+  {
+    name: 'server error',
+    expected: { status: 503, code: 'UNAVAILABLE', message: '잠시 후 다시 시도해 주세요.' },
+    respond: () => ({
+      status: 503,
+      body: { code: 'UNAVAILABLE', message: '잠시 후 다시 시도해 주세요.' },
+    }),
+  },
+  {
+    name: 'malformed success response',
+    expected: { status: 502 },
+    respond: () => ({ status: 200, body: { isSuccess: true, result: {} } }),
+  },
+];
+
+for (const { name, expected, respond, schedule } of temporaryRefreshFailures) {
+  test(`refresh ${name} preserves tokens and stops automatic retries`, async () => {
+    let available = false;
+    const h = harness(
+      (request) => {
+        if (request.url.endsWith('/auth/refresh'))
+          return available ? refreshSuccess : respond(request);
+        return request.headers.get('Authorization') === 'Bearer renewed-access'
+          ? { status: 200, body: { ok: true } }
+          : expired;
+      },
+      { schedule },
+    );
+    h.tokenStorage.set(session);
+    const loadList = () =>
+      h.queryClient.fetchQuery({ queryKey: ['list'], queryFn: () => h.http.get('/list') });
+
+    await Promise.all([
+      assert.rejects(loadList(), expected),
+      assert.rejects(h.http.get('/second'), expected),
+    ]);
+    assert.equal(h.requests.length, 3);
+    assert.deepEqual(h.tokens, ['service-jwt', 'refresh-jwt']);
+    assert.deepEqual(h.redirects, []);
+
+    available = true;
+    assert.deepEqual(await loadList(), { ok: true });
+    assert.equal(h.requests.length, 6);
+    assert.deepEqual(h.tokens, ['renewed-access', 'renewed-refresh']);
+  });
+}
+
+test('a Web Locks failure leaves the session in place', async () => {
+  const h = harness(expired, {
+    locks: { request: () => Promise.reject(new Error('lock unavailable')) },
+  });
+  h.tokenStorage.set(session);
+  await assert.rejects(h.http.get('/list'), { name: 'RefreshError' });
+  assert.equal(h.requests.length, 1);
+  assert.deepEqual(h.tokens, ['service-jwt', 'refresh-jwt']);
+  assert.deepEqual(h.redirects, []);
 });
 
 test('an access-only legacy session is cleared without calling refresh', async () => {

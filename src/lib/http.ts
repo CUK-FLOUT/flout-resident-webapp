@@ -19,6 +19,18 @@ export class ApiError extends Error {
   }
 }
 
+export class RefreshError extends ApiError {
+  constructor(cause: unknown) {
+    const error = cause instanceof ApiError ? cause : undefined;
+    super(
+      error?.status ?? 0,
+      error?.message ?? '로그인 상태를 갱신하지 못했어요. 잠시 후 다시 시도해 주세요.',
+      error?.code,
+    );
+    this.name = 'RefreshError';
+  }
+}
+
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 interface RequestOptions {
@@ -92,7 +104,7 @@ function responseMessage(message: unknown) {
   return typeof message === 'string' && message.trim() ? message : '요청을 처리하지 못했어요.';
 }
 
-/** 공개 인증 API는 Authorization과 401 복구를 거치지 않습니다. */
+
 async function postPublic<T>(path: string, body: unknown): Promise<T> {
   const data = await requestOnce<{
     isSuccess: boolean;
@@ -147,14 +159,11 @@ async function rotateSession(sent: AuthSession): Promise<AuthSession | null> {
       result.role !== 'RESIDENT' ||
       result.refreshToken === current.refreshToken
     )
-      throw new ApiError(401, '재발급된 주민 인증 정보를 확인할 수 없어요.');
-    if (sameTokens(tokenStorage.readSession(), current)) {
-      if (!tokenStorage.rotate(current.id, result)) {
-        expireSession(current);
-        return null;
-      }
-    }
-  } catch {
+      throw new ApiError(502, '재발급된 주민 인증 정보를 확인할 수 없어요.');
+    if (sameTokens(tokenStorage.readSession(), current) && !tokenStorage.rotate(current.id, result))
+      throw new ApiError(0, '갱신한 로그인 정보를 저장할 수 없어요.');
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 401) throw error;
     expireSession(current);
   }
   const latest = tokenStorage.readSession();
@@ -180,9 +189,6 @@ async function recoverSession(sent: AuthSession | null): Promise<AuthSession | n
   refreshing = attempt;
   try {
     return await promise;
-  } catch {
-    expireSession(sent);
-    return null;
   } finally {
     if (refreshing === attempt) refreshing = undefined;
   }
@@ -195,7 +201,13 @@ async function request<T>(method: Method, path: string, opts: RequestOptions = {
   } catch (error) {
     if (!(error instanceof ApiError) || error.status !== 401 || env.useMock) throw error;
     if (opts.signal?.aborted) throw opts.signal.reason;
-    const renewed = await recoverSession(sent);
+    let renewed: AuthSession | null;
+    try {
+      renewed = await recoverSession(sent);
+    } catch (refreshError) {
+      if (opts.signal?.aborted) throw opts.signal.reason;
+      throw new RefreshError(refreshError);
+    }
     const latest = tokenStorage.readSession();
     if (!renewed || !latest || !sameSession(latest, renewed)) throw error;
     try {

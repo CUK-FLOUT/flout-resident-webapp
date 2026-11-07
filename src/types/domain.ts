@@ -131,19 +131,19 @@ export interface InspectionUploadResponse {
 }
 
 export type ApplicationStage =
-  | 'INSPECTION_RECEIVED' // 접수 (방문 일정 확인 중)
-  | 'VISIT_SCHEDULED' // 방문일정 확정
-  | 'INSPECTION_IN_PROGRESS' // 현장점검 진행
-  | 'INSPECTION_RESULT_PENDING' // 현장점검 종료 · 결과 미공개
-  | 'INSPECTION_COMPLETED' // 현장점검 완료 · 결과 공개
-  | 'SUPPORT_RECEIVED' // 지원 신청 접수
-  | 'SUPPORT_REVIEW' // 행정 검토 중
-  | 'LANDLORD_CONSENT_REQUIRED' // 임대인 동의 필요
-  | 'SUPPORT_APPROVED' // 지원 승인
-  | 'SUPPORT_REJECTED' // 지원 미승인
-  | 'CONSTRUCTION_SCHEDULED' // 시공 예정
-  | 'CONSTRUCTION_IN_PROGRESS' // 시공 진행
-  | 'COMPLETED'; // 전체 완료
+  | 'INSPECTION_RECEIVED'
+  | 'VISIT_SCHEDULED'
+  | 'INSPECTION_IN_PROGRESS'
+  | 'INSPECTION_RESULT_PENDING'
+  | 'INSPECTION_COMPLETED'
+  | 'SUPPORT_RECEIVED'
+  | 'SUPPORT_REVIEW'
+  | 'LANDLORD_CONSENT_REQUIRED'
+  | 'SUPPORT_APPROVED'
+  | 'SUPPORT_REJECTED'
+  | 'CONSTRUCTION_SCHEDULED'
+  | 'CONSTRUCTION_IN_PROGRESS'
+  | 'COMPLETED';
 
 export interface VisitSchedule {
   date: ISODateString;

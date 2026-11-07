@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { ApiError } from '@/lib/http';
+import { ApiError, RefreshError } from '@/lib/http';
 import { env } from '@/lib/env';
 import { mockDelay } from './mocks';
 
@@ -8,9 +8,10 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 30_000,
       refetchOnWindowFocus: false,
-      // 4xx는 재시도해도 같은 결과라 재시도하지 않음
       retry: (count, error) =>
-        !(error instanceof ApiError && error.status >= 400 && error.status < 500) && count < 2,
+        !(error instanceof RefreshError) &&
+        !(error instanceof ApiError && error.status >= 400 && error.status < 500) &&
+        count < 2,
     },
   },
 });

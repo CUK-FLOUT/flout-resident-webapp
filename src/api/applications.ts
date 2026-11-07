@@ -19,7 +19,6 @@ import type {
   InspectionUploadResponse,
   InspectionResult,
   RecommendedFacilities,
-  SupportApplicationInput,
   SupportApplicationResponse,
   SupportAttachmentResponse,
   SupportProgram,
@@ -36,7 +35,6 @@ import {
   mockResult,
   mockSupportApplicationFor,
   mockSupportAttachmentFor,
-  mockSupportProgress,
   mockSupportProgressFor,
   mockSupportReviewFor,
 } from './mocks';
@@ -202,6 +200,22 @@ export function getRecommendedFacilities(applicationId: string) {
   );
 }
 
+export function useInspectionApplication(applicationId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.inspectionApplication(applicationId ?? ''),
+    queryFn: () => getInspectionApplication(applicationId!),
+    enabled: Boolean(applicationId),
+  });
+}
+
+export function useRecommendedFacilities(applicationId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.recommendedFacilities(applicationId ?? ''),
+    queryFn: () => getRecommendedFacilities(applicationId!),
+    enabled: Boolean(applicationId),
+  });
+}
+
 export function createSupportApplication(input: CreateSupportApplicationInput) {
   return withMock(
     () => mockSupportApplicationFor(input.applicationId, input.programId),
@@ -244,24 +258,6 @@ export function getSupportReview(supportApplicationId: number) {
         ),
       ),
   );
-}
-
-export function useApplySupport() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: SupportApplicationInput) => {
-      const form = new FormData();
-      const { documents, ...rest } = input;
-      form.append('request', new Blob([JSON.stringify(rest)], { type: 'application/json' }));
-      documents.forEach((d) => form.append('documents', d));
-      return withMock(
-        () => mockSupportProgress,
-        () => http.post<SupportProgress>(`/applications/${input.applicationId}/support`, form),
-      );
-    },
-    onSuccess: (_, input) =>
-      qc.invalidateQueries({ queryKey: queryKeys.application(input.applicationId) }),
-  });
 }
 
 /* ── CONSTRUCTION-01 ~ 07 지원 · 시공 진행 ────────────────────────── */

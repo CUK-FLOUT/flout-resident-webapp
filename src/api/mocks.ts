@@ -16,7 +16,6 @@ import type {
   SupportReview,
 } from '@/types/domain';
 
-
 export const mockDelay = (ms = 400) => new Promise((r) => setTimeout(r, ms));
 
 export const mockAddresses: AddressCandidate[] = [
@@ -248,7 +247,6 @@ export const mockSupportProgress: SupportProgress = {
   preferredTimeSlot: 'MORNING',
 };
 
-
 const mockSupportOverrides: Record<string, Partial<SupportProgress>> = {
   '000003': {
     decision: 'APPROVED',
@@ -284,14 +282,21 @@ export const mockInspectionApplicationFor = (id: string): InspectionApplicationD
   receiptNumber: id,
   applicant: { name: mockApplicationDetail.request.applicantName, phone: '010-****-0002' },
   address: mockApplicationDetail.request.address,
+  detailAddress: null,
   occupancyType: Number(id) === MOCK_OWNER_APPLICATION_ID ? 'OWNER' : 'TENANT',
 });
 
-export const mockRecommendedFacilitiesFor = (id: string): RecommendedFacilities => ({
-  applicationId: Number(id),
-  recommendationCount: 2,
-  facilities: ['출입구 물막이판', '창문 차수판'],
-});
+const MOCK_NO_FACILITY_APPLICATION_ID = 7;
+
+export const mockRecommendedFacilitiesFor = (id: string): RecommendedFacilities => {
+  const facilities =
+    Number(id) === MOCK_NO_FACILITY_APPLICATION_ID
+      ? []
+      : Number(id) === MOCK_OWNER_APPLICATION_ID
+        ? ['출입구 물막이판']
+        : ['출입구 물막이판', '창문 차수판'];
+  return { applicationId: Number(id), recommendationCount: facilities.length, facilities };
+};
 
 export const mockSupportApplicationFor = (
   applicationId: number,

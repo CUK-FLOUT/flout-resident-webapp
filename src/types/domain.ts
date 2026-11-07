@@ -210,15 +210,6 @@ export interface SupportProgram {
   requiredDocuments: SupportRequirement[];
 }
 
-export interface SupportApplicationInput {
-  applicationId: ID;
-  programId: ID;
-  facility: string;
-  preferredDate: string;
-  preferredTimeSlot: VisitTimeSlot;
-  documents: File[];
-}
-
 export type ConsentStatus = 'NOT_REQUIRED' | 'REQUIRED' | 'SUBMITTED' | 'CONFIRMED';
 
 export interface SubmittedFile {
@@ -231,6 +222,7 @@ export interface InspectionApplicationDetail {
   receiptNumber: string;
   applicant: { name: string; phone: string };
   address: string;
+  detailAddress: string | null;
   occupancyType: 'OWNER' | 'TENANT' | 'ETC';
 }
 

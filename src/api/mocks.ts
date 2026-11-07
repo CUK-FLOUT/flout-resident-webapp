@@ -4,17 +4,17 @@ import type {
   ApplicationDetail,
   ApplicationSummary,
   Construction,
+  InspectionApplicationDetail,
   InspectionResult,
   PreventionGuide,
+  RecommendedFacilities,
   RiskAssessment,
+  SupportApplicationResponse,
+  SupportAttachmentResponse,
   SupportProgram,
   SupportProgress,
+  SupportReview,
 } from '@/types/domain';
-
-/**
- * 백엔드 연결 전 화면 작업용 목업 데이터. (.env 에서 VITE_USE_MOCK=true)
- * Figma 화면의 예시 문구를 그대로 옮겼습니다.
- */
 
 export const mockDelay = (ms = 400) => new Promise((r) => setTimeout(r, ms));
 
@@ -34,7 +34,6 @@ export const mockAddresses: AddressCandidate[] = [
   },
 ];
 
-/** 페이지네이션 검증용 주소 검색 데이터. */
 export const mockAddressSearchExtra = Array.from({ length: 11 }, (_, i) => ({
   roadAddress: `경기도 부천시 원미구 중동로 ${i + 1}`,
   jibunAddress: `경기도 부천시 원미구 중동 ${i + 1}`,
@@ -120,7 +119,7 @@ export const mockApplications: ApplicationSummary[] = [
   },
   {
     id: '000002',
-    title: '지원 · 물막이판 설치 지원',
+    title: '지원 · 침수 예방시설 설치 지원',
     address: '부천시 OO구 OO길 12',
     stage: 'SUPPORT_REVIEW',
     createdAt: '2026-10-07T10:00:00+09:00',
@@ -128,7 +127,7 @@ export const mockApplications: ApplicationSummary[] = [
   },
   {
     id: '000004',
-    title: '지원 · 물막이판 설치 지원',
+    title: '지원 · 침수 예방시설 설치 지원',
     address: '부천시 OO구 OO길 30',
     stage: 'SUPPORT_REJECTED',
     createdAt: '2026-10-06T10:00:00+09:00',
@@ -216,9 +215,9 @@ export const mockResult: InspectionResult = {
   supportEligibility: 'CHECK_REQUIRED',
 };
 
-export const mockSupportPrograms: SupportProgram[] = [
+export const fixedSupportPrograms: SupportProgram[] = [
   {
-    id: 'sp-1',
+    id: '1',
     name: '침수 예방시설 설치 지원',
     description: '침수 예방을 위한 시설 설치와 관련해 지원 대상 여부를 검토할 수 있는 사업이에요.',
     target: '부천시 반지하 주택 거주 세대',
@@ -248,10 +247,6 @@ export const mockSupportProgress: SupportProgress = {
   preferredTimeSlot: 'MORNING',
 };
 
-/**
- * 접수번호별로 지원 진행 상태를 바꿔서 04-5 ~ 04-10 을 모두 열어볼 수 있게 합니다.
- *   000002 검토 중(세입자) · 000003 승인 · 000004 미승인 · 000005 일정 조율 중 · 000006 검토 중(소유자)
- */
 const mockSupportOverrides: Record<string, Partial<SupportProgress>> = {
   '000003': {
     decision: 'APPROVED',
@@ -279,6 +274,81 @@ export const mockApplicationDetailFor = (id: string): ApplicationDetail => ({
   id,
   request: { ...mockApplicationDetail.request, tenure: id === '000006' ? 'OWNER' : 'TENANT' },
 });
+
+const MOCK_OWNER_APPLICATION_ID = 6;
+
+export const mockInspectionApplicationFor = (id: string): InspectionApplicationDetail => ({
+  applicationId: Number(id),
+  receiptNumber: id,
+  applicant: { name: mockApplicationDetail.request.applicantName, phone: '010-****-0002' },
+  address: mockApplicationDetail.request.address,
+  detailAddress: null,
+  occupancyType: Number(id) === MOCK_OWNER_APPLICATION_ID ? 'OWNER' : 'TENANT',
+});
+
+const MOCK_NO_FACILITY_APPLICATION_ID = 7;
+
+export const mockRecommendedFacilitiesFor = (id: string): RecommendedFacilities => {
+  const facilities =
+    Number(id) === MOCK_NO_FACILITY_APPLICATION_ID
+      ? []
+      : Number(id) === MOCK_OWNER_APPLICATION_ID
+        ? ['출입구 물막이판']
+        : ['출입구 물막이판', '창문 차수판'];
+  return { applicationId: Number(id), recommendationCount: facilities.length, facilities };
+};
+
+export const mockSupportApplicationFor = (
+  applicationId: number,
+  programId: number,
+): SupportApplicationResponse => {
+  const isOwner = applicationId === MOCK_OWNER_APPLICATION_ID;
+  return {
+    supportApplicationId: applicationId,
+    applicationId,
+    programId,
+    status: isOwner ? 'SUBMITTED' : 'DRAFT',
+    submittedAt: isOwner ? '2026-10-07T10:00:00+09:00' : null,
+    receiptNumber: String(applicationId).padStart(6, '0'),
+    applicantName: mockApplicationDetail.request.applicantName,
+    programName: fixedSupportPrograms[0].name,
+    createdAt: '2026-10-07T10:00:00+09:00',
+  };
+};
+
+export const mockSupportAttachmentFor = (
+  supportApplicationId: number,
+  file: File,
+): SupportAttachmentResponse => ({
+  attachmentId: 1,
+  supportApplicationId,
+  attachmentType: 'LANDLORD_CONSENT',
+  fileName: file.name,
+  size: file.size,
+  contentType: file.type,
+  submittedAt: '2026-10-07T10:00:00+09:00',
+  status: 'SUBMITTED',
+});
+
+export const mockSupportReviewFor = (supportApplicationId: number): SupportReview => {
+  const isOwner = supportApplicationId === MOCK_OWNER_APPLICATION_ID;
+  return {
+    supportApplicationId,
+    applicationId: supportApplicationId,
+    receiptNo: String(supportApplicationId).padStart(6, '0'),
+    applicantName: mockApplicationDetail.request.applicantName,
+    address: mockApplicationDetail.request.address,
+    detailAddress: null,
+    programName: fixedSupportPrograms[0].name,
+    status: 'SUBMITTED',
+    submittedAt: '2026-10-07T10:00:00+09:00',
+    requestedFacility: '출입구 물막이판',
+    occupancyType: isOwner ? 'OWNER' : 'TENANT',
+    preferredConstructionDate: '2026-10-21',
+    preferredTimeSlot: 'MORNING',
+    landlordConsentStatus: isOwner ? 'NOT_REQUIRED' : 'PENDING',
+  };
+};
 
 export const mockConstructionFor = (applicationId: string): Construction => ({
   applicationId,

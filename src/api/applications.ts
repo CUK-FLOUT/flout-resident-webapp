@@ -11,23 +11,32 @@ import type {
   ApplicationDetail,
   ApplicationSummary,
   Construction,
+  CreateSupportApplicationInput,
+  InspectionApplicationDetail,
   InspectionApplicationRequest,
   InspectionDraftResponse,
   InspectionReceipt,
   InspectionUploadResponse,
   InspectionResult,
-  SupportApplicationInput,
+  RecommendedFacilities,
+  SupportApplicationResponse,
+  SupportAttachmentResponse,
   SupportProgram,
   SupportProgress,
+  SupportReview,
 } from '@/types/domain';
 import {
+  fixedSupportPrograms,
   mockApplicationDetailFor,
   mockApplications,
   mockConstructionFor,
+  mockInspectionApplicationFor,
+  mockRecommendedFacilitiesFor,
   mockResult,
-  mockSupportPrograms,
-  mockSupportProgress,
+  mockSupportApplicationFor,
+  mockSupportAttachmentFor,
   mockSupportProgressFor,
+  mockSupportReviewFor,
 } from './mocks';
 import { queryKeys, withMock } from './queryClient';
 
@@ -109,13 +118,6 @@ export function useInspectionSubmission() {
   return { createDraft, updateMockDraft, uploadPhotos };
 }
 
-/**
- * 신청(접수번호) 1건을 중심으로 점검 → 결과 → 지원 → 시공이 이어집니다.
- * TODO(백엔드): 엔드포인트 경로는 가안입니다.
- */
-
-/* ── STATUS-01 ~ 06 신청 내역 · 상세 ──────────────────────────────── */
-
 export function useApplications() {
   return useQuery({
     queryKey: queryKeys.applications(),
@@ -159,29 +161,129 @@ export function useSupportPrograms(applicationId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.supportPrograms(applicationId ?? ''),
     queryFn: () =>
-      withMock(
-        () => mockSupportPrograms,
-        () => http.get<SupportProgram[]>(`/applications/${applicationId}/support-programs`),
+      withMock<SupportProgram[]>(
+        () => fixedSupportPrograms,
+        async () => fixedSupportPrograms,
       ),
     enabled: Boolean(applicationId),
   });
 }
 
-export function useApplySupport() {
+export function getInspectionApplication(applicationId: string) {
+  return withMock(
+    () => mockInspectionApplicationFor(applicationId),
+    async () =>
+      unwrapInspection(
+        await http.get<InspectionEnvelope<InspectionApplicationDetail>>(
+          `/resident/applications/${applicationId}`,
+        ),
+      ),
+  );
+}
+
+export function getRecommendedFacilities(applicationId: string) {
+  return withMock(
+    () => mockRecommendedFacilitiesFor(applicationId),
+    async () =>
+      unwrapInspection(
+        await http.get<InspectionEnvelope<RecommendedFacilities>>(
+          `/resident/applications/${applicationId}/recommended-facilities`,
+        ),
+      ),
+  );
+}
+
+export function useInspectionApplication(applicationId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.inspectionApplication(applicationId ?? ''),
+    queryFn: () => getInspectionApplication(applicationId!),
+    enabled: Boolean(applicationId),
+  });
+}
+
+export function useRecommendedFacilities(applicationId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.recommendedFacilities(applicationId ?? ''),
+    queryFn: () => getRecommendedFacilities(applicationId!),
+    enabled: Boolean(applicationId),
+  });
+}
+
+export function createSupportApplication(input: CreateSupportApplicationInput) {
+  return withMock(
+    () => mockSupportApplicationFor(input.applicationId, input.programId),
+    async () =>
+      unwrapInspection(
+        await http.post<InspectionEnvelope<SupportApplicationResponse>>(
+          '/resident/support-applications',
+          {
+            ...input,
+            preferredVisitTime:
+              input.preferredVisitTime === 'ANYTIME' ? 'ANY' : input.preferredVisitTime,
+          },
+        ),
+      ),
+  );
+}
+
+export function uploadSupportAttachment(supportApplicationId: number, file: File) {
+  const form = new FormData();
+  form.append('file', file);
+  return withMock(
+    () => mockSupportAttachmentFor(supportApplicationId, file),
+    async () =>
+      unwrapInspection(
+        await http.post<InspectionEnvelope<SupportAttachmentResponse>>(
+          `/resident/support-applications/${supportApplicationId}/attachments`,
+          form,
+        ),
+      ),
+  );
+}
+
+export function useSubmitSupport() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: SupportApplicationInput) => {
-      const form = new FormData();
-      const { documents, ...rest } = input;
-      form.append('request', new Blob([JSON.stringify(rest)], { type: 'application/json' }));
-      documents.forEach((d) => form.append('documents', d));
-      return withMock(
-        () => mockSupportProgress,
-        () => http.post<SupportProgress>(`/applications/${input.applicationId}/support`, form),
-      );
+    mutationFn: async ({
+      input,
+      supportApplicationId,
+      file,
+      onCreated,
+    }: {
+      input: CreateSupportApplicationInput;
+      supportApplicationId?: number;
+      file: File | null;
+      onCreated: (supportApplicationId: number) => void;
+    }) => {
+      let id = supportApplicationId;
+      if (!id) {
+        id = (await createSupportApplication(input)).supportApplicationId;
+        onCreated(id);
+      }
+      if (file) await uploadSupportAttachment(id, file);
+      return id;
     },
-    onSuccess: (_, input) =>
-      qc.invalidateQueries({ queryKey: queryKeys.application(input.applicationId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.applications() }),
+  });
+}
+
+export function getSupportReview(supportApplicationId: number) {
+  return withMock(
+    () => mockSupportReviewFor(supportApplicationId),
+    async () =>
+      unwrapInspection(
+        await http.get<InspectionEnvelope<SupportReview>>(
+          `/resident/support-applications/${supportApplicationId}/review`,
+        ),
+      ),
+  );
+}
+
+export function useSupportReview(supportApplicationId: number) {
+  return useQuery({
+    queryKey: queryKeys.supportReview(supportApplicationId),
+    queryFn: () => getSupportReview(supportApplicationId),
+    enabled: Boolean(supportApplicationId),
   });
 }
 
@@ -199,7 +301,7 @@ export function useSupportProgress(applicationId: string | undefined) {
   });
 }
 
-/** SUPPORT-07 임대인 동의서 · 주택 소유 증명서 제출 (04-6 / 04-7) */
+/** 임대인 동의서 · 주택 소유 증명서 제출 */
 export function useSubmitConsentFile(applicationId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -215,7 +317,7 @@ export function useSubmitConsentFile(applicationId: string) {
         () => http.post<SupportProgress>(`/applications/${applicationId}/support/consent`, form),
       );
     },
-    // 응답(제출 후 상태)으로 바로 갱신 — 목업에서도 제출 완료 화면이 유지됩니다
+
     onSuccess: (progress) => qc.setQueryData(queryKeys.supportProgress(applicationId), progress),
   });
 }

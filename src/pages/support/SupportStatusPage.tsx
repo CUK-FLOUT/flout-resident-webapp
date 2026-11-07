@@ -16,15 +16,6 @@ import { formatDate, formatMonthDay, formatTime } from '@/lib/date';
 import type { ApplicationDetail, SupportProgress } from '@/types/domain';
 import { ConsentView } from './SupportConsentPage';
 
-/**
- * Figma: 04-5 지원검토 (1115:3550) · 04-8 일정 조율 중 (2020:1642)
- *        04-9 승인 (1115:3669) · 04-10 미승인 (1115:3722)
- * 기능명세: CONSTRUCTION-01, CONSTRUCTION-02, NOTI-06
- *
- * 진행 상태에 따라 한 화면이 바뀝니다.
- *   decision PENDING → 04-5 · REJECTED → 04-10 · APPROVED + scheduledAt 없음 → 04-8 / 있음 → 04-9
- * 동의 자료 경로(supportConsent)도 이 컴포넌트가 받아 04-6 / 04-7 ConsentView 를 그립니다.
- */
 export default function SupportStatusPage() {
   const { applicationId } = useParams<'applicationId'>();
   const navigate = useNavigate();

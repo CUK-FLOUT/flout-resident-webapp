@@ -38,6 +38,8 @@ export const queryKeys = {
   recommendedFacilities: (applicationId: string) =>
     ['applications', applicationId, 'recommended-facilities'] as const,
   supportProgress: (applicationId: string) => ['applications', applicationId, 'support'] as const,
+  supportReview: (supportApplicationId: number) =>
+    ['support-applications', supportApplicationId, 'review'] as const,
   construction: (applicationId: string) => ['applications', applicationId, 'construction'] as const,
   notifications: () => ['notifications'] as const,
 };

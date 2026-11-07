@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { FileText, X } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router';
-import { useApplication, useSupportProgress } from '@/api/applications';
+import { useNavigate, useSearchParams } from 'react-router';
+import { useSupportReview } from '@/api/applications';
 import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { SUPPORT_DECISION_LABEL } from '@/constants/labels';
@@ -10,10 +10,9 @@ import { formatDate } from '@/lib/date';
 import { useSupportDraft } from '@/stores/supportDraft';
 
 export default function SupportCompletePage() {
-  const { applicationId } = useParams<'applicationId'>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const progress = useSupportProgress(applicationId);
-  const application = useApplication(applicationId);
+  const review = useSupportReview(Number(searchParams.get('supportApplicationId')));
   const goHome = () => navigate(PATHS.home);
   const setDraft = useSupportDraft((s) => s.setDraft);
 
@@ -38,7 +37,7 @@ export default function SupportCompletePage() {
     </Button>
   );
 
-  if (progress.isLoading || application.isLoading) {
+  if (review.isLoading) {
     return (
       <Screen header={header} tab="home">
         <StateMessage>접수 내용을 불러오고 있어요…</StateMessage>
@@ -46,7 +45,7 @@ export default function SupportCompletePage() {
     );
   }
 
-  if (!progress.data || !application.data) {
+  if (!review.data) {
     return (
       <Screen header={header} tab="home" bottom={bottom}>
         <StateMessage>접수 내용을 불러오지 못했어요.</StateMessage>
@@ -54,11 +53,11 @@ export default function SupportCompletePage() {
     );
   }
 
-  const { programName, submittedAt, decision } = progress.data;
+  const { receiptNo, applicantName, programName, submittedAt } = review.data;
   const rows = [
     ['지원사업', programName],
     ['신청일', formatDate(submittedAt)],
-    ['현재 상태', SUPPORT_DECISION_LABEL[decision]],
+    ['현재 상태', SUPPORT_DECISION_LABEL.PENDING],
   ];
 
   return (
@@ -80,7 +79,7 @@ export default function SupportCompletePage() {
         <section className="flex flex-col gap-1.5">
           <p className="text-muted text-[12px] leading-[18px]">접수번호</p>
           <p className="text-ink text-[18px] leading-[26px] font-semibold">
-            {application.data.id} · {application.data.request.applicantName}
+            {receiptNo} · {applicantName}
           </p>
         </section>
 

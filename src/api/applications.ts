@@ -118,13 +118,6 @@ export function useInspectionSubmission() {
   return { createDraft, updateMockDraft, uploadPhotos };
 }
 
-/**
- * 신청(접수번호) 1건을 중심으로 점검 → 결과 → 지원 → 시공이 이어집니다.
- * TODO(백엔드): 엔드포인트 경로는 가안입니다.
- */
-
-/* ── STATUS-01 ~ 06 신청 내역 · 상세 ──────────────────────────────── */
-
 export function useApplications() {
   return useQuery({
     queryKey: queryKeys.applications(),
@@ -286,6 +279,14 @@ export function getSupportReview(supportApplicationId: number) {
   );
 }
 
+export function useSupportReview(supportApplicationId: number) {
+  return useQuery({
+    queryKey: queryKeys.supportReview(supportApplicationId),
+    queryFn: () => getSupportReview(supportApplicationId),
+    enabled: Boolean(supportApplicationId),
+  });
+}
+
 /* ── CONSTRUCTION-01 ~ 07 지원 · 시공 진행 ────────────────────────── */
 
 export function useSupportProgress(applicationId: string | undefined) {
@@ -300,7 +301,7 @@ export function useSupportProgress(applicationId: string | undefined) {
   });
 }
 
-/** SUPPORT-07 임대인 동의서 · 주택 소유 증명서 제출 (04-6 / 04-7) */
+/** 임대인 동의서 · 주택 소유 증명서 제출 */
 export function useSubmitConsentFile(applicationId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -316,7 +317,7 @@ export function useSubmitConsentFile(applicationId: string) {
         () => http.post<SupportProgress>(`/applications/${applicationId}/support/consent`, form),
       );
     },
-    // 응답(제출 후 상태)으로 바로 갱신 — 목업에서도 제출 완료 화면이 유지됩니다
+
     onSuccess: (progress) => qc.setQueryData(queryKeys.supportProgress(applicationId), progress),
   });
 }

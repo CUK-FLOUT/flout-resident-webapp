@@ -5,7 +5,7 @@ import { useAddressCoordinates, useAddressSearch, type AddressSearchItem } from 
 import { Screen } from '@/components/layout';
 import { Button, TextField } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
-import { ApiError } from '@/lib/http';
+import { ApiError, RefreshError } from '@/lib/http';
 import { getPrimaryAddress } from '@/lib/address';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useAddressDraft } from '@/stores/addressDraft';
@@ -18,7 +18,6 @@ function isBucheon(address: AddressSearchItem) {
   );
 }
 
-// 서버는 부천시 결과만 반환하므로 명시적인 타 지역 검색어만 별도 안내합니다.
 function explicitlyOutsideBucheon(keyword: string) {
   const text = keyword.trim();
   if (/(?:^|\s)부천시(?:\s|$)/.test(text)) return false;
@@ -29,15 +28,28 @@ function explicitlyOutsideBucheon(keyword: string) {
   );
 }
 
-function searchErrorMessage(error: unknown) {
-  if (!(error instanceof ApiError)) return '주소 검색에 실패했어요. 다시 시도해 주세요.';
+function addressErrorMessage(error: unknown, operation: 'search' | 'coordinates', next = false) {
+  const coordinates = operation === 'coordinates';
+  const service = coordinates ? '주소 좌표 조회' : '주소 검색';
+  const fallback = coordinates
+    ? '주소 좌표를 불러오지 못했어요. 다시 시도해 주세요.'
+    : next
+      ? '다음 검색 결과를 불러오지 못했어요.'
+      : '주소 검색에 실패했어요. 다시 시도해 주세요.';
+  if (!(error instanceof ApiError)) return fallback;
+  if (error instanceof RefreshError) return error.message;
   if (error.status === 401) return '로그인이 필요해요. 다시 로그인해 주세요.';
-  if (error.code === 'COMMON_400_2') return '검색어를 확인해 주세요.';
-  if (error.code === 'ADDRESS_502_2')
-    return '주소 검색 서비스에 연결하지 못했어요. 다시 시도해 주세요.';
-  if (error.code === 'ADDRESS_503_2' || error.code === 'TIMEOUT')
-    return '주소 검색 응답이 늦어지고 있어요. 다시 시도해 주세요.';
-  return '주소 검색에 실패했어요. 다시 시도해 주세요.';
+  if (error.status === 400)
+    return coordinates
+      ? '부천시 내의 구체적인 주소를 다시 선택해 주세요.'
+      : '검색어를 확인해 주세요.';
+  if (coordinates && error.status === 404)
+    return '선택한 주소의 위치를 찾지 못했어요. 다른 주소를 선택해 주세요.';
+  if (error.status === 502) return `${service} 서비스에 문제가 생겼어요. 다시 시도해 주세요.`;
+  if (error.status === 503 || error.code === 'TIMEOUT')
+    return `${service} 응답이 늦어지고 있어요. 다시 시도해 주세요.`;
+  if (error.code === 'NETWORK') return error.message;
+  return fallback;
 }
 
 export default function AddressSearchPage() {
@@ -161,11 +173,7 @@ export default function AddressSearchPage() {
       navigate(PATHS.addressDetail);
     } catch (error) {
       if (requestSequence !== sequence.current) return;
-      const message =
-        error instanceof ApiError && error.status === 401
-          ? '로그인이 필요해요. 다시 로그인해 주세요.'
-          : '주소 좌표를 불러오지 못했어요. 다시 시도해 주세요.';
-      setCoordinateError({ address, message });
+      setCoordinateError({ address, message: addressErrorMessage(error, 'coordinates') });
     } finally {
       selecting.current = false;
     }
@@ -213,7 +221,7 @@ export default function AddressSearchPage() {
       )}
       {current && search.isError && !search.isFetchNextPageError && (
         <div role="alert" className="text-body text-danger mt-4">
-          <p>{searchErrorMessage(search.error)}</p>
+          <p>{addressErrorMessage(search.error, 'search')}</p>
           <Button variant="text" size="md" fullWidth={false} onClick={() => void search.refetch()}>
             다시 시도
           </Button>
@@ -298,7 +306,7 @@ export default function AddressSearchPage() {
           </ul>
           {search.isFetchNextPageError && (
             <p role="alert" className="text-caption text-danger mt-3">
-              다음 검색 결과를 불러오지 못했어요.
+              {addressErrorMessage(search.error, 'search', true)}
             </p>
           )}
           {search.hasNextPage && (

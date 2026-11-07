@@ -28,6 +28,17 @@ interface AddressEnvelope<T> {
   result: T;
 }
 
+function unwrapAddress<T>(response: AddressEnvelope<T> | null): T {
+  if (!response?.isSuccess)
+    throw new ApiError(
+      response?.status ?? 502,
+      response?.message || '주소 서비스 응답을 확인할 수 없어요.',
+      response?.code,
+    );
+  if (response.result == null) throw new ApiError(502, '주소 서비스 응답을 확인할 수 없어요.');
+  return response.result;
+}
+
 export async function searchAddress(
   keyword: string,
   currentPage = 1,
@@ -63,8 +74,18 @@ export async function searchAddress(
           signal,
         },
       );
-      if (!response.isSuccess) throw new ApiError(response.status, response.message, response.code);
-      return response.result;
+      const result = unwrapAddress(response);
+      if (
+        !Array.isArray(result.addresses) ||
+        result.currentPage !== currentPage ||
+        typeof result.hasMore !== 'boolean' ||
+        (result.hasMore &&
+          (result.nextPage == null ||
+            !Number.isInteger(result.nextPage) ||
+            result.nextPage <= result.currentPage))
+      )
+        throw new ApiError(502, '주소 검색 결과를 확인할 수 없어요.');
+      return result;
     },
   );
 }
@@ -74,8 +95,8 @@ export function useAddressSearch(keyword: string, revision = 0, enabled = true) 
     queryKey: [...queryKeys.address(keyword), revision],
     queryFn: ({ pageParam, signal }) => searchAddress(keyword, pageParam, signal),
     initialPageParam: 1,
-    getNextPageParam: (lastPage, _pages, _lastPageParam, allPageParams) =>
-      lastPage.hasMore && lastPage.nextPage != null && !allPageParams.includes(lastPage.nextPage)
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore && lastPage.nextPage != null && lastPage.nextPage > lastPage.currentPage
         ? lastPage.nextPage
         : undefined,
     enabled: enabled && keyword.trim().length > 0,
@@ -98,14 +119,11 @@ export async function getAddressCoordinates(address: string): Promise<AddressCoo
           query: { address },
         },
       );
-      if (!response.isSuccess) throw new ApiError(response.status, response.message, response.code);
-      if (
-        !Number.isFinite(response.result?.latitude) ||
-        !Number.isFinite(response.result?.longitude)
-      ) {
-        throw new ApiError(0, '주소 좌표를 확인할 수 없어요.');
+      const result = unwrapAddress(response);
+      if (!Number.isFinite(result.latitude) || !Number.isFinite(result.longitude)) {
+        throw new ApiError(502, '주소 좌표를 확인할 수 없어요.');
       }
-      return response.result;
+      return result;
     },
   );
 }

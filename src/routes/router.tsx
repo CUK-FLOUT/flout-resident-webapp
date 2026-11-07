@@ -118,10 +118,6 @@ const routes: RouteObject[] = [
         lazy: page(() => import('@/pages/support/SupportCompletePage')),
       },
       { path: PATHS.supportStatus, lazy: page(() => import('@/pages/support/SupportStatusPage')) },
-      {
-        path: PATHS.supportConsent,
-        lazy: page(() => import('@/pages/support/SupportStatusPage')),
-      },
 
       // 시공
       {

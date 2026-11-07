@@ -20,10 +20,13 @@ import type {
   InspectionResult,
   RecommendedFacilities,
   SupportApplicationResponse,
+  SupportApproval,
   SupportAttachmentResponse,
   SupportProgram,
   SupportProgress,
+  SupportRejection,
   SupportReview,
+  SupportSchedule,
 } from '@/types/domain';
 import {
   fixedSupportPrograms,
@@ -34,9 +37,12 @@ import {
   mockRecommendedFacilitiesFor,
   mockResult,
   mockSupportApplicationFor,
+  mockSupportApprovalFor,
   mockSupportAttachmentFor,
   mockSupportProgressFor,
+  mockSupportRejectionFor,
   mockSupportReviewFor,
+  mockSupportScheduleFor,
 } from './mocks';
 import { queryKeys, withMock } from './queryClient';
 
@@ -311,6 +317,34 @@ export function useSupportReview(supportApplicationId: number) {
   });
 }
 
+function useSupportDetail<T>(
+  supportApplicationId: number,
+  detail: 'approval' | 'rejection' | 'schedule',
+  mock: () => T,
+) {
+  return useQuery({
+    queryKey: queryKeys.supportDetail(supportApplicationId, detail),
+    queryFn: () =>
+      withMock(mock, async () =>
+        unwrapInspection(
+          await http.get<InspectionEnvelope<T>>(
+            `/resident/support-applications/${supportApplicationId}/${detail}`,
+          ),
+        ),
+      ),
+    enabled: Boolean(supportApplicationId),
+  });
+}
+
+export const useSupportApproval = (id: number) =>
+  useSupportDetail<SupportApproval>(id, 'approval', () => mockSupportApprovalFor(id));
+
+export const useSupportRejection = (id: number) =>
+  useSupportDetail<SupportRejection>(id, 'rejection', () => mockSupportRejectionFor(id));
+
+export const useSupportSchedule = (id: number) =>
+  useSupportDetail<SupportSchedule>(id, 'schedule', () => mockSupportScheduleFor(id));
+
 /* ── CONSTRUCTION-01 ~ 07 지원 · 시공 진행 ────────────────────────── */
 
 export function useSupportProgress(applicationId: string | undefined) {
@@ -322,27 +356,6 @@ export function useSupportProgress(applicationId: string | undefined) {
         () => http.get<SupportProgress>(`/applications/${applicationId}/support`),
       ),
     enabled: Boolean(applicationId),
-  });
-}
-
-/** 임대인 동의서 · 주택 소유 증명서 제출 */
-export function useSubmitConsentFile(applicationId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (file: File) => {
-      const form = new FormData();
-      form.append('file', file);
-      return withMock(
-        () => ({
-          ...mockSupportProgressFor(applicationId),
-          consent: 'SUBMITTED' as const,
-          consentFile: { name: file.name, url: URL.createObjectURL(file) },
-        }),
-        () => http.post<SupportProgress>(`/applications/${applicationId}/support/consent`, form),
-      );
-    },
-
-    onSuccess: (progress) => qc.setQueryData(queryKeys.supportProgress(applicationId), progress),
   });
 }
 

@@ -28,7 +28,24 @@ const KEYS = {
   legacyAccessToken: 'flout.accessToken',
   recentAddresses: 'flout.recentAddresses',
   fcmToken: 'flout.fcmToken',
+  supportApprovalSeen: 'flout.supportApprovalSeen',
 } as const;
+
+export const supportApprovalSeenStorage = {
+  list(): number[] {
+    try {
+      return JSON.parse(safeGet(KEYS.supportApprovalSeen) ?? '[]') as number[];
+    } catch {
+      return [];
+    }
+  },
+  has(id: number) {
+    return this.list().includes(id);
+  },
+  add(id: number) {
+    if (!this.has(id)) safeSet(KEYS.supportApprovalSeen, JSON.stringify([...this.list(), id]));
+  },
+};
 
 export const fcmTokenStorage = {
   get: () => safeGet(KEYS.fcmToken),

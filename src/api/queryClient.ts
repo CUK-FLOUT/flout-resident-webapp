@@ -41,6 +41,8 @@ export const queryKeys = {
   supportProgress: (applicationId: string) => ['applications', applicationId, 'support'] as const,
   supportReview: (supportApplicationId: number) =>
     ['support-applications', supportApplicationId, 'review'] as const,
+  supportDetail: (supportApplicationId: number, detail: string) =>
+    ['support-applications', supportApplicationId, detail] as const,
   construction: (applicationId: string) => ['applications', applicationId, 'construction'] as const,
   notifications: () => ['notifications'] as const,
 };

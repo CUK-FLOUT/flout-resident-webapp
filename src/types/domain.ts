@@ -218,11 +218,8 @@ export interface SupportProgram {
 }
 
 export type ConsentStatus = 'NOT_REQUIRED' | 'REQUIRED' | 'SUBMITTED' | 'CONFIRMED';
-
-export interface SubmittedFile {
-  name: string;
-  url: string;
-}
+export type LandlordConsentStatus = 'PENDING' | 'VERIFIED' | 'NOT_REQUIRED';
+export type SupportApplicationStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
 export interface InspectionApplicationDetail {
   applicationId: number;
@@ -231,6 +228,10 @@ export interface InspectionApplicationDetail {
   address: string;
   detailAddress: string | null;
   occupancyType: 'OWNER' | 'TENANT' | 'ETC';
+  progress?: {
+    stage: string | null;
+    support: { supportApplicationId: number; status: SupportApplicationStatus } | null;
+  } | null;
 }
 
 export interface RecommendedFacilities {
@@ -284,7 +285,42 @@ export interface SupportReview {
   occupancyType: 'OWNER' | 'TENANT' | 'ETC';
   preferredConstructionDate: string;
   preferredTimeSlot: 'MORNING' | 'AFTERNOON' | 'ANY';
-  landlordConsentStatus: 'PENDING' | 'VERIFIED' | 'NOT_REQUIRED';
+  landlordConsentStatus: LandlordConsentStatus;
+}
+
+interface SupportDecisionBase {
+  supportApplicationId: number;
+  applicationId: number;
+  receiptNo: string;
+  applicantName: string;
+  address: string;
+  detailAddress: string | null;
+  programName: string;
+  requestedFacility: string;
+}
+
+export interface SupportApproval extends SupportDecisionBase {
+  status: SupportApplicationStatus;
+  approvedAt: ISODateString;
+  supportScope: string | null;
+  landlordConsentStatus: LandlordConsentStatus;
+  scheduledConstructionDate: string | null;
+  scheduledConstructionTime: string | null;
+}
+
+export interface SupportRejection extends SupportDecisionBase {
+  status: SupportApplicationStatus;
+  rejectionReason: string | null;
+  rejectedAt: ISODateString;
+  inspectionId: number | null;
+  inspectionResultPublished: boolean;
+}
+
+export interface SupportSchedule extends SupportDecisionBase {
+  status: 'APPROVED';
+  landlordConsentStatus: LandlordConsentStatus;
+  scheduledConstructionDate: string | null;
+  scheduledConstructionTime: string | null;
 }
 
 export type SupportDecision = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -295,7 +331,6 @@ export interface SupportProgress {
   programName: string;
   decision: SupportDecision;
   consent: ConsentStatus;
-  consentFile?: SubmittedFile;
   rejectReason?: string;
   submittedAt: ISODateString;
   facility: string;

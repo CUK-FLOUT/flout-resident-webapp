@@ -1,29 +1,29 @@
 import type { ReactNode } from 'react';
 import { useParams } from 'react-router';
-import { useApplication, useInspectionResult, useSupportProgress } from '@/api/applications';
+import { useInspectionApplication } from '@/api/applications';
 import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
-import { APPLICATION_STAGE, SUPPORT_DECISION_LABEL } from '@/constants/labels';
+import { SUPPORT_DECISION_LABEL } from '@/constants/labels';
 import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/date';
+import { getInspectionAddress, getInspectionStage } from '@/lib/inspectionApplication';
 import { maskPhone } from '@/lib/phone';
-import type { ApplicationStage } from '@/types/domain';
+import type { ConstructionStatus } from '@/types/domain';
 import { StageBadge } from './StageBadge';
 
-const STAGE_ORDER = Object.keys(APPLICATION_STAGE) as ApplicationStage[];
-const reached = (stage: ApplicationStage, target: ApplicationStage) =>
-  STAGE_ORDER.indexOf(stage) >= STAGE_ORDER.indexOf(target);
+const CONSTRUCTION_STATUS_LABEL: Record<ConstructionStatus, string> = {
+  PENDING: '시공 준비 중',
+  SCHEDULED: '시공 예정',
+  IN_PROGRESS: '시공 진행',
+  COMPLETED: '시공 완료',
+};
 
 export default function ApplicationDetailPage() {
   const { applicationId } = useParams<'applicationId'>();
-  const application = useApplication(applicationId);
-  const stage = application.data?.stage ?? 'INSPECTION_RECEIVED';
-  const idFrom = (target: ApplicationStage) => (reached(stage, target) ? applicationId : undefined);
-  const result = useInspectionResult(idFrom('INSPECTION_COMPLETED'));
-  const support = useSupportProgress(idFrom('SUPPORT_RECEIVED'));
+  const { data, isLoading, refetch } = useInspectionApplication(applicationId);
   const header = { title: '신청 상세' };
 
-  if (application.isLoading) {
+  if (isLoading) {
     return (
       <Screen header={header} tab="applications">
         <StateMessage>신청 내용을 불러오고 있어요…</StateMessage>
@@ -31,20 +31,23 @@ export default function ApplicationDetailPage() {
     );
   }
 
-  if (!application.data) {
+  if (!data) {
     return (
       <Screen
         header={header}
         tab="applications"
-        bottom={<Button onClick={() => application.refetch()}>다시 시도</Button>}
+        bottom={<Button onClick={() => refetch()}>다시 시도</Button>}
       >
         <StateMessage>신청 내용을 불러오지 못했어요.</StateMessage>
       </Screen>
     );
   }
 
-  const { title, address, createdAt, request } = application.data;
-  const [category, name = title] = title.split(' · ');
+  const stage = getInspectionStage(data);
+  const { support, construction, inspectionResultSummary } = data.progress ?? {};
+  const [category, name] = (data.progress?.title ?? '현장점검 · 침수 위험 점검 신청').split(' · ');
+  const address = getInspectionAddress(data);
+  const appliedAt = data.submittedAt ?? data.createdAt;
 
   return (
     <Screen header={header} tab="applications">
@@ -52,31 +55,52 @@ export default function ApplicationDetailPage() {
         <section className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
             <span className="text-muted text-[12px] leading-[22px] font-medium">{category}</span>
-            <StageBadge stage={stage} />
+            {stage && <StageBadge stage={stage} />}
           </div>
-          <h2 className="text-title text-ink">{name}</h2>
+          <h2 className="text-title text-ink">{name ?? category}</h2>
           <p className="text-caption text-muted">
-            {application.data.id} · {address}
+            {data.receiptNumber} · {address}
           </p>
         </section>
 
         <Section title="신청 정보">
-          <Row label="이름">{request.applicantName}</Row>
-          <Row label="연락처">{maskPhone(request.phone)}</Row>
-          <Row label="신청일">{formatDate(createdAt)}</Row>
-          <Row label="주소">{request.address}</Row>
-          <Row label="희망 방문일">{formatDate(request.preferredDate)}</Row>
+          <Row label="이름">{data.applicant.name}</Row>
+          <Row label="연락처">{data.applicant.phone && maskPhone(data.applicant.phone)}</Row>
+          <Row label="신청일">{appliedAt && formatDate(appliedAt)}</Row>
+          <Row label="주소">{address}</Row>
+          <Row label="희망 방문일">
+            {data.preferredVisitDate && formatDate(data.preferredVisitDate)}
+          </Row>
         </Section>
 
         <Section title="현장점검 결과">
-          <Row label="전문가 의견">{result.data?.summary}</Row>
+          <Row label="전문가 의견">{inspectionResultSummary}</Row>
         </Section>
 
         <Section title="지원 신청 정보">
-          <Row label="신청 지원 시설">{support.data?.facility}</Row>
+          <Row label="신청 지원 시설">{support?.requestedFacility}</Row>
           <Row label="지원 검토 결과">
-            {support.data && SUPPORT_DECISION_LABEL[support.data.decision]}
+            {support &&
+              support.status !== 'DRAFT' &&
+              SUPPORT_DECISION_LABEL[support.status === 'SUBMITTED' ? 'PENDING' : support.status]}
           </Row>
+          {support?.status === 'APPROVED' && <Row label="지원 범위">{support.supportScope}</Row>}
+          {support?.status === 'REJECTED' && (
+            <Row label="미승인 사유">{support.rejectionReason}</Row>
+          )}
+        </Section>
+
+        <Section title="시공 정보">
+          <Row label="시공 상태">
+            {construction && CONSTRUCTION_STATUS_LABEL[construction.status]}
+          </Row>
+          <Row label="시공일">
+            {construction?.scheduledAt && formatDate(construction.scheduledAt)}
+          </Row>
+          <Row label="완료일">
+            {construction?.completedAt && formatDate(construction.completedAt)}
+          </Row>
+          <Row label="최종 설치 결과">{construction?.finalInstallationResult}</Row>
         </Section>
       </div>
     </Screen>
@@ -93,7 +117,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
-  const empty = children === undefined || children === false || children === '';
+  const empty =
+    children === undefined || children === null || children === false || children === '';
   return (
     <div className="text-muted flex justify-between gap-3 py-0.5 text-[13px] leading-[22px]">
       <dt className="shrink-0">{label}</dt>

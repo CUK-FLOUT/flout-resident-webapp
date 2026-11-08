@@ -236,8 +236,10 @@ export interface InspectionApplicationDetail extends Omit<
   inspectionStatus: 'RECEIVED' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | null;
   resultPublished: boolean;
   progress: {
+    title?: string;
     stage: ApplicationStage | null;
     constructionId?: number | null;
+    inspectionResultSummary?: string | null;
     visit: {
       scheduledAt: ISODateString | null;
       inspectorName: string | null;
@@ -246,6 +248,16 @@ export interface InspectionApplicationDetail extends Omit<
     support?: {
       supportApplicationId: number;
       status: SupportApplicationStatus;
+      requestedFacility?: string | null;
+      supportScope?: string | null;
+      rejectionReason?: string | null;
+    } | null;
+    construction?: {
+      constructionId: number;
+      status: ConstructionStatus;
+      scheduledAt: ISODateString | null;
+      completedAt: ISODateString | null;
+      finalInstallationResult: string | null;
     } | null;
   } | null;
 }

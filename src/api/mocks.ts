@@ -340,10 +340,32 @@ export const mockInspectionApplicationFor = (id: string): InspectionApplicationD
     createdAt,
     submittedAt: null,
     progress: {
+      title: detail.title,
       stage: constructionStatus ? MOCK_CONSTRUCTION_STAGE[constructionStatus] : stage,
       constructionId: constructionStatus ? applicationId : null,
+      inspectionResultSummary:
+        inspectionStatus === 'COMPLETED'
+          ? '출입구가 낮아 빗물 유입에 대비한 조치가 필요합니다.'
+          : null,
       visit: null,
-      support: status ? { supportApplicationId: applicationId, status } : null,
+      support: status
+        ? {
+            supportApplicationId: applicationId,
+            status,
+            requestedFacility: '출입구 물막이판',
+            supportScope: status === 'APPROVED' ? '출입구 물막이판 설치 지원' : null,
+            rejectionReason: status === 'REJECTED' ? '자격 미달' : null,
+          }
+        : null,
+      construction: constructionStatus
+        ? {
+            constructionId: applicationId,
+            status: constructionStatus,
+            scheduledAt: '2026-11-12T10:00:00+09:00',
+            completedAt: constructionStatus === 'COMPLETED' ? '2026-11-12T15:00:00+09:00' : null,
+            finalInstallationResult: constructionStatus === 'COMPLETED' ? '설치 완료' : null,
+          }
+        : null,
     },
   };
 };

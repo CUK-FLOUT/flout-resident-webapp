@@ -8,7 +8,6 @@ import {
   uploadMockInspection,
 } from '@/api/inspectionMock';
 import type {
-  ApplicationDetail,
   ApplicationListItem,
   ConstructionResult,
   ConstructionSchedule,
@@ -18,29 +17,24 @@ import type {
   InspectionDraftResponse,
   InspectionReceipt,
   InspectionUploadResponse,
-  InspectionResult,
   RecommendedFacilities,
   SupportApplicationResponse,
   SupportApproval,
   SupportAttachmentResponse,
   SupportProgram,
-  SupportProgress,
   SupportRejection,
   SupportReview,
   SupportSchedule,
 } from '@/types/domain';
 import {
   fixedSupportPrograms,
-  mockApplicationDetailFor,
   mockApplications,
   mockConstructionResultFor,
   mockInspectionApplicationFor,
   mockRecommendedFacilitiesFor,
-  mockResult,
   mockSupportApplicationFor,
   mockSupportApprovalFor,
   mockSupportAttachmentFor,
-  mockSupportProgressFor,
   mockSupportRejectionFor,
   mockSupportReviewFor,
   mockSupportScheduleFor,
@@ -156,33 +150,6 @@ export function useApplications() {
           }));
         },
       ),
-  });
-}
-
-// 아래 상세 및 후속 기능의 엔드포인트는 가안입니다.
-export function useApplication(id: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.application(id ?? ''),
-    queryFn: () =>
-      withMock(
-        () => mockApplicationDetailFor(id!),
-        () => http.get<ApplicationDetail>(`/applications/${id}`),
-      ),
-    enabled: Boolean(id),
-  });
-}
-
-/* ── RESULT-01 ~ 08 점검 결과 · 맞춤 예방안 ───────────────────────── */
-
-export function useInspectionResult(applicationId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.result(applicationId ?? ''),
-    queryFn: () =>
-      withMock(
-        () => mockResult,
-        () => http.get<InspectionResult>(`/applications/${applicationId}/result`),
-      ),
-    enabled: Boolean(applicationId),
   });
 }
 
@@ -360,18 +327,6 @@ export const useSupportSchedule = (id: number) =>
   useSupportDetail<SupportSchedule>(id, 'schedule', () => mockSupportScheduleFor(id));
 
 /* ── CONSTRUCTION-01 ~ 07 지원 · 시공 진행 ────────────────────────── */
-
-export function useSupportProgress(applicationId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.supportProgress(applicationId ?? ''),
-    queryFn: () =>
-      withMock(
-        () => mockSupportProgressFor(applicationId!),
-        () => http.get<SupportProgress>(`/applications/${applicationId}/support`),
-      ),
-    enabled: Boolean(applicationId),
-  });
-}
 
 function useConstructionDetail<T>(
   constructionId: number,

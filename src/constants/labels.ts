@@ -4,7 +4,6 @@ import type {
   ExistingFacility,
   InspectionNeed,
   LandlordConsentStatus,
-  NotificationType,
   RiskFactorCode,
   RiskLevel,
   SupportDecision,
@@ -186,15 +185,4 @@ export const SUPPORT_DECISION_LABEL: Record<SupportDecision, string> = {
   PENDING: '지원 검토 중',
   APPROVED: '지원 승인',
   REJECTED: '지원 미승인',
-};
-
-export const NOTIFICATION_LABEL: Record<NotificationType, string> = {
-  INSPECTION_RECEIVED: '점검 신청 접수',
-  VISIT_SCHEDULED: '점검 일정 확정',
-  VISIT_REMINDER: '점검 예정',
-  RESULT_REGISTERED: '점검 결과 등록',
-  SUPPORT_RECEIVED: '지원 신청 접수',
-  SUPPORT_DECIDED: '지원 결과',
-  CONSTRUCTION_SCHEDULED: '시공 일정 확정',
-  CONSTRUCTION_COMPLETED: '시공 완료',
 };

@@ -46,4 +46,5 @@ export const queryKeys = {
   constructionDetail: (constructionId: number, detail: string) =>
     ['constructions', constructionId, detail] as const,
   notifications: () => ['notifications'] as const,
+  unreadNotifications: () => ['notifications', 'unread'] as const,
 };

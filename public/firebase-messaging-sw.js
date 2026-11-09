@@ -1,5 +1,14 @@
 const TARGET_PATHS = {
-  INSPECTION_DETAIL: (applicationId) => `/applications/${encodeURIComponent(applicationId)}/detail`,
+  INSPECTION_RECEIVED: '',
+  INSPECTION_SCHEDULED: '/visit',
+  INSPECTION_STARTED: '/inspection/progress',
+  INSPECTION_RESULT_PUBLISHED: '/result/registered',
+  SUPPORT_RECEIVED: '/support/status',
+  SUPPORT_APPROVED: '/support/status',
+  SUPPORT_REJECTED: '/support/status',
+  CONSTRUCTION_SCHEDULED: '/construction',
+  CONSTRUCTION_STARTED: '/construction/progress',
+  CONSTRUCTION_COMPLETED: '/construction/complete',
 };
 
 self.addEventListener('push', (event) => {
@@ -18,8 +27,11 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const { target, applicationId } = event.notification.data ?? {};
-  const toPath = TARGET_PATHS[target];
-  const path = toPath && applicationId ? toPath(applicationId) : '/notifications';
+  const { notificationType, applicationId } = event.notification.data ?? {};
+  const suffix = TARGET_PATHS[notificationType];
+  const path =
+    suffix !== undefined && applicationId
+      ? `/applications/${encodeURIComponent(applicationId)}${suffix}`
+      : '/notifications';
   event.waitUntil(self.clients.openWindow(path));
 });

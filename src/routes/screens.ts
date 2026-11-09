@@ -105,7 +105,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
     figmaName: '02-1 취약도 결과 · 높음',
     figmaNodes: ['1115:2530', '1584:1865', '1115:4451', '1787:1610'],
     specs: ['RISK-02', 'RISK-03', 'RISK-04', 'RISK-05', 'RISK-06', 'RISK-08', 'RISK-09'],
-    next: ['guideLoading'],
+    next: ['guideLoading', 'inspectionApply'],
     status: 'done',
     group: '홈·취약도',
   },

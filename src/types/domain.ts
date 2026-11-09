@@ -49,7 +49,7 @@ export interface GuideItem {
   id: ID;
   title: string;
   description: string;
-  estimatedMinutes: number;
+  estimatedMinutes?: number;
   done: boolean;
 }
 

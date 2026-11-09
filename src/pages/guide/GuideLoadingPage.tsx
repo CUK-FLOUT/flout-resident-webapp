@@ -45,7 +45,7 @@ export default function GuideLoadingPage() {
   const { assessmentId } = useParams();
   const navigate = useNavigate();
   const result = useAddressDraft((s) => s.result);
-  const valid = Boolean(assessmentId && result?.id === assessmentId);
+  const valid = Boolean(assessmentId && result && String(result.id) === assessmentId);
   const guide = useGuide(valid ? assessmentId : undefined);
 
   useEffect(() => {

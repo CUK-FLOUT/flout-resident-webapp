@@ -5,6 +5,8 @@ import { mockAddresses, mockAddressSearchExtra, mockGuide } from '@/api/mocks';
 import { queryKeys, withMock } from '@/api/queryClient';
 import { env } from '@/lib/env';
 import { mockDelay } from '@/api/mocks';
+import { parseAssessmentId } from '@/api/riskAnalysis';
+import { tokenStorage } from '@/lib/storage';
 
 /* ── RISK-01 주소 검색 (Swagger AddressSearchResult) ─────────────── */
 export interface AddressSearchItem {
@@ -134,19 +136,74 @@ export function useAddressCoordinates() {
 
 /* ── RISK-07 예방 가이드 (취약도 낮음 플로우) ─────────────────────── */
 
-// TODO(백엔드): 확정된 가이드 생성·조회 API와 응답을 연결합니다.
 export async function getGuide(assessmentId: string): Promise<PreventionGuide> {
-  if (!env.useMock) throw new Error('맞춤 예방 가이드 서비스는 준비 중이에요.');
-  await mockDelay();
-  return { ...mockGuide, assessmentId, items: mockGuide.items.map((item) => ({ ...item })) };
+  if (env.useMock) {
+    await mockDelay();
+    return { ...mockGuide, assessmentId, items: mockGuide.items.map((item) => ({ ...item })) };
+  }
+  const id = parseAssessmentId(assessmentId);
+  if (id === null) throw new ApiError(400, '분석 결과 번호를 확인할 수 없어요.');
+  const response = await http.post<{
+    isSuccess: boolean;
+    status: number;
+    message: string;
+    code: string;
+    result: {
+      guideId: number;
+      assessmentId: number;
+      items: {
+        itemId: number;
+        order: number;
+        title: string;
+        description: string;
+        completed: boolean;
+      }[];
+    };
+  }>(`/resident/risk-assessments/${id}/guide`);
+  if (!response?.isSuccess)
+    throw new ApiError(
+      response?.status ?? 502,
+      response?.message || '가이드를 불러오지 못했어요.',
+      response?.code,
+    );
+  const result = response.result;
+  if (
+    result?.assessmentId !== id ||
+    !Number.isSafeInteger(result.guideId) ||
+    !Array.isArray(result.items)
+  )
+    throw new ApiError(502, '저장된 예방 가이드를 확인할 수 없어요.');
+  return {
+    id: String(result.guideId),
+    assessmentId: String(result.assessmentId),
+    items: [...result.items]
+      .sort((a, b) => a.order - b.order)
+      .map((item) => {
+        if (
+          typeof item.itemId !== 'number' ||
+          !Number.isSafeInteger(item.itemId) ||
+          item.itemId <= 0
+        ) {
+          throw new Error('예방 가이드 항목 ID가 올바르지 않습니다.');
+        }
+
+        return {
+          id: String(item.itemId),
+          title: item.title,
+          description: item.description,
+          done: item.completed,
+        };
+      }),
+  };
 }
 
 export function useGuide(assessmentId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.guide(assessmentId ?? ''),
+    queryKey: [...queryKeys.guide(assessmentId ?? ''), tokenStorage.readSession()?.id],
     queryFn: () => getGuide(assessmentId!),
     enabled: Boolean(assessmentId),
     retry: false,
+    staleTime: Infinity,
   });
 }
 

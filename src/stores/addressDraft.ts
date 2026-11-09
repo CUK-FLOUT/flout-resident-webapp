@@ -1,6 +1,7 @@
 ﻿import { create } from 'zustand';
 import type { AddressCoordinates, AddressSearchItem } from '@/api/risk';
-import type { AnalysisResult, MockRiskLevel } from '@/api/riskAnalysis';
+import type { AnalysisResult } from '@/api/riskAnalysis';
+import type { RiskLevel } from '@/types/domain';
 
 export type ResidenceFloor = 'BASEMENT' | 'FIRST' | 'SECOND_OR_ABOVE';
 
@@ -10,9 +11,9 @@ interface AddressDraftState {
   detail: string;
   floor: ResidenceFloor | null;
   result: AnalysisResult | null;
-  mockLevel: MockRiskLevel;
+  mockLevel: RiskLevel;
   setResult: (result: AnalysisResult | null) => void;
-  setMockLevel: (level: MockRiskLevel) => void;
+  setMockLevel: (level: RiskLevel) => void;
   searchKeyword: string;
   searchRevision: number;
   searchScrollY: number;

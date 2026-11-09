@@ -61,7 +61,7 @@ export function GuideView({
                 onChange={(value) => onCheck(item.id, value)}
                 title={item.title}
                 description={item.description}
-                meta={`${done ? '✓ 완료' : '미완료'} · 예상 ${item.estimatedMinutes}분`}
+                meta={`${done ? '✓ 완료' : '미완료'}${item.estimatedMinutes === undefined ? '' : ` · 예상 ${item.estimatedMinutes}분`}`}
               />
             );
           })}
@@ -110,8 +110,8 @@ export function GuideView({
             className="border-border flex w-full items-center justify-between rounded-md border p-4 text-left"
             onClick={() => {
               setSheetOpen(false);
-              onUnresolved?.();
-              setUnresolved(true);
+              if (onUnresolved) onUnresolved();
+              else setUnresolved(true);
             }}
           >
             <span>
@@ -130,7 +130,7 @@ export default function GuidePage() {
   const { assessmentId } = useParams();
   const navigate = useNavigate();
   const result = useAddressDraft((s) => s.result);
-  const valid = Boolean(assessmentId && result?.id === assessmentId);
+  const valid = Boolean(assessmentId && result && String(result.id) === assessmentId);
   const guide = useGuide(valid ? assessmentId : undefined);
   const allCompleted = useGuideProgress((s) => s.completed);
   const setChecked = useGuideProgress((s) => s.setChecked);
@@ -150,13 +150,17 @@ export default function GuidePage() {
         </p>
       </Screen>
     );
+  const initial = guide.data.items.filter((item) => item.done).map((item) => item.id);
   return (
     <GuideView
       items={guide.data.items}
-      checked={allCompleted[assessmentId] ?? []}
-      onCheck={(id, value) => setChecked(assessmentId, id, value)}
+      checked={allCompleted[assessmentId] ?? initial}
+      onCheck={(id, value) => setChecked(assessmentId, id, value, initial)}
       onBack={() => navigate(generatePath(PATHS.riskResult, { assessmentId }))}
-      onUnresolved={() => setResolved(assessmentId, false)}
+      onUnresolved={() => {
+        setResolved(assessmentId, false);
+        navigate(PATHS.inspectionApply);
+      }}
       onResolved={() => {
         setResolved(assessmentId, true);
         navigate(generatePath(PATHS.guideResolved, { assessmentId }));

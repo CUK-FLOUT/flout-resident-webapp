@@ -13,7 +13,7 @@ import type {
  * 새로고침 시 사진 File 객체는 보존할 수 없어 persist 하지 않았습니다.
  */
 export interface Draft {
-  assessmentId?: string;
+  assessmentId?: string | number;
   address: string;
   applicantName: string;
   phone: string;

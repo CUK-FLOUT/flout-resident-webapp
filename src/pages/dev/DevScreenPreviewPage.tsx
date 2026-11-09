@@ -8,21 +8,14 @@ import { RiskResultView } from '@/pages/risk/RiskResultPage';
 import { GuideLoadingView } from '@/pages/guide/GuideLoadingPage';
 import { GuideView } from '@/pages/guide/GuidePage';
 import { GuideResolvedView } from '@/pages/guide/GuideResolvedPage';
-import type { MockRiskLevel } from '@/api/riskAnalysis';
+import type { RiskLevel } from '@/types/domain';
 import type { ResidenceFloor } from '@/stores/addressDraft';
 
-const previews: Record<string, { level: MockRiskLevel; floor: ResidenceFloor }> = {
+const previews: Record<string, { level: RiskLevel; floor: ResidenceFloor }> = {
   'risk-high': { level: 'HIGH', floor: 'BASEMENT' },
   'risk-caution': { level: 'CAUTION', floor: 'BASEMENT' },
   'risk-low': { level: 'LOW', floor: 'BASEMENT' },
   'risk-upper': { level: 'LOW', floor: 'SECOND_OR_ABOVE' },
-};
-
-const address = {
-  roadAddress: '경기도 부천시 원미구 부천로 00',
-  jibunAddress: '경기도 부천시 원미구 심곡동 000-0',
-  buildingName: '',
-  zipCode: '14600',
 };
 
 export default function DevScreenPreviewPage() {
@@ -72,9 +65,7 @@ export default function DevScreenPreviewPage() {
         }}
         tab="home"
       >
-        <div className="flex flex-col items-center gap-5 pt-14 text-center" role="status">
-          <RiskLoadingContent />
-        </div>
+        <RiskLoadingContent />
       </Screen>
     );
   }
@@ -83,7 +74,7 @@ export default function DevScreenPreviewPage() {
   if (!preview) return <Navigate to={PATHS.devScreens} replace />;
   return (
     <RiskResultView
-      address={address}
+      address="경기도 부천시 원미구 부천로 00"
       detail="101동 302호"
       floor={preview.floor}
       level={preview.level}

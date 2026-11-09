@@ -73,7 +73,7 @@ export default function GuideResolvedPage() {
   const { assessmentId } = useParams();
   const navigate = useNavigate();
   const result = useAddressDraft((s) => s.result);
-  const valid = Boolean(assessmentId && result?.id === assessmentId);
+  const valid = Boolean(assessmentId && result && String(result.id) === assessmentId);
   const guide = useGuide(valid ? assessmentId : undefined);
   const completed = useGuideProgress((s) => s.completed);
   const resolved = useGuideProgress((s) => s.resolved);
@@ -97,9 +97,10 @@ export default function GuideResolvedPage() {
   return (
     <GuideResolvedView
       address={getPrimaryAddress(input.address)}
-      risk={{ HIGH: '높음', CAUTION: '주의', LOW: '낮음' }[result.level]}
+      risk={{ HIGH: '높음', CAUTION: '보통', LOW: '낮음' }[result.level]}
       count={
-        guide.data.items.filter((item) => (completed[assessmentId] ?? []).includes(item.id)).length
+        guide.data.items.filter((item) => completed[assessmentId]?.includes(item.id) ?? item.done)
+          .length
       }
       total={guide.data.items.length}
       onGuide={() => navigate(generatePath(PATHS.guide, { assessmentId }))}

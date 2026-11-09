@@ -85,7 +85,7 @@ export const DESIGN_SCREENS: DesignScreen[] = [
   },
   {
     nodeId: '1584:1865',
-    name: '02-1 취약도 결과 · 주의',
+    name: '02-1 취약도 결과 · 보통',
     route: 'riskResult',
     preview: 'risk-caution',
   },

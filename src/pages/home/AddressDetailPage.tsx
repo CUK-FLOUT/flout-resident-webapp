@@ -62,6 +62,7 @@ export default function AddressDetailPage() {
         label="상세 주소"
         size="md"
         placeholder="예: 101동 302호"
+        maxLength={255}
         value={detail}
         onChange={(e) => {
           setDetail(e.target.value);

@@ -178,12 +178,22 @@ export async function getGuide(assessmentId: string): Promise<PreventionGuide> {
     assessmentId: String(result.assessmentId),
     items: [...result.items]
       .sort((a, b) => a.order - b.order)
-      .map((item) => ({
-        id: String(item.itemId),
-        title: item.title,
-        description: item.description,
-        done: item.completed,
-      })),
+      .map((item) => {
+        if (
+          typeof item.itemId !== 'number' ||
+          !Number.isSafeInteger(item.itemId) ||
+          item.itemId <= 0
+        ) {
+          throw new Error('예방 가이드 항목 ID가 올바르지 않습니다.');
+        }
+
+        return {
+          id: String(item.itemId),
+          title: item.title,
+          description: item.description,
+          done: item.completed,
+        };
+      }),
   };
 }
 

@@ -1,6 +1,6 @@
 import { Bell, ClipboardCheck, House } from 'lucide-react';
 import { Link } from 'react-router';
-import { useUnreadCount } from '@/api/notifications';
+import { useHasUnreadNotifications } from '@/api/notifications';
 import { PATHS } from '@/constants/paths';
 import { cn } from '@/lib/cn';
 
@@ -18,7 +18,7 @@ const tabs = [
 ] as const;
 
 export function BottomNav({ active }: { active: BottomNavTab }) {
-  const unread = useUnreadCount();
+  const hasUnread = useHasUnreadNotifications();
 
   return (
     <nav
@@ -41,9 +41,9 @@ export function BottomNav({ active }: { active: BottomNavTab }) {
               )}
             >
               <Icon size={20} aria-hidden />
-              {key === 'notifications' && unread > 0 && (
+              {key === 'notifications' && hasUnread && (
                 <span className="bg-danger absolute -top-0.5 -right-0.5 size-2 rounded-full">
-                  <span className="sr-only">읽지 않은 알림 {unread}개</span>
+                  <span className="sr-only">읽지 않은 알림 있음</span>
                 </span>
               )}
             </span>

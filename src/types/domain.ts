@@ -416,6 +416,7 @@ export interface AppNotification {
   id: ID;
   type: NotificationType;
   applicationId: ID;
+  receiptNumber: string;
   title: string;
   body: string;
   createdAt: ISODateString;

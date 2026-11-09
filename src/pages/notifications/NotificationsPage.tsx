@@ -1,6 +1,7 @@
 import { Bell } from 'lucide-react';
+import { useEffect } from 'react';
 import { generatePath, useNavigate } from 'react-router';
-import { useNotifications } from '@/api/notifications';
+import { useNotifications, useReadAllNotifications } from '@/api/notifications';
 import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
@@ -33,8 +34,14 @@ const dayLabel = (iso: string) =>
 
 export default function NotificationsPage() {
   const { data, isLoading, isError, refetch } = useNotifications();
+  const { mutate: readAll } = useReadAllNotifications();
   const navigate = useNavigate();
   const header = { title: '알림' };
+  const hasUnread = data?.some((n) => !n.read) ?? false;
+
+  useEffect(() => {
+    if (hasUnread) readAll();
+  }, [hasUnread, readAll]);
 
   if (isLoading) {
     return (
@@ -108,7 +115,7 @@ export default function NotificationsPage() {
                 <span className="flex flex-1 flex-col gap-2 py-1">
                   <span className="text-caption flex flex-col gap-1">
                     <span>
-                      {category(item.type)} · {item.applicationId}
+                      {category(item.type)} · {item.receiptNumber}
                     </span>
                     <span className={cn(!item.read && 'text-primary')}>
                       {item.title}

@@ -138,7 +138,6 @@ export type ApplicationStage =
   | 'INSPECTION_COMPLETED'
   | 'SUPPORT_RECEIVED'
   | 'SUPPORT_REVIEW'
-  | 'LANDLORD_CONSENT_REQUIRED'
   | 'SUPPORT_APPROVED'
   | 'SUPPORT_REJECTED'
   | 'CONSTRUCTION_SCHEDULED'
@@ -218,7 +217,6 @@ export interface SupportProgram {
 }
 
 export type ConsentStatus = 'NOT_REQUIRED' | 'REQUIRED' | 'SUBMITTED' | 'CONFIRMED';
-export type LandlordConsentStatus = 'PENDING' | 'VERIFIED' | 'NOT_REQUIRED';
 export type SupportApplicationStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
 export interface InspectionApplicationDetail extends Omit<
@@ -313,7 +311,6 @@ export interface SupportReview {
   occupancyType: 'OWNER' | 'TENANT' | 'ETC';
   preferredConstructionDate: string;
   preferredTimeSlot: 'MORNING' | 'AFTERNOON' | 'ANY';
-  landlordConsentStatus: LandlordConsentStatus;
 }
 
 interface SupportDecisionBase {
@@ -331,7 +328,6 @@ export interface SupportApproval extends SupportDecisionBase {
   status: SupportApplicationStatus;
   approvedAt: ISODateString;
   supportScope: string | null;
-  landlordConsentStatus: LandlordConsentStatus;
   scheduledConstructionDate: string | null;
   scheduledConstructionTime: string | null;
 }
@@ -346,7 +342,6 @@ export interface SupportRejection extends SupportDecisionBase {
 
 export interface SupportSchedule extends SupportDecisionBase {
   status: 'APPROVED';
-  landlordConsentStatus: LandlordConsentStatus;
   scheduledConstructionDate: string | null;
   scheduledConstructionTime: string | null;
 }

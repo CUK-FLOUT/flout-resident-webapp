@@ -11,7 +11,6 @@ import {
 import { Screen, StateMessage } from '@/components/layout';
 import { Button, StatusText, StepProgress } from '@/components/ui';
 import {
-  LANDLORD_CONSENT_LABEL,
   SUPPORT_DECISION_LABEL,
   SUPPORT_STEPS,
   TENURE_LABEL,
@@ -241,12 +240,7 @@ function ApprovedView({ id, onConfirm }: { id: number; onConfirm: () => void }) 
           </section>
           <NextStep title="일정 조율" />
           <dl className="flex flex-col gap-[18px]">
-            <Field label="승인 시설 / 임대인 동의">
-              {approval.supportScope || approval.requestedFacility} /{' '}
-              {approval.landlordConsentStatus === 'NOT_REQUIRED'
-                ? LANDLORD_CONSENT_LABEL.NOT_REQUIRED
-                : `필요 · ${LANDLORD_CONSENT_LABEL[approval.landlordConsentStatus]}`}
-            </Field>
+            <Field label="승인 시설">{approval.supportScope || approval.requestedFacility}</Field>
             <Field label="처리 상태">시공 예정</Field>
           </dl>
         </DecidedLayout>
@@ -289,10 +283,7 @@ function SchedulingView({ id }: { id: number }) {
             확정된 날짜와 방문 시간을 안내해 드릴게요.
           </NextStep>
           <dl className="flex flex-col gap-[18px]">
-            <Field label="신청 시설 / 동의 확인">
-              {schedule.requestedFacility} /{' '}
-              {LANDLORD_CONSENT_LABEL[schedule.landlordConsentStatus]}
-            </Field>
+            <Field label="신청 시설">{schedule.requestedFacility}</Field>
             <Field label="처리 상태">일정 조율 중</Field>
           </dl>
         </DecidedLayout>

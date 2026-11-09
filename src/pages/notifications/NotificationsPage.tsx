@@ -10,17 +10,21 @@ import type { AppNotification } from '@/types/domain';
 const category = (type: AppNotification['type']) =>
   type.startsWith('SUPPORT') ? '지원' : type.startsWith('CONSTRUCTION') ? '시공' : '현장점검';
 
+const DESTINATION = {
+  INSPECTION_RECEIVED: PATHS.applicationHub,
+  INSPECTION_SCHEDULED: PATHS.visit,
+  INSPECTION_STARTED: PATHS.inspectionProgress,
+  INSPECTION_RESULT_PUBLISHED: PATHS.resultRegistered,
+  SUPPORT_RECEIVED: PATHS.supportStatus,
+  SUPPORT_APPROVED: PATHS.supportStatus,
+  SUPPORT_REJECTED: PATHS.supportStatus,
+  CONSTRUCTION_SCHEDULED: PATHS.construction,
+  CONSTRUCTION_STARTED: PATHS.constructionProgress,
+  CONSTRUCTION_COMPLETED: PATHS.constructionComplete,
+} satisfies Record<AppNotification['type'], string>;
+
 const destination = ({ type, applicationId }: AppNotification) =>
-  generatePath(
-    type.startsWith('SUPPORT')
-      ? PATHS.supportStatus
-      : type.startsWith('CONSTRUCTION')
-        ? PATHS.construction
-        : type === 'RESULT_REGISTERED'
-          ? PATHS.result
-          : PATHS.applicationHub,
-    { applicationId },
-  );
+  DESTINATION[type] ? generatePath(DESTINATION[type], { applicationId }) : PATHS.notifications;
 
 const dayLabel = (iso: string) =>
   iso.slice(0, 10) === new Date().toLocaleDateString('sv-SE')

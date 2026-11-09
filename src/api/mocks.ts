@@ -520,7 +520,7 @@ export const mockNotifications: AppNotification[] = [
   },
   {
     id: 'n-3',
-    type: 'SUPPORT_DECIDED',
+    type: 'SUPPORT_APPROVED',
     applicationId: '000003',
     title: '지원 신청이 승인됐어요.',
     body: '시공 일정이 등록되면 알림으로 다시 안내해 드려요.',
@@ -538,7 +538,7 @@ export const mockNotifications: AppNotification[] = [
   },
   {
     id: 'n-1',
-    type: 'RESULT_REGISTERED',
+    type: 'INSPECTION_RESULT_PUBLISHED',
     applicationId: '000005',
     title: '현장점검 결과가 등록됐어요.',
     body: '취약지점과 전문가 권장 예방조치를 확인할 수 있어요.',

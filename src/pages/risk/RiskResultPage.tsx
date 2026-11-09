@@ -77,6 +77,7 @@ function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
   const storedFloor = location.state?.riskFloor;
   const selectedFloor =
     current?.input.floor ??
+    query.data?.floor ??
     (location.state?.assessmentId === assessmentId &&
     (storedFloor === 'BASEMENT' || storedFloor === 'FIRST' || storedFloor === 'SECOND_OR_ABOVE')
       ? storedFloor

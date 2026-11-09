@@ -22,6 +22,8 @@ const housingTypes = {
   SECOND_OR_ABOVE: 'SECOND_FLOOR_OR_ABOVE',
 } as const satisfies Record<ResidenceFloor, string>;
 
+type HousingType = (typeof housingTypes)[ResidenceFloor];
+
 export type RiskStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
 interface RiskDetails {
@@ -42,7 +44,11 @@ export type AnalysisResult = CompletedAnalysis & AnalysisIdentity & { input: Ana
 
 type AnalysisCreation = AnalysisIdentity & AnalysisOutcome;
 
-type AssessmentDetail = AnalysisOutcome & { address: string; detailAddress: string };
+type AssessmentDetail = AnalysisOutcome & {
+  address: string;
+  detailAddress: string;
+  floor: ResidenceFloor | null;
+};
 
 interface Envelope<T> {
   isSuccess: boolean;
@@ -80,6 +86,19 @@ export function parseAssessmentId(value: string | undefined): number | null {
   if (!value || !/^\d+$/.test(value)) return null;
   const id = Number(value);
   return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
+function readResidenceFloor(housingType: HousingType | null | undefined): ResidenceFloor | null {
+  switch (housingType) {
+    case housingTypes.BASEMENT:
+      return 'BASEMENT';
+    case housingTypes.FIRST:
+      return 'FIRST';
+    case housingTypes.SECOND_OR_ABOVE:
+      return 'SECOND_OR_ABOVE';
+    default:
+      return null;
+  }
 }
 
 function readOutcome(status: unknown, level: unknown, details: unknown): AnalysisOutcome {
@@ -147,6 +166,7 @@ export async function getRiskAssessment(
         detailAddress: string;
         status: string;
         riskLevel: string | null;
+        housingType?: HousingType | null;
         result: unknown;
       }>
     >('/resident/risk-assessments/' + id, { signal }),
@@ -162,6 +182,7 @@ export async function getRiskAssessment(
     ...readOutcome(response.status, response.riskLevel, response.result),
     address: response.address,
     detailAddress: response.detailAddress,
+    floor: readResidenceFloor(response.housingType),
   };
 }
 

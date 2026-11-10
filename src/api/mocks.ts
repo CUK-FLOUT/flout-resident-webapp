@@ -430,7 +430,6 @@ export const mockSupportReviewFor = (supportApplicationId: number): SupportRevie
     occupancyType: isOwner ? 'OWNER' : 'TENANT',
     preferredConstructionDate: '2026-10-21',
     preferredTimeSlot: 'MORNING',
-    landlordConsentStatus: isOwner ? 'NOT_REQUIRED' : 'PENDING',
   };
 };
 
@@ -450,7 +449,6 @@ export const mockSupportApprovalFor = (id: number): SupportApproval => ({
   status: 'APPROVED',
   approvedAt: '2026-10-14T10:00:00+09:00',
   supportScope: '출입구 물막이판',
-  landlordConsentStatus: 'VERIFIED',
   scheduledConstructionDate: null,
   scheduledConstructionTime: null,
 });
@@ -467,7 +465,6 @@ export const mockSupportRejectionFor = (id: number): SupportRejection => ({
 export const mockSupportScheduleFor = (id: number): SupportSchedule => ({
   ...mockSupportDecisionBase(id),
   status: 'APPROVED',
-  landlordConsentStatus: 'VERIFIED',
   scheduledConstructionDate: null,
   scheduledConstructionTime: null,
 });

@@ -14,7 +14,17 @@ import type {
  */
 export interface Draft {
   assessmentId?: string | number;
-  address: string;
+  context: {
+    address: string;
+    detailAddress: string;
+    latitude: number;
+    longitude: number;
+  } | null;
+  sessionScope: string | null;
+  formId: string | null;
+  formVersion: number | null;
+  formSnapshot: string | null;
+  creationPending: boolean;
   applicantName: string;
   phone: string;
   tenure: Tenure | null;
@@ -24,7 +34,6 @@ export interface Draft {
   reason: string;
   facilityInstalled: boolean | null;
   savedApplicationId: number | null;
-  savedReceiptNo: string;
   savedPayload: string;
   uploadKey: string;
   uploadedPhotos: File[];
@@ -41,7 +50,12 @@ interface InspectionDraftState extends Draft {
 
 const initial: Draft = {
   assessmentId: undefined,
-  address: '',
+  context: null,
+  sessionScope: null,
+  formId: null,
+  formVersion: null,
+  formSnapshot: null,
+  creationPending: false,
   applicantName: '',
   phone: '',
   tenure: null,
@@ -51,7 +65,6 @@ const initial: Draft = {
   reason: '',
   facilityInstalled: null,
   savedApplicationId: null,
-  savedReceiptNo: '',
   savedPayload: '',
   uploadKey: '',
   uploadedPhotos: [],

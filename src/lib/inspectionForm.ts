@@ -276,8 +276,10 @@ export async function saveInspectionProgress(): Promise<void> {
         Object.entries(fields).every(
           ([key, value]) => JSON.stringify(matching.fields[key]) === JSON.stringify(value),
         );
-      if (!matching || matching.formState !== 'EDITING' || !sameFields) throw error;
-      saved = matching;
+      if (!matching || matching.formState !== 'EDITING') throw error;
+        saved = sameFields
+          ? matching
+          : await putInspectionFormDraft(formId, assessmentId, matching.version, fields);
     }
     if (current()) draft.update({ formVersion: saved.version, formSnapshot: snapshot });
   };

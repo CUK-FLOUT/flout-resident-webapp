@@ -30,6 +30,7 @@ export default function InspectionApplyPage() {
   const requestedApplicationId = useLocation().state?.applicationId as number | undefined;
   const scope = inspectionSessionScope();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [phoneTouched, setPhoneTouched] = useState(false);
   const advancing = useRef(false);
   const ready = Boolean(
@@ -42,6 +43,7 @@ export default function InspectionApplyPage() {
   useEffect(() => {
     if (ready) return;
     let active = true;
+    setLoading(true);
     void loadInspectionEntry(result, scope, requestedApplicationId)
       .then((entry) => {
         if (!active || !entry || scope !== inspectionSessionScope()) return;
@@ -76,6 +78,9 @@ export default function InspectionApplyPage() {
           setError(
             failure instanceof Error ? failure.message : '임시 저장 정보를 불러오지 못했어요.',
           );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
     return () => {
       active = false;
@@ -83,17 +88,28 @@ export default function InspectionApplyPage() {
   }, [ready, result, scope, requestedApplicationId, navigate]);
   useInspectionAutosave(draft, ready, setError);
   if (!ready)
-    return (
-      <Screen
-        header={{ title: '현장점검하기' }}
-        tab="home"
-        bottom={<Button onClick={() => navigate(PATHS.addressSearch)}>주소 검색하기</Button>}
+  return (
+    <Screen
+      header={{ title: '현장점검하기' }}
+      tab="home"
+      bottom={
+        loading ? undefined : (
+          <Button onClick={() => navigate(PATHS.addressSearch)}>
+            주소 검색하기
+          </Button>
+        )
+      }
+    >
+      <p
+        role={loading ? 'status' : undefined}
+        className="text-body text-muted pt-10 text-center"
       >
-        <p className="text-body text-muted pt-10 text-center">
-          {error || '먼저 주소를 검색하고 침수 취약도를 확인해 주세요.'}
-        </p>
-      </Screen>
-    );
+        {loading
+          ? '임시 저장된 신청서를 불러오고 있어요.'
+          : error || '먼저 주소를 검색하고 침수 취약도를 확인해 주세요.'}
+      </p>
+    </Screen>
+  );
   return (
     <Screen
       header={{ title: '현장점검하기' }}

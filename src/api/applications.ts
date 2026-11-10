@@ -215,7 +215,8 @@ async function matchSupportProgram(applicationId: string): Promise<SupportProgra
     ),
   );
   const program = recommendation?.program;
-  if (!program || recommendation.programId == null) return [];
+  if (!program || recommendation.programId == null)
+    throw new ApiError(502, '지원사업 정보를 확인할 수 없어요.');
   return [
     {
       id: String(recommendation.programId),

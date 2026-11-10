@@ -44,6 +44,19 @@ import { queryKeys, withMock } from './queryClient';
 type InspectionInput = Omit<InspectionApplicationRequest, 'assessmentId'> & {
   assessmentId: number | string;
 };
+type InspectionUpdate = Partial<
+  Pick<
+    InspectionApplicationRequest,
+    | 'applicantName'
+    | 'contact'
+    | 'occupancyType'
+    | 'floodExperience'
+    | 'existingFacility'
+    | 'preferredVisitDate'
+    | 'preferredTimeSlot'
+    | 'inflowLocations'
+  > & { requestReason: string | null }
+>;
 interface InspectionEnvelope<T> {
   isSuccess: boolean;
   message: string;
@@ -56,6 +69,7 @@ function unwrapInspection<T>(envelope: InspectionEnvelope<T>): T {
 }
 export async function createInspectionDraft(
   input: InspectionInput,
+  formDraftId?: string,
 ): Promise<InspectionDraftResponse> {
   if (env.useMock)
     return createMockInspection({ ...input, assessmentId: String(input.assessmentId) });
@@ -66,8 +80,20 @@ export async function createInspectionDraft(
   )
     throw new Error('실제 취약도 분석 결과가 준비되지 않아 신청할 수 없어요.');
   return unwrapInspection(
-    await http.post<InspectionEnvelope<InspectionDraftResponse>>('/resident/applications', input),
+    await http.post<InspectionEnvelope<InspectionDraftResponse>>('/resident/applications', input, {
+      headers: formDraftId ? { 'X-Form-Draft-Id': formDraftId } : undefined,
+    }),
   );
+}
+export async function updateInspectionDraft(applicationId: number, input: InspectionUpdate) {
+  const result = unwrapInspection(
+    await http.patch<InspectionEnvelope<Pick<InspectionDraftResponse, 'applicationId' | 'status'>>>(
+      `/resident/applications/${applicationId}`,
+      input,
+    ),
+  );
+  if (result.applicationId !== applicationId || result.status !== 'DRAFT')
+    throw new ApiError(409, '임시 저장 상태의 신청만 수정할 수 있어요.');
 }
 export async function uploadInspectionPhotos(
   applicationId: number,
@@ -95,10 +121,13 @@ export async function getInspectionReceipt(applicationId: number): Promise<Inspe
 }
 
 export function useInspectionSubmission() {
-  const createDraft = useMutation({ mutationFn: createInspectionDraft });
+  const createDraft = useMutation({
+    mutationFn: ({ input, formDraftId }: { input: InspectionInput; formDraftId?: string }) =>
+      createInspectionDraft(input, formDraftId),
+  });
   const updateMockDraft = useMutation({
     mutationFn: ({ applicationId, input }: { applicationId: number; input: InspectionInput }) => {
-      if (!env.useMock) throw new Error('임시 신청 수정 API가 아직 준비되지 않았어요.');
+      if (!env.useMock) throw new Error('임시 신청 정보를 수정할 수 없어요.');
       return updateMockInspection(applicationId, {
         ...input,
         assessmentId: String(input.assessmentId),

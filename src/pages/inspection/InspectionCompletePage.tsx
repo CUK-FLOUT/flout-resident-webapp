@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle } from 'lucide-react';
 import { generatePath, useNavigate, useParams } from 'react-router';
@@ -6,6 +7,8 @@ import { Screen } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { env } from '@/lib/env';
+import { forgetInspection } from '@/lib/inspectionForm';
+import { useInspectionDraft } from '@/stores/inspectionDraft';
 
 export default function InspectionCompletePage() {
   const { applicationId } = useParams();
@@ -22,6 +25,19 @@ export default function InspectionCompletePage() {
     enabled: valid,
     retry: false,
   });
+  useEffect(() => {
+    const receipt = query.data;
+    const draft = useInspectionDraft.getState();
+    if (
+      !receipt ||
+      receipt.applicationId !== draft.savedApplicationId ||
+      (receipt.applicationStatus !== 'RECEIVED' &&
+        receipt.applicationStatus !== 'INSPECTION_COMPLETED')
+    )
+      return;
+    if (draft.assessmentId !== undefined) forgetInspection(draft.assessmentId);
+    draft.reset();
+  }, [query.data]);
   if (!valid)
     return (
       <Screen
@@ -61,7 +77,15 @@ export default function InspectionCompletePage() {
         header={{ title: '현장점검 신청' }}
         tab="home"
         bottom={
-          <Button onClick={() => navigate(PATHS.inspectionSchedule)}>사진 등록 확인하기</Button>
+          <Button
+            onClick={() =>
+              navigate(env.useMock ? PATHS.inspectionSchedule : PATHS.inspectionApply, {
+                state: { applicationId: receipt.applicationId },
+              })
+            }
+          >
+            사진 등록 확인하기
+          </Button>
         }
       >
         <p role="status" className="text-body text-muted pt-10 text-center">

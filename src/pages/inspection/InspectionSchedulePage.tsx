@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
@@ -6,8 +6,9 @@ import { Button, ChoiceGroup, ProgressBar, TextField } from '@/components/ui';
 import { VISIT_TIME_OPTIONS } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
 import { photoError, step1Error, step2Error } from '@/lib/inspection';
-import { useAddressDraft } from '@/stores/addressDraft';
+import { inspectionSessionScope, saveInspectionProgress } from '@/lib/inspectionForm';
 import { useInspectionDraft } from '@/stores/inspectionDraft';
+import { useInspectionAutosave } from './useInspectionAutosave';
 
 function PhotoPreview({
   file,
@@ -60,9 +61,12 @@ function PhotoPreview({
 export default function InspectionSchedulePage() {
   const navigate = useNavigate();
   const draft = useInspectionDraft();
-  const result = useAddressDraft((s) => s.result);
+  const scope = inspectionSessionScope();
+  const ready = Boolean(draft.context && draft.sessionScope === scope);
   const [error, setError] = useState('');
   const [showPhotoAlert, setShowPhotoAlert] = useState(false);
+  const advancing = useRef(false);
+  useInspectionAutosave(draft, ready, setError);
   useEffect(() => {
     if (!showPhotoAlert) return;
     const key = (e: KeyboardEvent) => {
@@ -71,8 +75,7 @@ export default function InspectionSchedulePage() {
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
   }, [showPhotoAlert]);
-  if (!result) return <Navigate to={PATHS.addressSearch} replace />;
-  if (draft.assessmentId !== result.id) return <Navigate to={PATHS.inspectionApply} replace />;
+  if (!ready) return <Navigate to={PATHS.inspectionApply} replace />;
   if (step1Error(draft)) return <Navigate to={PATHS.inspectionApply} replace />;
   const setPhotos = (photos: File[]) => {
     draft.update({ photos });
@@ -86,14 +89,30 @@ export default function InspectionSchedulePage() {
         bottom={
           <Button
             variant={step2Error(draft) ? 'muted' : 'primary'}
-            onClick={() => {
+            onClick={async () => {
+              if (advancing.current || draft.submitting) return;
               if (!draft.photos.length) {
                 setShowPhotoAlert(true);
                 return;
               }
               const message = step2Error(draft);
               setError(message ?? '');
-              if (!message) navigate(PATHS.inspectionConfirm);
+              if (message) return;
+              advancing.current = true;
+              try {
+                await saveInspectionProgress();
+                if (
+                  useInspectionDraft.getState().context === draft.context &&
+                  scope === inspectionSessionScope()
+                )
+                  navigate(PATHS.inspectionConfirm);
+              } catch (failure) {
+                setError(
+                  failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.',
+                );
+              } finally {
+                advancing.current = false;
+              }
             }}
           >
             신청 정보 확인

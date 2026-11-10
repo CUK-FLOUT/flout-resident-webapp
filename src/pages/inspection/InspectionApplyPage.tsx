@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { generatePath, useLocation, useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
 import { Button, ChoiceGroup, ProgressBar, Textarea, TextField } from '@/components/ui';
 import { TENURE_OPTIONS, WATER_ENTRY_OPTIONS, YES_NO_UNKNOWN_OPTIONS } from '@/constants/labels';
@@ -13,31 +13,103 @@ import {
 import { useAddressDraft } from '@/stores/addressDraft';
 import { useInspectionDraft } from '@/stores/inspectionDraft';
 import type { WaterEntryPoint } from '@/types/domain';
+import {
+  forgetInspection,
+  inspectionFormFields,
+  inspectionSessionScope,
+  loadInspectionEntry,
+  rememberInspection,
+  saveInspectionProgress,
+} from '@/lib/inspectionForm';
+import { useInspectionAutosave } from './useInspectionAutosave';
 
 export default function InspectionApplyPage() {
   const navigate = useNavigate();
   const draft = useInspectionDraft();
   const { result } = useAddressDraft();
+  const requestedApplicationId = useLocation().state?.applicationId as number | undefined;
+  const scope = inspectionSessionScope();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [phoneTouched, setPhoneTouched] = useState(false);
+  const advancing = useRef(false);
+  const ready = Boolean(
+    draft.context &&
+    draft.sessionScope === scope &&
+    (requestedApplicationId
+      ? draft.savedApplicationId === requestedApplicationId
+      : !result || draft.assessmentId === result.id),
+  );
   useEffect(() => {
-    if (result && useInspectionDraft.getState().assessmentId !== result.id) {
-      useInspectionDraft.getState().reset();
-      useInspectionDraft.getState().update({ assessmentId: result.id });
-    }
-  }, [result]);
-  if (!result)
-    return (
-      <Screen
-        header={{ title: '현장점검하기' }}
-        tab="home"
-        bottom={<Button onClick={() => navigate(PATHS.addressSearch)}>주소 검색하기</Button>}
+    if (ready) return;
+    let active = true;
+    setLoading(true);
+    void loadInspectionEntry(result, scope, requestedApplicationId)
+      .then((entry) => {
+        if (!active || !entry || scope !== inspectionSessionScope()) return;
+        const store = useInspectionDraft.getState();
+        store.reset();
+        if ('completed' in entry) {
+          if (entry.assessmentId !== undefined) forgetInspection(entry.assessmentId);
+          navigate(
+            generatePath(PATHS.inspectionComplete, { applicationId: String(entry.completed) }),
+            {
+              replace: true,
+            },
+          );
+          return;
+        }
+        store.update(entry.draft);
+        const restored = useInspectionDraft.getState();
+        const snapshot = JSON.stringify(inspectionFormFields(restored));
+        store.update({
+          formSnapshot: snapshot,
+          savedPayload: restored.savedApplicationId ? snapshot : '',
+        });
+        if (typeof restored.assessmentId === 'number')
+          rememberInspection(
+            restored.assessmentId,
+            restored.savedApplicationId,
+            restored.uploadKey,
+          );
+      })
+      .catch((failure: unknown) => {
+        if (active)
+          setError(
+            failure instanceof Error ? failure.message : '임시 저장 정보를 불러오지 못했어요.',
+          );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [ready, result, scope, requestedApplicationId, navigate]);
+  useInspectionAutosave(draft, ready, setError);
+  if (!ready)
+  return (
+    <Screen
+      header={{ title: '현장점검하기' }}
+      tab="home"
+      bottom={
+        loading ? undefined : (
+          <Button onClick={() => navigate(PATHS.addressSearch)}>
+            주소 검색하기
+          </Button>
+        )
+      }
+    >
+      <p
+        role={loading ? 'status' : undefined}
+        className="text-body text-muted pt-10 text-center"
       >
-        <p className="text-body text-muted pt-10 text-center">
-          먼저 주소를 검색하고 침수 취약도를 확인해 주세요.
-        </p>
-      </Screen>
-    );
+        {loading
+          ? '임시 저장된 신청서를 불러오고 있어요.'
+          : error || '먼저 주소를 검색하고 침수 취약도를 확인해 주세요.'}
+      </p>
+    </Screen>
+  );
   return (
     <Screen
       header={{ title: '현장점검하기' }}
@@ -45,13 +117,29 @@ export default function InspectionApplyPage() {
       bottom={
         <Button
           variant={step1Error(draft) ? 'muted' : 'primary'}
-          onClick={() => {
+          onClick={async () => {
+            if (advancing.current || draft.submitting) return;
             const message = step1Error(draft);
             setPhoneTouched(true);
             setError(
               message && message === inspectionPhoneError(draft.phone) ? '' : (message ?? ''),
             );
-            if (!message) navigate(PATHS.inspectionSchedule);
+            if (message) return;
+            advancing.current = true;
+            try {
+              await saveInspectionProgress();
+              if (
+                useInspectionDraft.getState().context === draft.context &&
+                scope === inspectionSessionScope()
+              )
+                navigate(PATHS.inspectionSchedule);
+            } catch (failure) {
+              setError(
+                failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.',
+              );
+            } finally {
+              advancing.current = false;
+            }
           }}
         >
           다음

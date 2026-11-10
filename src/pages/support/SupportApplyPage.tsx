@@ -1,16 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { generatePath, Navigate, useNavigate, useParams } from 'react-router';
 import {
   useInspectionApplication,
   useRecommendedFacilities,
   useSupportPrograms,
 } from '@/api/applications';
+import {
+  listSupportFormDrafts,
+  putSupportFormDraft,
+  type SupportFormDraft,
+} from '@/api/supportFormDrafts';
 import radioChecked from '@/assets/support/radio-checked.svg';
 import radioUnchecked from '@/assets/support/radio-unchecked.svg';
 import { Screen, StateMessage } from '@/components/layout';
 import { Button, ChoiceGroup, TextField } from '@/components/ui';
 import { TENURE_LABEL, VISIT_TIME_OPTIONS } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
+import { env } from '@/lib/env';
 import { maskPhone } from '@/lib/phone';
 import { useSupportDraft } from '@/stores/supportDraft';
 import type { InspectionApplicationDetail, SupportProgram, VisitTimeSlot } from '@/types/domain';
@@ -23,8 +29,23 @@ export default function SupportApplyPage() {
   const header = { title: '지원하기' };
   const queries = [application, programs, recommended];
   const program = programs.data?.[0];
+  const [resume, setResume] = useState<SupportFormDraft | null | undefined>(
+    env.useMock ? null : undefined,
+  );
 
-  if (queries.some((q) => q.isLoading)) {
+  useEffect(() => {
+    if (env.useMock || !applicationId) return;
+    let alive = true;
+    listSupportFormDrafts()
+      .then((drafts) => drafts.find((d) => String(d.applicationId) === applicationId) ?? null)
+      .catch(() => null)
+      .then((found) => alive && setResume(found));
+    return () => {
+      alive = false;
+    };
+  }, [applicationId]);
+
+  if (queries.some((q) => q.isLoading) || resume === undefined) {
     return (
       <Screen header={header} tab="home">
         <StateMessage>신청 정보를 불러오고 있어요…</StateMessage>
@@ -58,8 +79,78 @@ export default function SupportApplyPage() {
       application={application.data}
       program={program}
       facilityOptions={recommended.data.facilities}
+      resume={resume}
     />
   );
+}
+
+function restoreFields(resume: SupportFormDraft | null, facilityOptions: string[]) {
+  const fields = resume?.fields ?? {};
+  const { requestedFacility, preferredVisitDate, preferredVisitTime } = fields;
+  const today = new Date().toLocaleDateString('sv-SE');
+  return {
+    facility:
+      typeof requestedFacility === 'string' && facilityOptions.includes(requestedFacility)
+        ? requestedFacility
+        : null,
+    preferredDate:
+      typeof preferredVisitDate === 'string' && preferredVisitDate >= today
+        ? preferredVisitDate
+        : '',
+    preferredTimeSlot:
+      VISIT_TIME_OPTIONS.find((o) => o.value === preferredVisitTime)?.value ?? null,
+  };
+}
+
+function useSupportAutosave(
+  applicationId: string,
+  resume: SupportFormDraft | null,
+  fields: Record<string, unknown>,
+) {
+  const enabled = !env.useMock && resume?.formState !== 'LINKED';
+  const snapshot = JSON.stringify(fields);
+  const form = useRef({
+    draftId: resume?.draftId ?? crypto.randomUUID(),
+    version: resume?.version ?? null,
+  });
+  const lastSaved = useRef(snapshot);
+  const latest = useRef(snapshot);
+  const queue = useRef(Promise.resolve());
+  const [error, setError] = useState('');
+
+  const save = useRef((next: string) => {
+    if (next === lastSaved.current) return;
+    lastSaved.current = next;
+    queue.current = queue.current.then(() =>
+      putSupportFormDraft(
+        form.current.draftId,
+        Number(applicationId),
+        form.current.version,
+        JSON.parse(next),
+      )
+        .then((draft) => {
+          form.current.version = draft.version;
+          setError('');
+        })
+        .catch((failure: unknown) =>
+          setError(failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.'),
+        ),
+    );
+  }).current;
+
+  useEffect(() => {
+    latest.current = snapshot;
+    if (!enabled) return;
+    const timer = window.setTimeout(() => save(snapshot), 650);
+    return () => window.clearTimeout(timer);
+  }, [snapshot, enabled, save]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    return () => save(latest.current);
+  }, [enabled, save]);
+
+  return { draftId: enabled ? form.current.draftId : undefined, error };
 }
 
 function ApplyForm({
@@ -67,24 +158,35 @@ function ApplyForm({
   application,
   program,
   facilityOptions,
+  resume,
 }: {
   applicationId: string;
   application: InspectionApplicationDetail;
   program: SupportProgram;
   facilityOptions: string[];
+  resume: SupportFormDraft | null;
 }) {
   const navigate = useNavigate();
   const { draft, setDraft } = useSupportDraft();
   const saved = draft?.applicationId === applicationId ? draft : null;
-  const [selectedFacility, setSelectedFacility] = useState(saved?.facility ?? null);
-  const [preferredDate, setPreferredDate] = useState(saved?.preferredDate ?? '');
+  const [restored] = useState(() => restoreFields(resume, facilityOptions));
+  const [selectedFacility, setSelectedFacility] = useState(saved?.facility ?? restored.facility);
+  const [preferredDate, setPreferredDate] = useState(
+    saved?.preferredDate ?? restored.preferredDate,
+  );
   const [preferredTimeSlot, setPreferredTimeSlot] = useState<VisitTimeSlot | null>(
-    saved?.preferredTimeSlot ?? null,
+    saved?.preferredTimeSlot ?? restored.preferredTimeSlot,
   );
   const autoAssigned = facilityOptions.length === 1;
   const facility = autoAssigned ? facilityOptions[0] : selectedFacility;
   const filled = facility && preferredDate && preferredTimeSlot;
   const { applicant, address, detailAddress, occupancyType } = application;
+  const autosave = useSupportAutosave(applicationId, resume, {
+    programId: Number(program.id),
+    requestedFacility: facility,
+    preferredVisitDate: preferredDate,
+    preferredVisitTime: preferredTimeSlot,
+  });
 
   return (
     <Screen
@@ -95,7 +197,14 @@ function ApplyForm({
           disabled={!filled}
           onClick={() => {
             if (!filled) return;
-            setDraft({ ...saved, applicationId, facility, preferredDate, preferredTimeSlot });
+            setDraft({
+              ...saved,
+              applicationId,
+              facility,
+              preferredDate,
+              preferredTimeSlot,
+              formDraftId: autosave.draftId,
+            });
             navigate(generatePath(PATHS.supportSubmit, { applicationId }));
           }}
         >
@@ -195,6 +304,11 @@ function ApplyForm({
           onChange={setPreferredTimeSlot}
           className="[&>p]:text-label"
         />
+        {autosave.error && (
+          <p role="alert" className="text-caption text-danger">
+            {autosave.error}
+          </p>
+        )}
       </div>
     </Screen>
   );

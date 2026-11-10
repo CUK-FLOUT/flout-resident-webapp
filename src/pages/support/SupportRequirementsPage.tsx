@@ -7,7 +7,6 @@ import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import type { SupportRequirement } from '@/types/domain';
 
-
 export default function SupportRequirementsPage() {
   const { applicationId } = useParams<'applicationId'>();
   const navigate = useNavigate();
@@ -89,7 +88,9 @@ function RequirementList({
             </span>
             <span className="flex flex-col gap-1.5">
               <span className="text-label text-ink">{item.title}</span>
-              <span className="text-caption text-muted">{item.description}</span>
+              {item.description && (
+                <span className="text-caption text-muted">{item.description}</span>
+              )}
             </span>
           </li>
         ))}

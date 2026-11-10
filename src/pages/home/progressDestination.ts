@@ -102,10 +102,34 @@ export function getProgressDestination(item: ResidentProgressItem): ProgressLink
       return application(PATHS.applicationHub, '점검 현황 보기');
     case 'CHECK_SUPPORT_OPTIONS':
       return application(PATHS.support, '지원사업 알아보기');
-    case 'CONTINUE_SUPPORT_FORM':
-      return { label: '이어서 작성', to: null };
+    case 'CONTINUE_SUPPORT_FORM': {
+      const id = matchId(target?.draftId, relatedIds?.supportFormDraftId, formId);
+      return {
+        label: '이어서 작성',
+        to:
+          currentStage === 'SUPPORT_FORM_EDITING' && applicationId && id
+            ? withParams(
+                generatePath(PATHS.supportApply, { applicationId: String(applicationId) }),
+                {
+                  supportFormDraftId: id,
+                },
+              )
+            : null,
+      };
+    }
     case 'UPLOAD_LANDLORD_CONSENT':
-      return { label: '동의서 등록', to: null };
+      return {
+        label: '동의서 등록',
+        to:
+          currentStage === 'SUPPORT_DRAFT' && applicationId && supportId
+            ? withParams(
+                generatePath(PATHS.supportSubmit, { applicationId: String(applicationId) }),
+                {
+                  supportApplicationId: String(supportId),
+                },
+              )
+            : null,
+      };
     case 'VIEW_SUPPORT_PROGRESS':
       return application(PATHS.supportStatus, '검토 현황 보기', supportId !== null);
     case 'VIEW_REJECTION':

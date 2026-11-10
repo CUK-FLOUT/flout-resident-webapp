@@ -31,6 +31,8 @@ export const queryKeys = {
   guide: (assessmentId: string) => ['guide', assessmentId] as const,
   applications: () => ['applications'] as const,
   residentProgress: (session: string | null) => ['resident-progress', session] as const,
+  supportConsentTarget: (session: string | null, applicationId: number, supportId: number) =>
+    ['support-consent-target', session, applicationId, supportId] as const,
   application: (id: string) => ['applications', id] as const,
   result: (applicationId: string) => ['applications', applicationId, 'result'] as const,
   supportPrograms: (applicationId: string) =>

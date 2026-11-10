@@ -288,19 +288,21 @@ export function uploadSupportAttachment(supportApplicationId: number, file: File
 export function useSubmitSupport() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      input,
-      supportApplicationId,
-      formDraftId,
-      file,
-      onCreated,
-    }: {
+    mutationFn: async (submission: {
       input: CreateSupportApplicationInput;
       supportApplicationId?: number;
       formDraftId?: string;
       file: File | null;
       onCreated: (supportApplicationId: number) => void;
-    }) => {
+    } | { supportApplicationId: number; file: File }) => {
+      if (!('input' in submission)) {
+        const { supportApplicationId, file } = submission;
+        const receipt = await uploadSupportAttachment(supportApplicationId, file);
+        if (receipt.supportApplicationId !== supportApplicationId || receipt.status !== 'SUBMITTED')
+          throw new ApiError(502, '동의서 접수 응답을 확인할 수 없어요.');
+        return supportApplicationId;
+      }
+      const { input, supportApplicationId, formDraftId, file, onCreated } = submission;
       let id = supportApplicationId;
       if (!id) {
         id = (await createSupportApplication(input, formDraftId)).supportApplicationId;

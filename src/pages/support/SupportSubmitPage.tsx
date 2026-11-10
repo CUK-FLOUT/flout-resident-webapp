@@ -1,20 +1,136 @@
 import { useState, type ChangeEvent } from 'react';
-import { generatePath, Navigate, useNavigate, useParams } from 'react-router';
-import { useInspectionApplication, useSubmitSupport, useSupportPrograms } from '@/api/applications';
+import { useQuery } from '@tanstack/react-query';
+import { generatePath, Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
+import {
+  parseInspectionApplicationId,
+  useInspectionApplication,
+  useSubmitSupport,
+  useSupportPrograms,
+} from '@/api/applications';
+import { queryKeys } from '@/api/queryClient';
+import { getResidentProgress } from '@/api/residentProgress';
 import arrowRight from '@/assets/support/arrow-right.svg';
 import downloadIcon from '@/assets/support/download.svg';
 import reviewNotice from '@/assets/support/review-notice.svg';
 import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
+import { tokenStorage } from '@/lib/storage';
 import { useSupportDraft, type SupportDraft } from '@/stores/supportDraft';
 import type { InspectionApplicationDetail, SupportProgram } from '@/types/domain';
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const ACCEPTED_FILE = /\.(pdf|jpe?g|png)$/i;
 
+async function canUploadConsent(applicationId: number, supportId: number, signal: AbortSignal) {
+  const visited = new Set<string>();
+  let cursor: string | undefined;
+  do {
+    const page = await getResidentProgress({ cursor, signal });
+    const item = page.items.find((entry) => entry.relatedIds?.applicationId === applicationId);
+    if (item) {
+      const targetId = item.nextAction?.target?.supportApplicationId;
+      const relatedId = item.relatedIds.supportApplicationId;
+      return (
+        !item.closed &&
+        item.currentStage === 'SUPPORT_DRAFT' &&
+        item.nextAction?.type === 'UPLOAD_LANDLORD_CONSENT' &&
+        (targetId ?? relatedId) === supportId &&
+        (relatedId == null || relatedId === supportId)
+      );
+    }
+    cursor = page.nextCursor ?? undefined;
+    if (cursor) {
+      if (visited.has(cursor)) return false;
+      visited.add(cursor);
+    }
+  } while (cursor);
+  return false;
+}
+
 export default function SupportSubmitPage() {
   const { applicationId } = useParams<'applicationId'>();
+  const [searchParams] = useSearchParams();
+  const requestedSupportId = searchParams.get('supportApplicationId');
+  if (requestedSupportId !== null) {
+    return (
+      <ConsentEntry
+        key={JSON.stringify([applicationId, requestedSupportId])}
+        applicationId={parseInspectionApplicationId(applicationId)}
+        supportId={parseInspectionApplicationId(requestedSupportId)}
+      />
+    );
+  }
+  return <NewSupportEntry applicationId={applicationId} />;
+}
+
+function ConsentEntry({
+  applicationId,
+  supportId,
+}: {
+  applicationId?: number;
+  supportId?: number;
+}) {
+  const header = { title: '지원하기' };
+  const application = useInspectionApplication(applicationId ? String(applicationId) : undefined);
+  const target = useQuery({
+    queryKey: queryKeys.supportConsentTarget(
+      tokenStorage.readSession()?.id ?? null,
+      applicationId ?? 0,
+      supportId ?? 0,
+    ),
+    queryFn: ({ signal }) => canUploadConsent(applicationId!, supportId!, signal),
+    enabled: Boolean(applicationId && supportId),
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+
+  if (application.isLoading || target.isFetching) {
+    return (
+      <Screen header={header} tab="home">
+        <StateMessage>신청 정보를 불러오고 있어요…</StateMessage>
+      </Screen>
+    );
+  }
+  if (
+    !applicationId ||
+    !supportId ||
+    target.isError ||
+    application.isError ||
+    target.data !== true ||
+    application.data?.occupancyType !== 'TENANT'
+  ) {
+    const canRetry = target.isError || application.isError;
+    return (
+      <Screen
+        header={header}
+        tab="home"
+        bottom={
+          canRetry && (
+            <Button
+              onClick={() => {
+                if (target.isError) void target.refetch();
+                if (application.isError) void application.refetch();
+              }}
+            >
+              다시 시도
+            </Button>
+          )
+        }
+      >
+        <StateMessage>
+          {canRetry
+            ? '신청 정보를 불러오지 못했어요.'
+            : '동의서를 등록할 수 있는 지원 신청을 확인하지 못했어요.'}
+        </StateMessage>
+      </Screen>
+    );
+  }
+
+  return <SubmitForm application={application.data} submission={{ supportId }} />;
+}
+
+function NewSupportEntry({ applicationId }: { applicationId?: string }) {
   const draft = useSupportDraft((s) => s.draft);
   const application = useInspectionApplication(applicationId);
   const programs = useSupportPrograms(applicationId);
@@ -56,17 +172,15 @@ export default function SupportSubmitPage() {
     );
   }
 
-  return <SubmitForm draft={draft} application={application.data} program={program} />;
+  return <SubmitForm application={application.data} submission={{ draft, program }} />;
 }
 
 function SubmitForm({
-  draft,
   application,
-  program,
+  submission,
 }: {
-  draft: SupportDraft;
   application: InspectionApplicationDetail;
-  program: SupportProgram;
+  submission: { draft: SupportDraft; program: SupportProgram } | { supportId: number };
 }) {
   const navigate = useNavigate();
   const setDraft = useSupportDraft((s) => s.setDraft);
@@ -110,7 +224,23 @@ function SubmitForm({
     />
   );
 
-  const onSubmit = () =>
+  const draft = 'draft' in submission ? submission.draft : null;
+  const goComplete = (supportApplicationId: number) =>
+    navigate(
+      `${generatePath(PATHS.supportComplete, { applicationId: draft?.applicationId ?? String(application.applicationId) })}?supportApplicationId=${supportApplicationId}`,
+      { replace: true },
+    );
+
+  const onSubmit = () => {
+    if ('supportId' in submission) {
+      if (file)
+        submit.mutate(
+          { supportApplicationId: submission.supportId, file },
+          { onSuccess: goComplete },
+        );
+      return;
+    }
+    const { draft, program } = submission;
     submit.mutate(
       {
         input: {
@@ -125,14 +255,9 @@ function SubmitForm({
         file,
         onCreated: (supportApplicationId) => setDraft({ ...draft, supportApplicationId }),
       },
-      {
-        onSuccess: (supportApplicationId) =>
-          navigate(
-            `${generatePath(PATHS.supportComplete, { applicationId: draft.applicationId })}?supportApplicationId=${supportApplicationId}`,
-            { replace: true },
-          ),
-      },
+      { onSuccess: goComplete },
     );
+  };
 
   return (
     <Screen header={{ title: '지원하기' }} tab="home">
@@ -199,9 +324,10 @@ function SubmitForm({
         </section>
 
         <dl className="text-caption flex gap-2 px-4 py-2.5">
-          <dt className="w-[116px] shrink-0">거주 형태 / 선택 시설</dt>
+          <dt className="w-[116px] shrink-0">{draft ? '거주 형태 / 선택 시설' : '거주 형태'}</dt>
           <dd>
-            {isTenant ? '세입자' : '소유자·기타'} / {draft.facility}
+            {isTenant ? '세입자' : '소유자·기타'}
+            {draft && ` / ${draft.facility}`}
           </dd>
         </dl>
 

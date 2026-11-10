@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { generatePath, Navigate, useNavigate, useParams } from 'react-router';
+import { generatePath, Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
 import {
   useInspectionApplication,
   useRecommendedFacilities,
@@ -23,6 +23,24 @@ import type { InspectionApplicationDetail, SupportProgram, VisitTimeSlot } from 
 
 export default function SupportApplyPage() {
   const { applicationId } = useParams<'applicationId'>();
+  const [searchParams] = useSearchParams();
+  const requestedDraftId = searchParams.get('supportFormDraftId');
+  return (
+    <SupportApplyEntry
+      key={JSON.stringify([applicationId, requestedDraftId])}
+      applicationId={applicationId}
+      requestedDraftId={requestedDraftId}
+    />
+  );
+}
+
+function SupportApplyEntry({
+  applicationId,
+  requestedDraftId,
+}: {
+  applicationId?: string;
+  requestedDraftId: string | null;
+}) {
   const application = useInspectionApplication(applicationId);
   const programs = useSupportPrograms(applicationId);
   const recommended = useRecommendedFacilities(applicationId);
@@ -32,23 +50,68 @@ export default function SupportApplyPage() {
   const [resume, setResume] = useState<SupportFormDraft | null | undefined>(
     env.useMock ? null : undefined,
   );
+  const [attempt, setAttempt] = useState(0);
+  const [resumeError, setResumeError] = useState(false);
 
   useEffect(() => {
     if (env.useMock || !applicationId) return;
     let alive = true;
     listSupportFormDrafts()
-      .then((drafts) => drafts.find((d) => String(d.applicationId) === applicationId) ?? null)
-      .catch(() => null)
-      .then((found) => alive && setResume(found));
+      .then((drafts) => {
+        if (!alive) return;
+        setResume(
+          drafts.find((draft) =>
+            requestedDraftId === null
+              ? String(draft.applicationId) === applicationId
+              : draft.applicationId === Number(applicationId) &&
+                draft.draftId === requestedDraftId &&
+                draft.formState === 'EDITING' &&
+                draft.supportApplicationId === null,
+          ) ?? null,
+        );
+      })
+      .catch(() => {
+        if (!alive) return;
+        setResume(null);
+        setResumeError(requestedDraftId !== null);
+      });
     return () => {
       alive = false;
     };
-  }, [applicationId]);
+  }, [applicationId, requestedDraftId, attempt]);
 
   if (queries.some((q) => q.isLoading) || resume === undefined) {
     return (
       <Screen header={header} tab="home">
         <StateMessage>신청 정보를 불러오고 있어요…</StateMessage>
+      </Screen>
+    );
+  }
+
+  if (requestedDraftId !== null && !resume) {
+    return (
+      <Screen
+        header={header}
+        tab="home"
+        bottom={
+          resumeError && (
+            <Button
+              onClick={() => {
+                setResumeError(false);
+                setResume(undefined);
+                setAttempt((value) => value + 1);
+              }}
+            >
+              다시 시도
+            </Button>
+          )
+        }
+      >
+        <StateMessage>
+          {resumeError
+            ? '임시 저장 정보를 불러오지 못했어요.'
+            : '이어서 작성할 지원 신청서를 찾을 수 없어요.'}
+        </StateMessage>
       </Screen>
     );
   }
@@ -69,6 +132,19 @@ export default function SupportApplyPage() {
     );
   }
 
+  const savedProgramId = resume?.fields.programId;
+  if (
+    requestedDraftId !== null &&
+    (recommended.data.facilities.length === 0 ||
+      (savedProgramId != null && savedProgramId !== Number(program.id)))
+  ) {
+    return (
+      <Screen header={header} tab="home">
+        <StateMessage>이 신청서에 연결된 지원사업 또는 권장 시설을 확인할 수 없어요.</StateMessage>
+      </Screen>
+    );
+  }
+
   if (recommended.data.facilities.length === 0) {
     return <Navigate to={generatePath(PATHS.support, { applicationId: applicationId! })} replace />;
   }
@@ -80,6 +156,7 @@ export default function SupportApplyPage() {
       program={program}
       facilityOptions={recommended.data.facilities}
       resume={resume}
+      resumeFromHome={requestedDraftId !== null}
     />
   );
 }
@@ -159,16 +236,18 @@ function ApplyForm({
   program,
   facilityOptions,
   resume,
+  resumeFromHome,
 }: {
   applicationId: string;
   application: InspectionApplicationDetail;
   program: SupportProgram;
   facilityOptions: string[];
   resume: SupportFormDraft | null;
+  resumeFromHome: boolean;
 }) {
   const navigate = useNavigate();
   const { draft, setDraft } = useSupportDraft();
-  const saved = draft?.applicationId === applicationId ? draft : null;
+  const saved = !resumeFromHome && draft?.applicationId === applicationId ? draft : null;
   const [restored] = useState(() => restoreFields(resume, facilityOptions));
   const [selectedFacility, setSelectedFacility] = useState(saved?.facility ?? restored.facility);
   const [preferredDate, setPreferredDate] = useState(

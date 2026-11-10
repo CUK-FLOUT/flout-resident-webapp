@@ -223,7 +223,7 @@ function ApprovedView({ id, onConfirm }: { id: number; onConfirm: () => void }) 
           }
           description={
             <>
-              지원 승인과 필요한 동의 확인이 완료됐어요.
+              지원 승인이 완료됐어요.
               <br />
               등록된 시공 일정과 진행상태를 확인할 수 있어요.
             </>

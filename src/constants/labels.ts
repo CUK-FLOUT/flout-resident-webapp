@@ -3,7 +3,6 @@ import type {
   ApplicationStage,
   ExistingFacility,
   InspectionNeed,
-  LandlordConsentStatus,
   RiskFactorCode,
   RiskLevel,
   SupportDecision,
@@ -149,11 +148,6 @@ export const APPLICATION_STAGE: Record<
     headline: '제출한 내용을 검토하고 있어요.',
     tone: 'primary',
   },
-  LANDLORD_CONSENT_REQUIRED: {
-    label: '동의 필요',
-    headline: '임대인 동의를 기다리고 있어요.',
-    tone: 'warning',
-  },
   SUPPORT_APPROVED: { label: '승인', headline: '지원 대상자로 확인됐어요.', tone: 'success' },
   SUPPORT_REJECTED: {
     label: '지원 미승인',
@@ -174,12 +168,6 @@ export const APPLICATION_STAGE: Record<
 };
 
 export const SUPPORT_STEPS = ['접수', '동의', '결과', '일정'] as const;
-
-export const LANDLORD_CONSENT_LABEL: Record<LandlordConsentStatus, string> = {
-  NOT_REQUIRED: '불필요',
-  PENDING: '확인 중',
-  VERIFIED: '확인 완료',
-};
 
 export const SUPPORT_DECISION_LABEL: Record<SupportDecision, string> = {
   PENDING: '지원 검토 중',

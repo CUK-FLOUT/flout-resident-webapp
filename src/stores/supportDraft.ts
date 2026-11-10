@@ -7,6 +7,7 @@ export interface SupportDraft {
   preferredDate: string;
   preferredTimeSlot: VisitTimeSlot;
   supportApplicationId?: number;
+  formDraftId?: string;
 }
 
 interface SupportDraftState {

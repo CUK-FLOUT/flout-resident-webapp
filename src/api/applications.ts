@@ -249,7 +249,10 @@ export function useRecommendedFacilities(applicationId: string | undefined) {
   });
 }
 
-export function createSupportApplication(input: CreateSupportApplicationInput) {
+export function createSupportApplication(
+  input: CreateSupportApplicationInput,
+  formDraftId?: string,
+) {
   return withMock(
     () => mockSupportApplicationFor(input.applicationId, input.programId),
     async () =>
@@ -261,6 +264,7 @@ export function createSupportApplication(input: CreateSupportApplicationInput) {
             preferredVisitTime:
               input.preferredVisitTime === 'ANYTIME' ? 'ANY' : input.preferredVisitTime,
           },
+          { headers: formDraftId ? { 'X-Form-Draft-Id': formDraftId } : undefined },
         ),
       ),
   );
@@ -287,17 +291,19 @@ export function useSubmitSupport() {
     mutationFn: async ({
       input,
       supportApplicationId,
+      formDraftId,
       file,
       onCreated,
     }: {
       input: CreateSupportApplicationInput;
       supportApplicationId?: number;
+      formDraftId?: string;
       file: File | null;
       onCreated: (supportApplicationId: number) => void;
     }) => {
       let id = supportApplicationId;
       if (!id) {
-        id = (await createSupportApplication(input)).supportApplicationId;
+        id = (await createSupportApplication(input, formDraftId)).supportApplicationId;
         onCreated(id);
       }
       if (file) await uploadSupportAttachment(id, file);

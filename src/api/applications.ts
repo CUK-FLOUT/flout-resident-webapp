@@ -188,6 +188,7 @@ export function useApplications() {
 interface SupportProgramMatching {
   recommendation: {
     programId: number | null;
+    reason: string | null;
     program: {
       name: string;
       description: string | null;
@@ -224,6 +225,7 @@ async function matchSupportProgram(applicationId: string): Promise<SupportProgra
       benefit: program.supportedFacilities ?? '',
       conditions: toRequirements(program.eligibilityConditions),
       requiredDocuments: toRequirements(program.requiredDocuments),
+      reason: recommendation.reason ?? undefined,
     },
   ];
 }

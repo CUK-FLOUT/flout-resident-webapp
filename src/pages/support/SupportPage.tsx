@@ -113,7 +113,7 @@ export default function SupportPage() {
                 <span className="bg-page text-ink flex size-8 shrink-0 items-center justify-center rounded-full">
                   <Check size={16} aria-hidden />
                 </span>
-                현장점검에서 침수 취약지점이 확인됐어요.
+                {program.reason || '현장점검에서 침수 취약지점이 확인됐어요.'}
               </p>
             </section>
 

@@ -121,6 +121,7 @@ function SubmitForm({
           preferredVisitTime: draft.preferredTimeSlot,
         },
         supportApplicationId: draft.supportApplicationId,
+        formDraftId: draft.formDraftId,
         file,
         onCreated: (supportApplicationId) => setDraft({ ...draft, supportApplicationId }),
       },

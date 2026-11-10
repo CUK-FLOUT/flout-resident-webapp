@@ -28,8 +28,26 @@ import './home.css';
 
 const cardSurface = 'rounded-[10px] border border-(--home-border) bg-surface';
 
+const progressTypeByStage = new Map([
+  ['RISK_ASSESSMENT_COMPLETED', '침수 취약도 분석'],
+  ['GUIDE_AVAILABLE', '침수 예방 가이드'],
+  ['GUIDE_COMPLETED', '침수 예방 가이드'],
+  ['INSPECTION_FORM_EDITING', '현장점검 신청'],
+  ['SUPPORT_FORM_EDITING', '지원 신청'],
+]);
+
+const progressTypeByApplication = {
+  RISK_ASSESSMENT: '침수 취약도 분석',
+  INSPECTION: '현장점검 신청',
+  SUPPORT: '지원 신청',
+} satisfies Record<ResidentProgressItem['applicationType'], string>;
+
 function ProgressCard({ item }: { item: ResidentProgressItem }) {
   const action = getProgressDestination(item);
+  const caption = item.receiptNumber
+    ? `신청번호 ${item.receiptNumber}`
+    : (progressTypeByStage.get(item.currentStage) ??
+      progressTypeByApplication[item.applicationType]);
   const appearance =
     action?.label === '이어서 작성'
       ? { icon: pencil, tone: 'bg-(--home-draft)' }
@@ -54,9 +72,7 @@ function ProgressCard({ item }: { item: ResidentProgressItem }) {
         <img src={appearance.icon} width={24} height={24} alt="" />
       </span>
       <div className="min-w-0">
-        {item.receiptNumber && (
-          <p className="text-body-text text-[10px] leading-4">신청번호 {item.receiptNumber}</p>
-        )}
+        <p className="text-body-text text-[10px] leading-4">{caption}</p>
         <h3 className="text-ink text-[13px] leading-[18px] font-bold tracking-[-0.035em]">
           {item.title}
         </h3>

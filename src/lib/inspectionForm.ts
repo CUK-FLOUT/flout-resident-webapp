@@ -153,7 +153,10 @@ export async function loadInspectionEntry(
   const resume = readResume();
   const drafts = await listInspectionFormDrafts();
   const requested =
-    requestedApplicationId ?? (!result && !requestedFormId ? resume?.applicationId : null);
+    requestedApplicationId ??
+    (!result && !requestedFormId && !requestedAssessmentId
+      ? resume?.applicationId
+      : null);
   const assessmentToResume = requestedAssessmentId ?? result?.id ?? resume?.assessmentId;
   const saved = requestedFormId
     ? drafts.find((item) => item.draftId === requestedFormId)

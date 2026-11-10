@@ -12,10 +12,26 @@ export function useInspectionAutosave(
   useEffect(() => {
     if (!enabled || env.useMock || draft.submitting) return;
     const timer = window.setTimeout(() => {
-      void saveInspectionProgress().catch((failure: unknown) => {
-        setError(failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.');
-      });
-    }, 650);
+  const savedSnapshot = snapshot;
+
+  void saveInspectionProgress()
+    .then(() => {
+      const current = useInspectionDraft.getState();
+
+      if (
+        JSON.stringify(inspectionFormFields(current)) === savedSnapshot &&
+        (current.formSnapshot === savedSnapshot ||
+          current.savedPayload === savedSnapshot)
+      ) {
+        setError('');
+      }
+    })
+    .catch((failure: unknown) => {
+      setError(
+        failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.',
+      );
+    });
+}, 650);
     return () => window.clearTimeout(timer);
   }, [snapshot, enabled, draft.submitting, setError]);
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { generatePath, Navigate, useNavigate, useParams } from 'react-router';
+import { generatePath, Navigate, useLocation, useNavigate, useParams } from 'react-router';
 import { useGuide } from '@/api/risk';
 import { Screen } from '@/components/layout';
 import { BottomSheet, Button, CheckItem, ProgressBar } from '@/components/ui';
@@ -128,6 +128,7 @@ export function GuideView({
 
 export default function GuidePage() {
   const { assessmentId } = useParams();
+  const { search } = useLocation();
   const navigate = useNavigate();
   const result = useAddressDraft((s) => s.result);
   const valid = Boolean(assessmentId && result && String(result.id) === assessmentId);
@@ -135,7 +136,15 @@ export default function GuidePage() {
   const allCompleted = useGuideProgress((s) => s.completed);
   const setChecked = useGuideProgress((s) => s.setChecked);
   const setResolved = useGuideProgress((s) => s.setResolved);
-  if (!valid || !assessmentId) return <Navigate to={PATHS.addressSearch} replace />;
+  if (!valid || !assessmentId)
+    return assessmentId && new URLSearchParams(search).has('guideId') ? (
+      <Navigate
+        to={{ pathname: generatePath(PATHS.guideLoading, { assessmentId }), search }}
+        replace
+      />
+    ) : (
+      <Navigate to={PATHS.addressSearch} replace />
+    );
   if (guide.isLoading)
     return <Navigate to={generatePath(PATHS.guideLoading, { assessmentId })} replace />;
   if (!guide.data)

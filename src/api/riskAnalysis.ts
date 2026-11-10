@@ -48,6 +48,8 @@ type AssessmentDetail = AnalysisOutcome & {
   address: string;
   detailAddress: string;
   floor: ResidenceFloor | null;
+  guideId: number | null;
+  applicationId: number | null;
 };
 
 interface Envelope<T> {
@@ -167,6 +169,8 @@ export async function getRiskAssessment(
         status: string;
         riskLevel: string | null;
         housingType?: HousingType | null;
+        guideId?: number | null;
+        applicationId?: number | null;
         result: unknown;
       }>
     >('/resident/risk-assessments/' + id, { signal }),
@@ -183,6 +187,8 @@ export async function getRiskAssessment(
     address: response.address,
     detailAddress: response.detailAddress,
     floor: readResidenceFloor(response.housingType),
+    guideId: response.guideId ?? null,
+    applicationId: response.applicationId ?? null,
   };
 }
 

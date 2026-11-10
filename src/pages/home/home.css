@@ -1,0 +1,11 @@
+.resident-home {
+  --home-banner: #eaf3fd;
+  --home-tint: #ebf3fc;
+  --home-panel: #f3f7fc;
+  --home-note: #e8f1fc;
+  --home-border: #d8e1e9;
+  --home-action: #1663de;
+  --home-scheduled: #e7f5ff;
+  --home-review: #f0ecff;
+  --home-draft: #fff4e3;
+}

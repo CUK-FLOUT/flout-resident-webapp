@@ -130,8 +130,13 @@ type InspectionEntry =
 export async function loadInspectionEntry(
   result: AnalysisResult | null,
   scope: string | null,
-  requestedApplicationId?: number,
+  requestedIds: { applicationId?: number; formId?: string; assessmentId?: number },
 ): Promise<InspectionEntry> {
+  const {
+    applicationId: requestedApplicationId,
+    formId: requestedFormId,
+    assessmentId: requestedAssessmentId,
+  } = requestedIds;
   const initialContext = result
     ? {
         address: getPrimaryAddress(result.input.address).trim(),
@@ -147,15 +152,32 @@ export async function loadInspectionEntry(
 
   const resume = readResume();
   const drafts = await listInspectionFormDrafts();
-  const requested = requestedApplicationId ?? (!result ? resume?.applicationId : null);
-  const assessmentToResume = result?.id ?? resume?.assessmentId;
-  const saved = requested
-    ? drafts.find((item) => item.applicationId === requested)
-    : assessmentToResume !== undefined
-      ? drafts.find((item) => item.assessmentId === assessmentToResume)
-      : drafts[0];
+  const requested =
+    requestedApplicationId ?? (!result && !requestedFormId ? resume?.applicationId : null);
+  const assessmentToResume = requestedAssessmentId ?? result?.id ?? resume?.assessmentId;
+  const saved = requestedFormId
+    ? drafts.find((item) => item.draftId === requestedFormId)
+    : requested
+      ? drafts.find((item) => item.applicationId === requested)
+      : assessmentToResume !== undefined
+        ? drafts.find((item) => item.assessmentId === assessmentToResume)
+        : drafts[0];
 
-  if (!saved && requested) {
+  if (requestedFormId && !saved)
+    throw new ApiError(404, '이어 쓸 수 있는 임시 신청서를 찾을 수 없어요.');
+  if (saved && requestedAssessmentId && saved.assessmentId !== requestedAssessmentId)
+    throw new ApiError(409, '신청에 연결된 취약도 분석을 확인할 수 없어요.');
+
+  const linkedAnalysis =
+    !saved && requested && requestedAssessmentId
+      ? await getRiskAssessment(requestedAssessmentId)
+      : null;
+  const linkedApplicationId =
+    linkedAnalysis?.status === 'COMPLETED' && linkedAnalysis.applicationId === requested
+      ? requested
+      : null;
+
+  if (!saved && requested && !linkedApplicationId) {
     const receipt = await getInspectionReceipt(requested);
     if (
       receipt.applicationStatus === 'RECEIVED' ||
@@ -167,9 +189,8 @@ export async function loadInspectionEntry(
 
   const assessmentId = saved?.assessmentId ?? assessmentToResume;
   if (typeof assessmentId !== 'number') return null;
-  const application = saved?.applicationId
-    ? await getInspectionApplication(saved.applicationId)
-    : null;
+  const applicationId = saved?.applicationId ?? linkedApplicationId;
+  const application = applicationId ? await getInspectionApplication(applicationId) : null;
   if (
     application?.applicationStatus === 'RECEIVED' ||
     application?.applicationStatus === 'INSPECTION_COMPLETED'
@@ -277,9 +298,9 @@ export async function saveInspectionProgress(): Promise<void> {
           ([key, value]) => JSON.stringify(matching.fields[key]) === JSON.stringify(value),
         );
       if (!matching || matching.formState !== 'EDITING') throw error;
-        saved = sameFields
-          ? matching
-          : await putInspectionFormDraft(formId, assessmentId, matching.version, fields);
+      saved = sameFields
+        ? matching
+        : await putInspectionFormDraft(formId, assessmentId, matching.version, fields);
     }
     if (current()) draft.update({ formVersion: saved.version, formSnapshot: snapshot });
   };

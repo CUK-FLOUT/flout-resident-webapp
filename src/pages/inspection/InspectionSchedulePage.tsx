@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Plus, X } from 'lucide-react';
-import { Navigate, useNavigate } from 'react-router';
+import { Navigate, useLocation, useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
 import { Button, ChoiceGroup, ProgressBar, TextField } from '@/components/ui';
 import { VISIT_TIME_OPTIONS } from '@/constants/labels';
@@ -60,6 +60,8 @@ function PhotoPreview({
 
 export default function InspectionSchedulePage() {
   const navigate = useNavigate();
+  const { search } = useLocation();
+  const applyPath = { pathname: PATHS.inspectionApply, search };
   const draft = useInspectionDraft();
   const scope = inspectionSessionScope();
   const ready = Boolean(draft.context && draft.sessionScope === scope);
@@ -75,8 +77,12 @@ export default function InspectionSchedulePage() {
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
   }, [showPhotoAlert]);
-  if (!ready) return <Navigate to={PATHS.inspectionApply} replace />;
-  if (step1Error(draft)) return <Navigate to={PATHS.inspectionApply} replace />;
+  if (!ready) {
+    const params = new URLSearchParams(search);
+    if (params.has('applicationId')) params.set('step', 'photos');
+    return <Navigate to={{ ...applyPath, search: params.toString() }} replace />;
+  }
+  if (step1Error(draft)) return <Navigate to={applyPath} replace />;
   const setPhotos = (photos: File[]) => {
     draft.update({ photos });
     setError('');
@@ -84,7 +90,7 @@ export default function InspectionSchedulePage() {
   return (
     <>
       <Screen
-        header={{ title: '현장점검하기', onBack: () => navigate(PATHS.inspectionApply) }}
+        header={{ title: '현장점검하기', onBack: () => navigate(applyPath) }}
         tab="home"
         bottom={
           <Button
@@ -105,7 +111,7 @@ export default function InspectionSchedulePage() {
                   useInspectionDraft.getState().context === draft.context &&
                   scope === inspectionSessionScope()
                 )
-                  navigate(PATHS.inspectionConfirm);
+                  navigate({ pathname: PATHS.inspectionConfirm, search });
               } catch (failure) {
                 setError(
                   failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.',

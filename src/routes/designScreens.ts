@@ -56,6 +56,17 @@ export const DESIGN_SCREENS: DesignScreen[] = [
     status: 'done',
   },
   {
+    nodeId: '3610:4208',
+    name: '01-2 전체보기',
+    route: 'homeProgress',
+  },
+  {
+    nodeId: '3854:3043',
+    name: '01-3 홈화면 · 로그아웃',
+    relatedRoute: 'home',
+    status: 'done',
+  },
+  {
     nodeId: '2020:1503',
     name: '01-1 주소 검색 · 검색 결과 선택',
     route: 'addressSearch',

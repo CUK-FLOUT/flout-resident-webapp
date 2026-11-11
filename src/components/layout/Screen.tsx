@@ -24,9 +24,18 @@ export interface ScreenProps {
   bleed?: boolean;
   /** 하단탭 표시 + 선택된 탭. 생략하면 하단탭 없음 */
   tab?: BottomNavTab;
+  refreshUnread?: boolean;
 }
 
-export function Screen({ header, bottom, children, className, bleed, tab }: ScreenProps) {
+export function Screen({
+  header,
+  bottom,
+  children,
+  className,
+  bleed,
+  tab,
+  refreshUnread,
+}: ScreenProps) {
   return (
     <>
       {header && <AppHeader {...header} />}
@@ -36,7 +45,7 @@ export function Screen({ header, bottom, children, className, bleed, tab }: Scre
       {(bottom || tab) && (
         <div className="sticky bottom-0 z-10">
           {bottom && <BottomCTA>{bottom}</BottomCTA>}
-          {tab && <BottomNav active={tab} />}
+          {tab && <BottomNav active={tab} refreshUnread={refreshUnread} />}
         </div>
       )}
     </>

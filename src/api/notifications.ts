@@ -47,9 +47,10 @@ export function useNotifications() {
   });
 }
 
-export function useHasUnreadNotifications() {
+export function useHasUnreadNotifications(enabled = true) {
   const { data } = useQuery({
     queryKey: queryKeys.unreadNotifications(),
+    enabled,
     queryFn: ({ signal }) =>
       withMock(
         () => mockNotifications.some((n) => !n.read),

@@ -1,19 +1,11 @@
 import { Link, useNavigate } from 'react-router';
-import {
-  homeProgressLimit,
-  useResidentProgress,
-  type ResidentProgressItem,
-} from '@/api/residentProgress';
-import calendar from '@/assets/home/calendar.svg';
+import { homeProgressLimit, useResidentProgress } from '@/api/residentProgress';
 import chevron from '@/assets/home/chevron.svg';
 import connector from '@/assets/home/connector.svg';
 import divider from '@/assets/home/divider.svg';
 import emptyIcon from '@/assets/home/empty.svg';
 import heroLogo from '@/assets/home/hero-logo.png';
 import heroWave from '@/assets/home/hero-wave.svg';
-import pencil from '@/assets/home/pencil.svg';
-import pin from '@/assets/home/pin.svg';
-import review from '@/assets/home/review.svg';
 import search from '@/assets/home/search.svg';
 import stepConstruction from '@/assets/home/step-construction.svg';
 import stepInspection from '@/assets/home/step-inspection.svg';
@@ -23,88 +15,11 @@ import { Screen } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { useAddressDraft } from '@/stores/addressDraft';
-import { getProgressDestination } from './progressDestination';
+import { HomeAccountMenu } from './HomeAccountMenu';
+import { ProgressCard } from './ProgressCard';
 import './home.css';
 
 const cardSurface = 'rounded-[10px] border border-(--home-border) bg-surface';
-
-const progressTypeByStage = new Map([
-  ['RISK_ASSESSMENT_COMPLETED', '침수 취약도 분석'],
-  ['GUIDE_AVAILABLE', '침수 예방 가이드'],
-  ['GUIDE_COMPLETED', '침수 예방 가이드'],
-  ['INSPECTION_FORM_EDITING', '현장점검 신청'],
-  ['SUPPORT_FORM_EDITING', '지원 신청'],
-]);
-
-const progressTypeByApplication = {
-  RISK_ASSESSMENT: '침수 취약도 분석',
-  INSPECTION: '현장점검 신청',
-  SUPPORT: '지원 신청',
-} satisfies Record<ResidentProgressItem['applicationType'], string>;
-
-function ProgressCard({ item }: { item: ResidentProgressItem }) {
-  const action = getProgressDestination(item);
-  const caption = item.receiptNumber
-    ? `신청번호 ${item.receiptNumber}`
-    : (progressTypeByStage.get(item.currentStage) ??
-      progressTypeByApplication[item.applicationType]);
-  const appearance =
-    action?.label === '이어서 작성'
-      ? { icon: pencil, tone: 'bg-(--home-draft)' }
-      : item.currentStage === 'VISIT_SCHEDULED'
-        ? { icon: calendar, tone: 'bg-(--home-scheduled)' }
-        : item.applicationType === 'SUPPORT'
-          ? { icon: review, tone: 'bg-(--home-review)' }
-          : { icon: stepInspection, tone: 'bg-soft' };
-
-  return (
-    <li
-      className={
-        cardSurface +
-        ' grid min-h-[76px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-[11px] py-2 min-[360px]:gap-3'
-      }
-    >
-      <span
-        className={
-          appearance.tone + ' grid size-9 place-items-center rounded-[9px] min-[360px]:size-11'
-        }
-      >
-        <img src={appearance.icon} width={24} height={24} alt="" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-body-text text-[10px] leading-4">{caption}</p>
-        <h3 className="text-ink text-[13px] leading-[18px] font-bold tracking-[-0.035em]">
-          {item.title}
-        </h3>
-        {item.address && (
-          <p className="text-body-text mt-1 flex min-w-0 items-center gap-1 text-[10px] leading-4">
-            <img src={pin} width={14} height={14} className="shrink-0" alt="" />
-            <span className="truncate">{item.address}</span>
-          </p>
-        )}
-      </div>
-      {action?.to ? (
-        <Link
-          to={action.to}
-          aria-label={item.title + ' · ' + action.label}
-          className="flex min-h-11 items-center rounded-full"
-        >
-          <span className="grid min-h-[26px] min-w-[66px] place-items-center rounded-full bg-(--home-tint) px-2 text-center text-[10px] leading-4 font-bold text-(--home-action) min-[360px]:min-w-[88px]">
-            {action.label}
-          </span>
-        </Link>
-      ) : (
-        <button
-          type="button"
-          disabled
-          className="text-muted bg-soft min-h-[26px] min-w-[66px] rounded-full px-2 text-center text-[10px] leading-4 min-[360px]:min-w-[88px]"
-        >
-          {action?.label ?? '이동할 수 없음'}
-        </button>
-      )}
-    </li>
-  );
-}
 
 function EmptyProgress() {
   return (
@@ -155,7 +70,12 @@ export default function HomePage() {
 
   return (
     <Screen
-      header={{ title: '홈', onBack: false, className: '[&_h1]:text-[18px]' }}
+      header={{
+        title: '홈',
+        onBack: false,
+        right: <HomeAccountMenu />,
+        className: '[&_h1]:text-[18px]',
+      }}
       tab="home"
       bleed
       className="resident-home px-[15px] pt-3 pb-5!"
@@ -221,9 +141,9 @@ export default function HomePage() {
           <h2 id="resident-progress" className="text-[18px] leading-7 font-bold">
             나의 진행 현황
           </h2>
-          <span aria-disabled="true" className="text-[12px] font-medium text-(--home-action)">
+          <Link to={PATHS.homeProgress} className="text-[12px] font-medium text-(--home-action)">
             전체 보기 <span aria-hidden>›</span>
-          </span>
+          </Link>
         </div>
         {!signedIn ? (
           <div

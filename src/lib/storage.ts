@@ -95,17 +95,49 @@ function writeTokens(id: string, { accessToken, refreshToken }: TokenPair) {
   return true;
 }
 
+const sessionListeners = new Set<() => void>();
+let legacyScope: { accessToken: string; id: string } | undefined;
+let legacyGeneration = 0;
+
+function getSessionScope(): string | null {
+  const session = readSession();
+  if (!session || session.id !== null) {
+    legacyScope = undefined;
+    return session?.id ?? null;
+  }
+  if (legacyScope?.accessToken !== session.accessToken)
+    legacyScope = { accessToken: session.accessToken, id: `legacy:${++legacyGeneration}` };
+  return legacyScope.id;
+}
+
+function subscribeToSession(listener: () => void) {
+  sessionListeners.add(listener);
+  const onStorage = ({ key }: StorageEvent) => {
+    if (key === null || key === KEYS.authTokens || key === KEYS.legacyAccessToken) listener();
+  };
+  window.addEventListener('storage', onStorage);
+  return () => {
+    sessionListeners.delete(listener);
+    window.removeEventListener('storage', onStorage);
+  };
+}
+
 export const tokenStorage = {
   get: () => readSession()?.accessToken ?? null,
   readSession,
+  getSessionScope,
+  subscribeToSession,
   set(tokens: TokenPair) {
     const id = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
-    return writeTokens(id, tokens);
+    const saved = writeTokens(id, tokens);
+    if (saved) sessionListeners.forEach((listener) => listener());
+    return saved;
   },
   rotate: writeTokens,
   clear() {
     safeRemove(KEYS.authTokens);
     safeRemove(KEYS.legacyAccessToken);
+    sessionListeners.forEach((listener) => listener());
   },
 };
 

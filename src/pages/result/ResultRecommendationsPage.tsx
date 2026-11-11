@@ -1,16 +1,41 @@
-import { generatePath, useNavigate, useParams } from 'react-router';
+import { generatePath, useNavigate } from 'react-router';
+import { useInspectionRecommendations } from '@/api/inspectionResults';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { InspectionStatusScreen } from '@/pages/inspection/InspectionStatusScreen';
-import { resultMock } from './resultMock';
+import {
+  ResultApplicationScreen,
+  ResultState,
+  type ResultApplication,
+} from './ResultApplicationScreen';
 
 export default function ResultRecommendationsPage() {
-  const { applicationId = '000001' } = useParams<'applicationId'>();
+  return (
+    <ResultApplicationScreen title="권장 예방조치" backTo="resultPoints">
+      {(props) => <ResultRecommendations {...props} />}
+    </ResultApplicationScreen>
+  );
+}
+
+function ResultRecommendations({ title, backTo, application, applicationId }: ResultApplication) {
   const navigate = useNavigate();
+  const recommendations = useInspectionRecommendations(application.applicationId);
+  if (recommendations.isPending)
+    return <ResultState title={title} backTo={backTo} message="권장 예방조치를 불러오고 있어요…" />;
+  if (recommendations.isError || !recommendations.data)
+    return (
+      <ResultState
+        title={title}
+        backTo={backTo}
+        message="권장 예방조치를 불러오지 못했어요."
+        retry={() => void recommendations.refetch()}
+      />
+    );
+  const { recommendedActions } = recommendations.data;
   return (
     <InspectionStatusScreen
-      title="권장 예방조치"
-      backTo={generatePath(PATHS.resultPoints, { applicationId })}
+      title={title}
+      backTo={backTo}
       bottom={
         <div className="flex flex-col gap-3">
           <Button onClick={() => navigate(generatePath(PATHS.support, { applicationId }))}>
@@ -25,20 +50,24 @@ export default function ResultRecommendationsPage() {
       <div className="flex flex-col gap-5 py-5">
         <h2 className="text-title">전문가 권장 예방조치</h2>
         <p className="text-body">
-          {applicationId} · 출입구 / 배수구
+          {application.receiptNumber}
           <br />
           현장점검에서 등록한 조치를 함께 확인해요.
         </p>
-        <ol className="flex flex-col gap-3">
-          {resultMock.recommendations.map((recommendation, index) => (
-            <li
-              key={recommendation}
-              className="border-border rounded-md border p-4 text-[16px] leading-[26px] whitespace-pre-line"
-            >
-              {index + 1}. {recommendation}
-            </li>
-          ))}
-        </ol>
+        {recommendedActions.length === 0 ? (
+          <p className="text-body text-muted">등록된 권장 예방조치가 없어요.</p>
+        ) : (
+          <ol className="flex flex-col gap-3">
+            {recommendedActions.map(({ description }, index) => (
+              <li
+                key={index}
+                className="border-border rounded-md border p-4 text-[16px] leading-[26px] whitespace-pre-line"
+              >
+                {index + 1}. {description}
+              </li>
+            ))}
+          </ol>
+        )}
       </div>
     </InspectionStatusScreen>
   );

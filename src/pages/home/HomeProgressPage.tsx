@@ -1,29 +1,20 @@
 import { Link, useNavigate } from 'react-router';
-import { useCachedResidentProgress } from '@/api/residentProgress';
+import { useResidentProgress } from '@/api/residentProgress';
 import backIcon from '@/assets/home/progress/back.svg';
 import { Screen, StateMessage } from '@/components/layout';
+import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
-import { env } from '@/lib/env';
-import { ProgressCard, ProgressCardView } from './ProgressCard';
+import { ProgressCard } from './ProgressCard';
 import { progressStages } from './progressStages';
 import './home.css';
 
 export default function HomeProgressPage() {
   const navigate = useNavigate();
-  const { state, signedIn } = useCachedResidentProgress();
-  const preview = env.useMock;
-  const page = state?.data;
-  const count = preview ? progressStages.size : page?.items.length;
+  const { items, count, signedIn, isPending, isFetching, isError, retry } = useResidentProgress();
   const goBack = () => {
     if (window.history.state?.idx > 0) navigate(-1);
     else navigate(PATHS.home, { replace: true });
   };
-
-  const unavailable = !signedIn
-    ? '로그인하면 진행 내역을 확인할 수 있어요.'
-    : state?.fetchStatus === 'fetching'
-      ? '진행 내역을 불러오고 있어요…'
-      : '홈에서 불러온 진행 내역이 없어요.';
 
   return (
     <Screen
@@ -50,21 +41,12 @@ export default function HomeProgressPage() {
           )}
         </div>
         <p className="text-muted mt-[3px] text-[12px] leading-5">
-          {preview && '예시 데이터 · '}신청별 진행 상태를 확인할 수 있어요.
+          신청별 진행 상태를 확인할 수 있어요.
         </p>
-        {!preview && page?.nextCursor && (
-          <p className="text-muted text-caption">홈에서 불러온 내역 {count}건을 표시하고 있어요.</p>
-        )}
       </section>
-      {preview ? (
+      {signedIn && items.length > 0 && (
         <ul className="mt-[22px] flex flex-col gap-4 pr-2.5 pl-[15px]">
-          {[...progressStages].map(([stage, props]) => (
-            <ProgressCardView key={stage} {...props} address="부천시 원미구 심곡로 12" list />
-          ))}
-        </ul>
-      ) : page?.items.length ? (
-        <ul className="mt-[22px] flex flex-col gap-4 pr-2.5 pl-[15px]">
-          {page.items.map((item) => (
+          {items.map((item) => (
             <ProgressCard
               key={item.assessmentId}
               item={item}
@@ -73,13 +55,33 @@ export default function HomeProgressPage() {
             />
           ))}
         </ul>
-      ) : (
+      )}
+      {!signedIn ? (
         <div className="px-gutter text-center">
-          <StateMessage>{page ? '아직 진행 내역이 없어요.' : unavailable}</StateMessage>
+          <StateMessage>로그인하면 진행 내역을 확인할 수 있어요.</StateMessage>
           <Link to={PATHS.home} className="text-primary text-label mt-3 inline-block underline">
             홈으로 돌아가기
           </Link>
         </div>
+      ) : isError ? (
+        <div className="px-gutter text-center" role="alert">
+          <StateMessage>전체 진행 현황을 불러오지 못했어요.</StateMessage>
+          <Button
+            variant="text"
+            size="md"
+            fullWidth={false}
+            loading={isFetching}
+            onClick={() => void retry()}
+          >
+            다시 시도
+          </Button>
+        </div>
+      ) : isPending || count === undefined ? (
+        <div role="status">
+          <StateMessage>진행 내역을 불러오고 있어요…</StateMessage>
+        </div>
+      ) : (
+        count === 0 && <StateMessage>아직 진행 내역이 없어요.</StateMessage>
       )}
     </Screen>
   );

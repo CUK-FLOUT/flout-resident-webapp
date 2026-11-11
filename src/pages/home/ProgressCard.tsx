@@ -8,6 +8,7 @@ import review from '@/assets/home/review.svg';
 import stepInspection from '@/assets/home/step-inspection.svg';
 import { cn } from '@/lib/cn';
 import { getProgressDestination } from './progressDestination';
+import { progressStages } from './progressStages';
 
 const progressTypeByStage = new Map([
   ['RISK_ASSESSMENT_COMPLETED', '침수 취약도 분석'],
@@ -40,6 +41,7 @@ export function ProgressCard({
       progressTypeByApplication[item.applicationType]);
   const appearance =
     stage ??
+    progressStages.get(item.currentStage) ??
     (action?.label === '이어서 작성'
       ? { icon: pencil, tone: 'bg-(--home-draft)' }
       : item.currentStage === 'VISIT_SCHEDULED'
@@ -61,7 +63,7 @@ export function ProgressCard({
   );
 }
 
-export function ProgressCardView({
+function ProgressCardView({
   caption,
   title,
   address,

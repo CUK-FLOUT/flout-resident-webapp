@@ -1,6 +1,6 @@
-import { useSyncExternalStore } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { queryClient, queryKeys, withMock } from '@/api/queryClient';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { queryKeys, withMock } from '@/api/queryClient';
 import { env } from '@/lib/env';
 import { ApiError, http } from '@/lib/http';
 import { tokenStorage } from '@/lib/storage';
@@ -140,35 +140,76 @@ function readSessionKey() {
   return env.useMock ? 'mock' : session ? (session.id ?? 'legacy') : null;
 }
 
-function subscribeToSession(listener: () => void) {
-  window.addEventListener('storage', listener);
-  return () => window.removeEventListener('storage', listener);
-}
-
 export const homeProgressLimit = 3;
 
-function subscribeToProgressCache(listener: () => void) {
-  return queryClient.getQueryCache().subscribe(listener);
-}
-
-export function useCachedResidentProgress() {
-  const session = useSyncExternalStore(tokenStorage.subscribeToSession, readSessionKey);
-  const state = useSyncExternalStore(subscribeToProgressCache, () =>
-    session === null
-      ? undefined
-      : queryClient.getQueryState<ResidentProgressPage>(queryKeys.residentProgress(session)),
-  );
-  return { state, signedIn: session !== null };
+function collectProgressItems(pages: ResidentProgressPage[]) {
+  const assessments = new Set<number>();
+  const applications = new Set<number>();
+  const items: ResidentProgressItem[] = [];
+  for (const { items: page } of pages) {
+    for (const item of page) {
+      const applicationId = item.relatedIds?.applicationId;
+      const hasApplicationId =
+        typeof applicationId === 'number' &&
+        Number.isSafeInteger(applicationId) &&
+        applicationId > 0;
+      if (
+        !assessments.has(item.assessmentId) &&
+        !(hasApplicationId && applications.has(applicationId))
+      ) {
+        items.push(item);
+      }
+      assessments.add(item.assessmentId);
+      if (hasApplicationId) applications.add(applicationId);
+    }
+  }
+  return items;
 }
 
 export function useResidentProgress() {
-  const session = useSyncExternalStore(subscribeToSession, readSessionKey);
-  const query = useQuery({
+  const session = useSyncExternalStore(tokenStorage.subscribeToSession, readSessionKey);
+  const query = useInfiniteQuery({
     queryKey: queryKeys.residentProgress(session),
-    queryFn: ({ signal }) => getResidentProgress({ size: homeProgressLimit, signal }),
+    queryFn: async ({ pageParam, signal }) => {
+      const page = await getResidentProgress({ cursor: pageParam, signal });
+      if (
+        page.nextCursor?.trim() === '' ||
+        page.items.some(
+          ({ assessmentId }) => !Number.isSafeInteger(assessmentId) || assessmentId <= 0,
+        )
+      )
+        throw new ApiError(502, '진행 현황 응답을 확인할 수 없어요.');
+      return page;
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: ({ nextCursor }, _pages, _pageParam, pageParams) =>
+      nextCursor !== null && !pageParams.includes(nextCursor) ? nextCursor : undefined,
     enabled: session !== null,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: 'always',
   });
-  return { ...query, signedIn: session !== null };
+  const { data, fetchNextPage, hasNextPage, isError, isFetching, isFetchNextPageError } = query;
+  useEffect(() => {
+    if (session !== null && hasNextPage && !isFetching && !isError)
+      void fetchNextPage({ cancelRefetch: false });
+  }, [session, hasNextPage, isFetching, isError, fetchNextPage]);
+
+  const items = useMemo(() => (data ? collectProgressItems(data.pages) : []), [data]);
+  const lastPage = data?.pages.at(-1);
+  const repeatedCursor = Boolean(
+    lastPage?.nextCursor && data?.pageParams.includes(lastPage.nextCursor),
+  );
+  const count = lastPage?.nextCursor === null && !isError ? items.length : undefined;
+  return {
+    items,
+    count,
+    signedIn: session !== null,
+    isPending: query.isPending,
+    isFetching,
+    isError: isError || repeatedCursor,
+    hasPageError: isFetchNextPageError || repeatedCursor,
+    retry: () =>
+      isFetchNextPageError && hasNextPage
+        ? fetchNextPage({ cancelRefetch: false })
+        : query.refetch(),
+  };
 }

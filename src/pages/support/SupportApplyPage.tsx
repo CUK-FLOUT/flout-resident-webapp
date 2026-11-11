@@ -73,7 +73,7 @@ function SupportApplyEntry({
       .catch(() => {
         if (!alive) return;
         setResume(null);
-        setResumeError(requestedDraftId !== null);
+        setResumeError(true);
       });
     return () => {
       alive = false;
@@ -88,7 +88,7 @@ function SupportApplyEntry({
     );
   }
 
-  if (requestedDraftId !== null && !resume) {
+  if (resumeError || (requestedDraftId !== null && !resume)) {
     return (
       <Screen
         header={header}
@@ -133,10 +133,12 @@ function SupportApplyEntry({
   }
 
   const savedProgramId = resume?.fields.programId;
+  const programId = Number(program.id);
   if (
-    requestedDraftId !== null &&
-    (recommended.data.facilities.length === 0 ||
-      (savedProgramId != null && savedProgramId !== Number(program.id)))
+    !Number.isSafeInteger(programId) ||
+    programId <= 0 ||
+    (resume && savedProgramId !== programId) ||
+    (requestedDraftId !== null && recommended.data.facilities.length === 0)
   ) {
     return (
       <Screen header={header} tab="home">
@@ -154,6 +156,7 @@ function SupportApplyEntry({
       applicationId={applicationId!}
       application={application.data}
       program={program}
+      programId={programId}
       facilityOptions={recommended.data.facilities}
       resume={resume}
       resumeFromHome={requestedDraftId !== null}
@@ -234,6 +237,7 @@ function ApplyForm({
   applicationId,
   application,
   program,
+  programId,
   facilityOptions,
   resume,
   resumeFromHome,
@@ -241,13 +245,20 @@ function ApplyForm({
   applicationId: string;
   application: InspectionApplicationDetail;
   program: SupportProgram;
+  programId: number;
   facilityOptions: string[];
   resume: SupportFormDraft | null;
   resumeFromHome: boolean;
 }) {
   const navigate = useNavigate();
   const { draft, setDraft } = useSupportDraft();
-  const saved = !resumeFromHome && draft?.applicationId === applicationId ? draft : null;
+  const saved =
+    !resumeFromHome &&
+    draft?.applicationId === applicationId &&
+    draft.programId === programId &&
+    (!resume || draft.formDraftId === resume.draftId)
+      ? draft
+      : null;
   const [restored] = useState(() => restoreFields(resume, facilityOptions));
   const [selectedFacility, setSelectedFacility] = useState(saved?.facility ?? restored.facility);
   const [preferredDate, setPreferredDate] = useState(
@@ -261,7 +272,7 @@ function ApplyForm({
   const filled = facility && preferredDate && preferredTimeSlot;
   const { applicant, address, detailAddress, occupancyType } = application;
   const autosave = useSupportAutosave(applicationId, resume, {
-    programId: Number(program.id),
+    programId,
     requestedFacility: facility,
     preferredVisitDate: preferredDate,
     preferredVisitTime: preferredTimeSlot,
@@ -279,6 +290,7 @@ function ApplyForm({
             setDraft({
               ...saved,
               applicationId,
+              programId,
               facility,
               preferredDate,
               preferredTimeSlot,

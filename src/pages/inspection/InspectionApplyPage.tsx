@@ -112,14 +112,14 @@ export default function InspectionApplyPage() {
     navigate,
   ]);
   const resumePhotos = searchParams.get('step') === 'photos';
+  const canResumePhotos = Boolean(draft.savedApplicationId && !step1Error(draft));
   useEffect(() => {
     if (!resumePhotos || !ready) return;
     const params = new URLSearchParams(location.search);
     params.delete('step');
-    const pathname =
-      draft.savedApplicationId && !step1Error(draft) ? PATHS.inspectionSchedule : PATHS.inspectionApply;
+    const pathname = canResumePhotos ? PATHS.inspectionSchedule : PATHS.inspectionApply;
     navigate({ pathname, search: params.toString() }, { replace: true });
-  }, [resumePhotos, ready, draft, location.search, navigate]);
+  }, [resumePhotos, ready, canResumePhotos, location.search, navigate]);
   useInspectionAutosave(draft, ready, setError);
   if (!ready)
     return (

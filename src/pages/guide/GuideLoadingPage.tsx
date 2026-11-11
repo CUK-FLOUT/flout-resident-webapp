@@ -48,9 +48,10 @@ export default function GuideLoadingPage() {
   const { search } = useLocation();
   const guideId = parseAssessmentId(new URLSearchParams(search).get('guideId') ?? undefined);
   const assessmentNumber = parseAssessmentId(assessmentId);
+  const canonicalId = assessmentNumber === null ? assessmentId : String(assessmentNumber);
   const result = useAddressDraft((s) => s.result);
-  const valid = Boolean(assessmentId && result && String(result.id) === assessmentId);
-  const guide = useGuide(valid ? assessmentId : undefined);
+  const valid = Boolean(canonicalId && result && String(result.id) === canonicalId);
+  const guide = useGuide(valid ? canonicalId : undefined);
   const [restoreError, setRestoreError] = useState('');
   const [attempt, setAttempt] = useState(0);
 
@@ -95,21 +96,21 @@ export default function GuideLoadingPage() {
   const mismatchedGuide = Boolean(guideId && guide.data && guide.data.id !== String(guideId));
 
   useEffect(() => {
-    if (valid && guide.data && assessmentId && !mismatchedGuide)
+    if (valid && guide.data && canonicalId && !mismatchedGuide)
       navigate(
-        { pathname: generatePath(PATHS.guide, { assessmentId }), search },
+        { pathname: generatePath(PATHS.guide, { assessmentId: canonicalId }), search },
         { replace: true },
       );
-  }, [valid, guide.data, assessmentId, mismatchedGuide, navigate, search]);
+  }, [valid, guide.data, canonicalId, mismatchedGuide, navigate, search]);
 
-  if (!assessmentId || (!valid && !(guideId && assessmentNumber)))
+  if (!canonicalId || (!valid && !(guideId && assessmentNumber)))
     return <Navigate to={PATHS.addressSearch} replace />;
   if (guide.isError || restoreError || mismatchedGuide)
     return (
       <Screen
         header={{
           title: '맞춤 예방 가이드',
-          onBack: () => navigate(generatePath(PATHS.riskResult, { assessmentId })),
+          onBack: () => navigate(generatePath(PATHS.riskResult, { assessmentId: canonicalId })),
         }}
         tab="home"
         bottom={
@@ -130,6 +131,8 @@ export default function GuideLoadingPage() {
       </Screen>
     );
   return (
-    <GuideLoadingView onBack={() => navigate(generatePath(PATHS.riskResult, { assessmentId }))} />
+    <GuideLoadingView
+      onBack={() => navigate(generatePath(PATHS.riskResult, { assessmentId: canonicalId }))}
+    />
   );
 }

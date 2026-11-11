@@ -5,7 +5,6 @@ import {
   parseInspectionApplicationId,
   useInspectionApplication,
   useSubmitSupport,
-  useSupportPrograms,
 } from '@/api/applications';
 import { queryKeys } from '@/api/queryClient';
 import { getResidentProgress } from '@/api/residentProgress';
@@ -17,7 +16,7 @@ import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { tokenStorage } from '@/lib/storage';
 import { useSupportDraft, type SupportDraft } from '@/stores/supportDraft';
-import type { InspectionApplicationDetail, SupportProgram } from '@/types/domain';
+import type { InspectionApplicationDetail } from '@/types/domain';
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const ACCEPTED_FILE = /\.(pdf|jpe?g|png)$/i;
@@ -83,9 +82,10 @@ function ConsentEntry({
     enabled: Boolean(applicationId && supportId),
     staleTime: 0,
     refetchOnMount: 'always',
+    refetchOnReconnect: false,
   });
 
-  if (application.isLoading || target.isFetching) {
+  if (application.isLoading || (!target.isFetchedAfterMount && target.isFetching)) {
     return (
       <Screen header={header} tab="home">
         <StateMessage>신청 정보를 불러오고 있어요…</StateMessage>
@@ -96,11 +96,11 @@ function ConsentEntry({
     !applicationId ||
     !supportId ||
     target.isError ||
-    application.isError ||
+    application.isLoadingError ||
     target.data !== true ||
     application.data?.occupancyType !== 'TENANT'
   ) {
-    const canRetry = target.isError || application.isError;
+    const canRetry = target.isError || application.isLoadingError;
     return (
       <Screen
         header={header}
@@ -110,7 +110,7 @@ function ConsentEntry({
             <Button
               onClick={() => {
                 if (target.isError) void target.refetch();
-                if (application.isError) void application.refetch();
+                if (application.isLoadingError) void application.refetch();
               }}
             >
               다시 시도
@@ -133,9 +133,7 @@ function ConsentEntry({
 function NewSupportEntry({ applicationId }: { applicationId?: string }) {
   const draft = useSupportDraft((s) => s.draft);
   const application = useInspectionApplication(applicationId);
-  const programs = useSupportPrograms(applicationId);
   const header = { title: '지원하기' };
-  const program = programs.data?.[0];
 
   if (!draft || draft.applicationId !== applicationId) {
     return (
@@ -143,7 +141,7 @@ function NewSupportEntry({ applicationId }: { applicationId?: string }) {
     );
   }
 
-  if (application.isLoading || programs.isLoading) {
+  if (application.isLoading) {
     return (
       <Screen header={header} tab="home">
         <StateMessage>신청 정보를 불러오고 있어요…</StateMessage>
@@ -151,20 +149,13 @@ function NewSupportEntry({ applicationId }: { applicationId?: string }) {
     );
   }
 
-  if (!application.data || !program) {
+  if (!application.data) {
     return (
       <Screen
         header={header}
         tab="home"
         bottom={
-          <Button
-            onClick={() => {
-              application.refetch();
-              programs.refetch();
-            }}
-          >
-            다시 시도
-          </Button>
+          <Button onClick={() => application.refetch()}>다시 시도</Button>
         }
       >
         <StateMessage>신청 정보를 불러오지 못했어요.</StateMessage>
@@ -172,7 +163,7 @@ function NewSupportEntry({ applicationId }: { applicationId?: string }) {
     );
   }
 
-  return <SubmitForm application={application.data} submission={{ draft, program }} />;
+  return <SubmitForm application={application.data} submission={{ draft }} />;
 }
 
 function SubmitForm({
@@ -180,7 +171,7 @@ function SubmitForm({
   submission,
 }: {
   application: InspectionApplicationDetail;
-  submission: { draft: SupportDraft; program: SupportProgram } | { supportId: number };
+  submission: { draft: SupportDraft } | { supportId: number };
 }) {
   const navigate = useNavigate();
   const setDraft = useSupportDraft((s) => s.setDraft);
@@ -240,12 +231,12 @@ function SubmitForm({
         );
       return;
     }
-    const { draft, program } = submission;
+    const { draft } = submission;
     submit.mutate(
       {
         input: {
           applicationId: application.applicationId,
-          programId: Number(program.id),
+          programId: draft.programId,
           requestedFacility: draft.facility,
           preferredVisitDate: draft.preferredDate,
           preferredVisitTime: draft.preferredTimeSlot,

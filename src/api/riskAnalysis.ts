@@ -90,6 +90,10 @@ export function parseAssessmentId(value: string | undefined): number | null {
   return Number.isSafeInteger(id) && id > 0 ? id : null;
 }
 
+function readOptionalId(value: unknown): number | null {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : null;
+}
+
 function readResidenceFloor(housingType: HousingType | null | undefined): ResidenceFloor | null {
   switch (housingType) {
     case housingTypes.BASEMENT:
@@ -187,8 +191,8 @@ export async function getRiskAssessment(
     address: response.address,
     detailAddress: response.detailAddress,
     floor: readResidenceFloor(response.housingType),
-    guideId: response.guideId ?? null,
-    applicationId: response.applicationId ?? null,
+    guideId: readOptionalId(response.guideId),
+    applicationId: readOptionalId(response.applicationId),
   };
 }
 

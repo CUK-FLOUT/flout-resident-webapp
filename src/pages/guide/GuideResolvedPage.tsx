@@ -46,7 +46,7 @@ export function GuideResolvedView({
         <span className="bg-soft text-primary flex size-16 items-center justify-center rounded-full">
           <Check size={28} aria-hidden />
         </span>
-        <h1 className="text-title text-ink mt-4">해결되어 다행이에요</h1>
+        <h1 className="text-title text-ink mt-4">예방체크를 완료했어요</h1>
         <p className="text-body text-muted mt-3">필요하면 언제든 현장점검을 신청할 수 있어요.</p>
       </div>
       <section className="bg-soft mt-6 rounded-md p-4">

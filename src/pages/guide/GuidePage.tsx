@@ -86,7 +86,7 @@ export function GuideView({
         description="가이드를 따라 해보셨다면 알려 주세요."
         footer={
           <Button variant="text" size="md" onClick={() => setSheetOpen(false)}>
-            닫고 더 해볼게요
+            진행 중인 가이드로 돌아가기
           </Button>
         }
       >

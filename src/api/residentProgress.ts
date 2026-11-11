@@ -136,8 +136,7 @@ export async function getResidentProgress({
 }
 
 function readSessionKey() {
-  const session = tokenStorage.readSession();
-  return env.useMock ? 'mock' : session ? (session.id ?? 'legacy') : null;
+  return env.useMock ? 'mock' : tokenStorage.getSessionScope();
 }
 
 export const homeProgressLimit = 3;

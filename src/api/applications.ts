@@ -280,12 +280,17 @@ export function getRecommendedFacilities(applicationId: string) {
   );
 }
 
-export function useInspectionApplication(applicationId: string | undefined) {
+export function useInspectionApplication(
+  applicationId: string | undefined,
+  { refetchUnpublished = false } = {},
+) {
   const id = parseInspectionApplicationId(applicationId);
   return useQuery({
     queryKey: queryKeys.inspectionApplication(id === undefined ? '' : String(id)),
     queryFn: ({ signal }) => getInspectionApplication(id!, signal),
     enabled: id !== undefined,
+    refetchOnMount: (query) =>
+      refetchUnpublished && query.state.data?.resultPublished === false ? 'always' : true,
   });
 }
 

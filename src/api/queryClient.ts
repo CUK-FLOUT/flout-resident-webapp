@@ -35,6 +35,8 @@ export const queryKeys = {
     ['support-consent-target', session, applicationId, supportId] as const,
   application: (id: string) => ['applications', id] as const,
   result: (applicationId: string) => ['applications', applicationId, 'result'] as const,
+  inspectionRecommendations: (applicationId: string) =>
+    ['applications', applicationId, 'inspection-recommendations'] as const,
   supportPrograms: (applicationId: string) =>
     ['applications', applicationId, 'support-programs'] as const,
   inspectionApplication: (applicationId: string) =>

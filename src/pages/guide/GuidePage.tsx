@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react';
-import { generatePath, Navigate, useLocation, useNavigate, useParams } from 'react-router';
-import { useGuide } from '@/api/risk';
+import { generatePath, Navigate, useNavigate } from 'react-router';
+import { savePreventionGuide, type GuideUpdate } from '@/api/preventionGuide';
+import { queryKeys } from '@/api/queryClient';
 import { Screen } from '@/components/layout';
 import { BottomSheet, Button, CheckItem, ProgressBar } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
-import { useAddressDraft } from '@/stores/addressDraft';
-import { useGuideProgress } from '@/stores/guideProgress';
-import type { GuideItem } from '@/types/domain';
+import { env } from '@/lib/env';
+import { tokenStorage } from '@/lib/storage';
+import type { GuideItem, GuideResolution, PreventionGuide } from '@/types/domain';
+import { GuideLoadingView } from './GuideLoadingPage';
+import { GuideLoadState } from './GuideLoadState';
+import { useGuideRoute } from './useGuideRoute';
 
 export function GuideView({
   items,
@@ -17,6 +22,10 @@ export function GuideView({
   onResolved,
   onUnresolved,
   initialSheetOpen = false,
+  title = '이것부터 확인하세요',
+  subtitle = '우리 집 주변을 먼저 살펴보고, 할 수 있는 것부터 준비해 주세요.',
+  saving = false,
+  saveError,
 }: {
   items: GuideItem[];
   checked: string[];
@@ -25,6 +34,10 @@ export function GuideView({
   onResolved: () => void;
   onUnresolved?: () => void;
   initialSheetOpen?: boolean;
+  title?: string;
+  subtitle?: string;
+  saving?: boolean;
+  saveError?: string;
 }) {
   const [sheetOpen, setSheetOpen] = useState(initialSheetOpen);
   const [unresolved, setUnresolved] = useState(false);
@@ -35,22 +48,24 @@ export function GuideView({
         header={{ title: '맞춤 예방 가이드', onBack }}
         tab="home"
         bottom={
-          <Button disabled={items.length === 0} onClick={() => setSheetOpen(true)}>
+          <Button disabled={items.length === 0 || saving} onClick={() => setSheetOpen(true)}>
             가이드대로 해봤어요
           </Button>
         }
       >
-        <h1 className="text-title text-ink pt-4">이것부터 확인하세요</h1>
-        <p className="text-body text-muted mt-2">
-          우리 집 주변을 먼저 살펴보고, 할 수 있는 것부터 준비해 주세요.
-        </p>
+        <h1 className="text-title text-ink pt-4">{title}</h1>
+        <p className="text-body text-muted mt-2">{subtitle}</p>
         <ProgressBar
           className="mt-7"
           value={count}
           max={items.length}
           label={`${count} / ${items.length} 완료`}
         />
-        <div className="mt-6 flex flex-col gap-4">
+        <fieldset
+          className="mt-6 flex min-w-0 flex-col gap-4"
+          aria-label="예방 가이드 체크리스트"
+          disabled={saving}
+        >
           {items.map((item) => {
             const done = checked.includes(item.id);
             return (
@@ -65,7 +80,12 @@ export function GuideView({
               />
             );
           })}
-        </div>
+        </fieldset>
+        {saveError && (
+          <p role="alert" className="text-body text-danger mt-4">
+            {saveError}
+          </p>
+        )}
         {items.length === 0 && (
           <p className="text-body text-muted mt-6">표시할 예방 가이드가 없어요.</p>
         )}
@@ -127,53 +147,124 @@ export function GuideView({
 }
 
 export default function GuidePage() {
-  const { assessmentId } = useParams();
-  const { search } = useLocation();
+  const guide = useGuideRoute();
   const navigate = useNavigate();
-  const result = useAddressDraft((s) => s.result);
-  const valid = Boolean(assessmentId && result && String(result.id) === assessmentId);
-  const guide = useGuide(valid ? assessmentId : undefined);
-  const allCompleted = useGuideProgress((s) => s.completed);
-  const setChecked = useGuideProgress((s) => s.setChecked);
-  const setResolved = useGuideProgress((s) => s.setResolved);
-  if (!valid || !assessmentId)
-    return assessmentId && new URLSearchParams(search).has('guideId') ? (
-      <Navigate
-        to={{ pathname: generatePath(PATHS.guideLoading, { assessmentId }), search }}
-        replace
-      />
-    ) : (
-      <Navigate to={PATHS.addressSearch} replace />
-    );
-  if (guide.isLoading)
-    return <Navigate to={generatePath(PATHS.guideLoading, { assessmentId })} replace />;
+  const { assessmentId } = guide;
+
+  if (!assessmentId || !guide.valid) return <Navigate to={PATHS.addressSearch} replace />;
+
+  const onBack = () => navigate(generatePath(PATHS.riskResult, { assessmentId }));
+  if (guide.isLoading) return <GuideLoadingView onBack={onBack} />;
   if (!guide.data)
-    return (
-      <Screen
-        header={{ title: '맞춤 예방 가이드' }}
-        tab="home"
-        bottom={<Button onClick={() => void guide.refetch()}>다시 시도</Button>}
-      >
-        <p role="alert" className="text-body text-muted pt-10 text-center">
-          가이드를 불러오지 못했어요.
-        </p>
-      </Screen>
-    );
-  const initial = guide.data.items.filter((item) => item.done).map((item) => item.id);
+    return <GuideLoadState error={guide.error} retry={guide.retry} onBack={onBack} />;
+
+  return (
+    <GuideChecklist
+      key={JSON.stringify(guide.queryKey)}
+      data={guide.data}
+      queryKey={guide.queryKey}
+      sessionId={guide.sessionId}
+      search={guide.search}
+      onBack={onBack}
+    />
+  );
+}
+
+function GuideChecklist({
+  data,
+  queryKey,
+  sessionId,
+  search,
+  onBack,
+}: {
+  data: PreventionGuide;
+  queryKey: readonly unknown[];
+  sessionId?: string | null;
+  search: string;
+  onBack: () => void;
+}) {
+  const navigate = useNavigate();
+  const client = useQueryClient();
+  const locked = useRef(false);
+  const query = { queryKey, exact: true };
+  const save = useMutation({
+    networkMode: 'always',
+    retry: false,
+    mutationFn: async (update: GuideUpdate) => {
+      await client.cancelQueries(query);
+      if (tokenStorage.readSession()?.id !== sessionId)
+        throw new Error('로그인 상태를 다시 확인해 주세요.');
+      if (!env.useMock) return savePreventionGuide(data, update);
+      return 'itemId' in update
+        ? {
+            ...data,
+            items: data.items.map((item) =>
+              item.id === update.itemId ? { ...item, done: update.completed } : item,
+            ),
+          }
+        : { ...data, resolution: update.resolution };
+    },
+    onSuccess: async (saved) => {
+      if (tokenStorage.readSession()?.id !== sessionId) return;
+      await client.cancelQueries(query);
+      client.setQueryData(queryKey, saved);
+      if (!env.useMock)
+        void client.invalidateQueries({
+          queryKey: queryKeys.residentProgress(sessionId ?? 'legacy'),
+        });
+    },
+    onError: async () => {
+      if (!env.useMock && tokenStorage.readSession()?.id === sessionId)
+        await client.invalidateQueries(query);
+    },
+    onSettled: () => {
+      locked.current = false;
+    },
+  });
+
+  const finish = (resolution: GuideResolution) => {
+    if (tokenStorage.readSession()?.id !== sessionId) return;
+    if (resolution === 'CONFIRMED') {
+      navigate({
+        pathname: generatePath(PATHS.guideResolved, { assessmentId: data.assessmentId }),
+        search,
+      });
+    } else {
+      navigate({
+        pathname: PATHS.inspectionApply,
+        search: env.useMock
+          ? ''
+          : new URLSearchParams({ assessmentId: data.assessmentId }).toString(),
+      });
+    }
+  };
+
+  const choose = (resolution: GuideResolution) => {
+    if (locked.current) return;
+    if (data.resolution === resolution) {
+      finish(resolution);
+      return;
+    }
+    locked.current = true;
+    save.mutate({ resolution }, { onSuccess: () => finish(resolution) });
+  };
+
   return (
     <GuideView
-      items={guide.data.items}
-      checked={allCompleted[assessmentId] ?? initial}
-      onCheck={(id, value) => setChecked(assessmentId, id, value, initial)}
-      onBack={() => navigate(generatePath(PATHS.riskResult, { assessmentId }))}
-      onUnresolved={() => {
-        setResolved(assessmentId, false);
-        navigate(PATHS.inspectionApply);
+      items={data.items}
+      title={data.title}
+      subtitle={data.subtitle}
+      checked={data.items.filter((item) => item.done).map((item) => item.id)}
+      saving={save.isPending}
+      saveError={save.error?.message}
+      onCheck={(itemId, completed) => {
+        if (locked.current) return;
+        locked.current = true;
+        save.mutate({ itemId, completed });
       }}
-      onResolved={() => {
-        setResolved(assessmentId, true);
-        navigate(generatePath(PATHS.guideResolved, { assessmentId }));
-      }}
+      onBack={onBack}
+      onUnresolved={() => choose('NEEDS_INSPECTION')}
+      onResolved={() => choose('CONFIRMED')}
     />
   );
 }

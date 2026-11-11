@@ -57,7 +57,15 @@ export interface PreventionGuide {
   id: ID;
   assessmentId: ID;
   items: GuideItem[];
+  title?: string;
+  subtitle?: string;
+  grade?: RiskLevel;
+  completedCount?: number;
+  totalCount?: number;
+  resolution?: GuideResolution | null;
 }
+
+export type GuideResolution = 'CONFIRMED' | 'NEEDS_INSPECTION';
 
 export type UnresolvedReason = 'WINDOW_ENTRANCE' | 'DRAIN_BATHROOM' | 'OTHER';
 

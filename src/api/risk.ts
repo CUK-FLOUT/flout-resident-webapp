@@ -1,6 +1,6 @@
 ﻿import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { ApiError, http } from '@/lib/http';
-import type { PreventionGuide, UnresolvedReason } from '@/types/domain';
+import type { PreventionGuide } from '@/types/domain';
 import { mockAddresses, mockAddressSearchExtra, mockGuide } from '@/api/mocks';
 import { queryKeys, withMock } from '@/api/queryClient';
 import { env } from '@/lib/env';
@@ -206,13 +206,3 @@ export function useGuide(assessmentId: string | undefined) {
     staleTime: Infinity,
   });
 }
-
-export const reportGuideOutcome = async (input: {
-  guideId: string;
-  resolved: boolean;
-  reasons?: UnresolvedReason[];
-}): Promise<void> => {
-  void input;
-  // TODO(백엔드): 해결 여부 저장 API가 확정되면 연결합니다.
-  if (!env.useMock) throw new Error('가이드 결과 저장 서비스는 준비 중이에요.');
-};

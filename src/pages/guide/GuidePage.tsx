@@ -147,7 +147,7 @@ export function GuideView({
 }
 
 export default function GuidePage() {
-  const guide = useGuideRoute();
+  const guide = useGuideRoute({ allowGeneration: true });
   const navigate = useNavigate();
   const { assessmentId } = guide;
 

@@ -27,8 +27,11 @@ export function useGuideRoute({ allowGeneration = false, includeAddress = false 
     allowGeneration &&
     !invalidGuideId &&
     !existingId &&
-    result &&
-    assessment.data?.status === 'COMPLETED';
+    assessment.data?.status === 'COMPLETED' &&
+     (result ||
+       (!env.useMock &&
+         assessment.data.level === 'LOW' &&
+         (assessment.data.floor === 'BASEMENT' || assessment.data.floor === 'FIRST')));
   const generated = useGuide((env.useMock ? result : shouldGenerate) ? canonicalId : undefined);
   const guideId = existingId ? String(existingId) : generated.data?.id;
   const sessionId = tokenStorage.readSession()?.id;

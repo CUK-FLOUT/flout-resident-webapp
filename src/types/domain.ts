@@ -214,6 +214,7 @@ export interface SupportProgram {
   benefit: string;
   conditions: SupportRequirement[];
   requiredDocuments: SupportRequirement[];
+  reason?: string;
 }
 
 export type ConsentStatus = 'NOT_REQUIRED' | 'REQUIRED' | 'SUBMITTED' | 'CONFIRMED';

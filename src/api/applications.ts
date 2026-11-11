@@ -22,6 +22,7 @@ import type {
   SupportApproval,
   SupportAttachmentResponse,
   SupportProgram,
+  SupportRequirement,
   SupportRejection,
   SupportReview,
   SupportSchedule,
@@ -184,15 +185,62 @@ export function useApplications() {
 
 /* ── SUPPORT-01 ~ 09 지원 안내 · 신청 ─────────────────────────────── */
 
+interface SupportProgramMatching {
+  recommendation: {
+    programId: number | null;
+    reason: string | null;
+    program: {
+      name: string;
+      description: string | null;
+      targetDescription: string | null;
+      supportedFacilities: string | null;
+      eligibilityConditions: string | null;
+      requiredDocuments: string | null;
+    } | null;
+  } | null;
+}
+
+function toRequirements(text: string | null): SupportRequirement[] {
+  return (text ?? '')
+    .split('\n')
+    .map((line) => line.replace(/^[\s\-•·]+/, '').trim())
+    .filter(Boolean)
+    .map((title) => ({ title, description: '' }));
+}
+
+async function matchSupportProgram(applicationId: string): Promise<SupportProgram[]> {
+  const { recommendation } = unwrapInspection(
+    await http.post<InspectionEnvelope<SupportProgramMatching>>(
+      `/resident/support-application/${applicationId}/matching`,
+    ),
+  );
+  const program = recommendation?.program;
+  if (!program || recommendation.programId == null)
+    throw new ApiError(502, '지원사업 정보를 확인할 수 없어요.');
+  return [
+    {
+      id: String(recommendation.programId),
+      name: program.name,
+      description: program.description ?? '',
+      target: program.targetDescription ?? '',
+      benefit: program.supportedFacilities ?? '',
+      conditions: toRequirements(program.eligibilityConditions),
+      requiredDocuments: toRequirements(program.requiredDocuments),
+      reason: recommendation.reason ?? undefined,
+    },
+  ];
+}
+
 export function useSupportPrograms(applicationId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.supportPrograms(applicationId ?? ''),
     queryFn: () =>
       withMock<SupportProgram[]>(
         () => fixedSupportPrograms,
-        async () => fixedSupportPrograms,
+        () => matchSupportProgram(applicationId!),
       ),
     enabled: Boolean(applicationId),
+    staleTime: Infinity,
   });
 }
 

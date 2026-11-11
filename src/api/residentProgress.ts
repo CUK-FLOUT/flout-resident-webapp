@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { queryKeys, withMock } from '@/api/queryClient';
+import { queryClient, queryKeys, withMock } from '@/api/queryClient';
 import { env } from '@/lib/env';
 import { ApiError, http } from '@/lib/http';
 import { tokenStorage } from '@/lib/storage';
@@ -146,6 +146,20 @@ function subscribeToSession(listener: () => void) {
 }
 
 export const homeProgressLimit = 3;
+
+function subscribeToProgressCache(listener: () => void) {
+  return queryClient.getQueryCache().subscribe(listener);
+}
+
+export function useCachedResidentProgress() {
+  const session = useSyncExternalStore(tokenStorage.subscribeToSession, readSessionKey);
+  const state = useSyncExternalStore(subscribeToProgressCache, () =>
+    session === null
+      ? undefined
+      : queryClient.getQueryState<ResidentProgressPage>(queryKeys.residentProgress(session)),
+  );
+  return { state, signedIn: session !== null };
+}
 
 export function useResidentProgress() {
   const session = useSyncExternalStore(subscribeToSession, readSessionKey);

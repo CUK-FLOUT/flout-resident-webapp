@@ -71,9 +71,17 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
   /* ── 홈·취약도 ── */
   home: {
     figmaName: '01 홈화면',
-    figmaNodes: ['2167:2693', '2755:2722'],
+    figmaNodes: ['2167:2693', '2755:2722', '3854:3043'],
     specs: ['RISK-01'],
-    next: ['addressSearch', 'inspectionApply', 'applications', 'notifications'],
+    next: ['addressSearch', 'inspectionApply', 'applications', 'notifications', 'homeProgress'],
+    status: 'done',
+    group: '홈·취약도',
+  },
+  homeProgress: {
+    figmaName: '01-2 전체보기',
+    figmaNodes: ['3610:4208'],
+    specs: [],
+    next: ['home'],
     status: 'done',
     group: '홈·취약도',
   },

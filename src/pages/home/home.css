@@ -8,4 +8,12 @@
   --home-scheduled: #e7f5ff;
   --home-review: #f0ecff;
   --home-draft: #fff4e3;
+  --home-complete: #e9f7ee;
+  --home-failed: #fdecec;
+  --home-guide: #e8f7f5;
+  --home-count: #eaf3ff;
+}
+
+.home-logout-dialog::backdrop {
+  background-color: rgb(18 31 51 / 42%);
 }

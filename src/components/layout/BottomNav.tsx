@@ -17,8 +17,14 @@ const tabs = [
   { key: 'notifications', label: '알림', to: PATHS.notifications, Icon: Bell },
 ] as const;
 
-export function BottomNav({ active }: { active: BottomNavTab }) {
-  const hasUnread = useHasUnreadNotifications();
+export function BottomNav({
+  active,
+  refreshUnread = true,
+}: {
+  active: BottomNavTab;
+  refreshUnread?: boolean;
+}) {
+  const hasUnread = useHasUnreadNotifications(refreshUnread);
 
   return (
     <nav

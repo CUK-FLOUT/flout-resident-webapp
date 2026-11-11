@@ -22,8 +22,6 @@ import constructionComplete from '@/assets/home/progress/construction-complete.s
 interface ProgressStage {
   icon: string;
   tone: string;
-  caption: string;
-  title: string;
   actionLabel: string;
 }
 
@@ -33,8 +31,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: analysis,
       tone: 'bg-(--home-scheduled)',
-      caption: '침수 취약도 분석',
-      title: '침수 취약도 분석 중이에요',
       actionLabel: '분석 현황',
     },
   ],
@@ -43,8 +39,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: analysisFailed,
       tone: 'bg-(--home-failed)',
-      caption: '침수 취약도 분석',
-      title: '침수 취약도 분석에 실패했어요',
       actionLabel: '결과 확인',
     },
   ],
@@ -53,8 +47,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: analysisComplete,
       tone: 'bg-(--home-complete)',
-      caption: '침수 취약도 분석',
-      title: '침수 취약도 분석이 완료됐어요',
       actionLabel: '결과 확인',
     },
   ],
@@ -63,8 +55,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: guide,
       tone: 'bg-(--home-guide)',
-      caption: '침수 예방 가이드',
-      title: '침수 예방 가이드가 준비됐어요',
       actionLabel: '가이드 보기',
     },
   ],
@@ -73,8 +63,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: guideProgress,
       tone: 'bg-(--home-guide)',
-      caption: '침수 예방 가이드',
-      title: '침수 예방 가이드 확인 중이에요',
       actionLabel: '이어서 보기',
     },
   ],
@@ -83,8 +71,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: guideComplete,
       tone: 'bg-(--home-complete)',
-      caption: '침수 예방 가이드',
-      title: '침수 예방 가이드를 확인했어요',
       actionLabel: '점검 안내',
     },
   ],
@@ -93,8 +79,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: inspectionDraft,
       tone: 'bg-(--home-draft)',
-      caption: '현장점검 신청',
-      title: '현장점검 신청서 작성 중이에요',
       actionLabel: '이어서 작성',
     },
   ],
@@ -103,8 +87,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: camera,
       tone: 'bg-(--home-draft)',
-      caption: '신청번호 000008',
-      title: '현장점검 사진 등록이 필요해요',
       actionLabel: '사진 등록',
     },
   ],
@@ -113,8 +95,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: inspectionReceived,
       tone: 'bg-(--home-scheduled)',
-      caption: '신청번호 000009',
-      title: '현장점검 신청이 접수됐어요',
       actionLabel: '신청 현황',
     },
   ],
@@ -123,8 +103,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: calendar,
       tone: 'bg-(--home-scheduled)',
-      caption: '신청번호 000010',
-      title: '현장점검 일정이 확정됐어요',
       actionLabel: '일정 확인',
     },
   ],
@@ -133,8 +111,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: inspectionProgress,
       tone: 'bg-(--home-scheduled)',
-      caption: '신청번호 000011',
-      title: '현장점검이 진행 중이에요',
       actionLabel: '진행 현황',
     },
   ],
@@ -143,8 +119,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: clock,
       tone: 'bg-(--home-scheduled)',
-      caption: '신청번호 000012',
-      title: '현장점검 결과를 준비 중이에요',
       actionLabel: '점검 현황',
     },
   ],
@@ -153,8 +127,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: inspectionResult,
       tone: 'bg-(--home-complete)',
-      caption: '신청번호 000013',
-      title: '현장점검 결과가 공개됐어요',
       actionLabel: '지원사업 보기',
     },
   ],
@@ -163,8 +135,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: supportDraft,
       tone: 'bg-(--home-draft)',
-      caption: '신청번호 000014',
-      title: '지원 신청서 작성 중이에요',
       actionLabel: '이어서 작성',
     },
   ],
@@ -173,8 +143,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: upload,
       tone: 'bg-(--home-draft)',
-      caption: '신청번호 000015',
-      title: '임대인 동의서 등록이 필요해요',
       actionLabel: '동의서 등록',
     },
   ],
@@ -183,8 +151,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: review,
       tone: 'bg-(--home-review)',
-      caption: '신청번호 000016',
-      title: '지원 신청을 검토 중이에요',
       actionLabel: '검토 현황',
     },
   ],
@@ -193,8 +159,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: approved,
       tone: 'bg-(--home-complete)',
-      caption: '신청번호 000017',
-      title: '지원 신청이 승인됐어요',
       actionLabel: '시공 일정 확인',
     },
   ],
@@ -203,8 +167,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: rejected,
       tone: 'bg-(--home-failed)',
-      caption: '신청번호 000018',
-      title: '지원 신청이 반려됐어요',
       actionLabel: '반려 사유 확인',
     },
   ],
@@ -213,8 +175,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: calendar,
       tone: 'bg-(--home-scheduled)',
-      caption: '신청번호 000019',
-      title: '시공 일정이 확정됐어요',
       actionLabel: '일정 확인',
     },
   ],
@@ -223,8 +183,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: constructionProgress,
       tone: 'bg-(--home-scheduled)',
-      caption: '신청번호 000020',
-      title: '시공이 진행 중이에요',
       actionLabel: '진행 현황',
     },
   ],
@@ -233,8 +191,6 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: constructionComplete,
       tone: 'bg-(--home-complete)',
-      caption: '신청번호 000021',
-      title: '시공이 완료됐어요',
       actionLabel: '완료 내용 확인',
     },
   ],

@@ -35,8 +35,9 @@ function EmptyProgress() {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { data, isLoading, isError, isFetching, refetch, signedIn } = useResidentProgress();
-  const items = data?.items.filter((item) => !item.closed).slice(0, homeProgressLimit) ?? [];
+  const progress = useResidentProgress();
+  const { count, isPending, isError, isFetching, hasPageError, retry, signedIn } = progress;
+  const items = progress.items.filter((item) => !item.closed).slice(0, homeProgressLimit);
   const searchAddress = () => {
     useAddressDraft.getState().startNewSearch();
     navigate(PATHS.addressSearch);
@@ -138,8 +139,19 @@ export default function HomePage() {
       </button>
       <section className="mt-4" aria-labelledby="resident-progress">
         <div className="mb-[7px] flex min-h-7 items-center justify-between gap-3">
-          <h2 id="resident-progress" className="text-[18px] leading-7 font-bold">
+          <h2
+            id="resident-progress"
+            className="flex items-center gap-2 text-[18px] leading-7 font-bold"
+          >
             나의 진행 현황
+            {count !== undefined && (
+              <span
+                aria-label={`전체 ${count}건`}
+                className="grid h-6 min-w-6 place-items-center rounded-full bg-(--home-count) px-1.5 text-[10px] leading-4 text-(--home-action)"
+              >
+                {count}
+              </span>
+            )}
           </h2>
           <Link to={PATHS.homeProgress} className="text-[12px] font-medium text-(--home-action)">
             전체 보기 <span aria-hidden>›</span>
@@ -157,7 +169,7 @@ export default function HomePage() {
               로그인
             </Link>
           </div>
-        ) : isLoading ? (
+        ) : isPending || (!isError && count === undefined && items.length === 0) ? (
           <p
             role="status"
             className={
@@ -166,7 +178,7 @@ export default function HomePage() {
           >
             진행 현황을 불러오고 있어요…
           </p>
-        ) : isError ? (
+        ) : isError && (!hasPageError || items.length === 0) ? (
           <div
             role="alert"
             className={
@@ -180,7 +192,7 @@ export default function HomePage() {
               size="md"
               fullWidth={false}
               loading={isFetching}
-              onClick={() => void refetch()}
+              onClick={() => void retry()}
             >
               다시 시도
             </Button>
@@ -193,6 +205,20 @@ export default function HomePage() {
               <ProgressCard key={item.assessmentId} item={item} />
             ))}
           </ul>
+        )}
+        {hasPageError && items.length > 0 && (
+          <div className="mt-1 flex flex-wrap items-center justify-between" role="alert">
+            <p className="text-muted text-caption">전체 진행 현황을 불러오지 못했어요.</p>
+            <Button
+              variant="text"
+              size="md"
+              fullWidth={false}
+              loading={isFetching}
+              onClick={() => void retry()}
+            >
+              다시 시도
+            </Button>
+          </div>
         )}
       </section>
       <section

@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { ApiError, RefreshError } from '@/lib/http';
 import { env } from '@/lib/env';
+import { tokenStorage } from '@/lib/storage';
 import { mockDelay } from './mocks';
 
 export const queryClient = new QueryClient({
@@ -14,6 +15,14 @@ export const queryClient = new QueryClient({
         count < 2,
     },
   },
+});
+
+let cacheSession = tokenStorage.getSessionScope();
+tokenStorage.subscribeToSession(() => {
+  const session = tokenStorage.getSessionScope();
+  if (session === cacheSession) return;
+  cacheSession = session;
+  queryClient.clear();
 });
 
 /**
@@ -34,13 +43,14 @@ export const queryKeys = {
   supportConsentTarget: (session: string | null, applicationId: number, supportId: number) =>
     ['support-consent-target', session, applicationId, supportId] as const,
   application: (id: string) => ['applications', id] as const,
-  result: (applicationId: string) => ['applications', applicationId, 'result'] as const,
-  inspectionRecommendations: (applicationId: string) =>
-    ['applications', applicationId, 'inspection-recommendations'] as const,
+  result: (applicationId: string, session: string | null) =>
+    ['applications', applicationId, 'result', session] as const,
+  inspectionRecommendations: (applicationId: string, session: string | null) =>
+    ['applications', applicationId, 'inspection-recommendations', session] as const,
   supportPrograms: (applicationId: string) =>
     ['applications', applicationId, 'support-programs'] as const,
-  inspectionApplication: (applicationId: string) =>
-    ['applications', applicationId, 'inspection-application'] as const,
+  inspectionApplication: (applicationId: string, session: string | null) =>
+    ['applications', applicationId, 'inspection-application', session] as const,
   recommendedFacilities: (applicationId: string) =>
     ['applications', applicationId, 'recommended-facilities'] as const,
   supportProgress: (applicationId: string) => ['applications', applicationId, 'support'] as const,

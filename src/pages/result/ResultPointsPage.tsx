@@ -72,7 +72,7 @@ function ResultPoints({ title, backTo, application, applicationId, result }: Pub
                 ))}
               </div>
               <p className="text-[12px] leading-5">현장점검 사진 · {result.photos.length}장</p>
-              <div className="flex gap-3">
+              <div className="flex min-w-0 gap-3 overflow-x-auto">
                 {result.photos.map((photo, index) => (
                   <button
                     key={photo.photoId}

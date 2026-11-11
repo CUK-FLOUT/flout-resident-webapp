@@ -20,6 +20,7 @@ function harness(
 ) {
   const requests = [];
   const redirects = [];
+  const storageListeners = new Set();
   const modules = {
     'lib/env': { env: { apiBaseUrl: 'https://api.flout.shop/api', useMock: false } },
     'api/mocks': {},
@@ -36,6 +37,12 @@ function harness(
   const context = vm.createContext({
     window: {
       location,
+      addEventListener: (type, listener) => {
+        if (type === 'storage') storageListeners.add(listener);
+      },
+      removeEventListener: (type, listener) => {
+        if (type === 'storage') storageListeners.delete(listener);
+      },
       localStorage: {
         getItem: (key) => stored.get(key) ?? null,
         setItem: (key, value) => stored.set(key, value),
@@ -79,13 +86,16 @@ function harness(
   }
   const api = load('api/auth');
   const { tokenStorage } = load('lib/storage');
+  const { queryClient, queryKeys } = load('api/queryClient');
   return {
     api,
     http: load('lib/http').http,
-    queryClient: load('api/queryClient').queryClient,
+    queryClient,
+    queryKeys,
     tokenStorage,
     requests,
     redirects,
+    notifyStorage: (key) => storageListeners.forEach((listener) => listener({ key })),
     get tokens() {
       const saved = tokenStorage.readSession();
       return saved ? [saved.accessToken, saved.refreshToken] : [];
@@ -98,6 +108,79 @@ const session = {
   role: 'RESIDENT',
   requiresConsent: false,
 };
+
+test('account switches and logout remove inspection caches and discard a late response', async () => {
+  const h = harness({});
+  h.tokenStorage.set(session);
+  const scopeA = h.tokenStorage.getSessionScope();
+  const keys = [
+    h.queryKeys.inspectionApplication('21', scopeA),
+    h.queryKeys.result('21', scopeA),
+    h.queryKeys.inspectionRecommendations('21', scopeA),
+    h.queryKeys.notifications(),
+  ];
+  keys.forEach((key) => h.queryClient.setQueryData(key, 'account A'));
+  const pendingKey = h.queryKeys.inspectionApplication('22', scopeA);
+  let requestSignal;
+  let resolveRequest;
+  const pending = h.queryClient.fetchQuery({
+    queryKey: pendingKey,
+    queryFn: ({ signal }) => {
+      requestSignal = signal;
+      return new Promise((resolve) => {
+        resolveRequest = resolve;
+      });
+    },
+  });
+  const cancelled = assert.rejects(pending);
+  h.tokenStorage.set({ accessToken: 'account-b-access', refreshToken: 'account-b-refresh' });
+  const scopeB = h.tokenStorage.getSessionScope();
+  assert.notEqual(scopeA, scopeB);
+  assert.equal(requestSignal.aborted, true);
+  resolveRequest('late account A');
+  await cancelled;
+  [...keys, pendingKey].forEach((key) => assert.equal(h.queryClient.getQueryState(key), undefined));
+  const keyB = h.queryKeys.inspectionApplication('21', scopeB);
+  assert.equal(h.queryClient.getQueryData(keyB), undefined);
+  h.queryClient.setQueryData(keyB, 'account B');
+  h.tokenStorage.clear();
+  assert.equal(h.tokenStorage.getSessionScope(), null);
+  assert.equal(h.queryClient.getQueryState(keyB), undefined);
+});
+
+test('rotating tokens within the same session preserves the existing inspection query', async () => {
+  const h = harness({});
+  h.tokenStorage.set(session);
+  const scope = h.tokenStorage.getSessionScope();
+  const key = h.queryKeys.inspectionApplication('21', scope);
+  h.queryClient.setQueryData(key, 'cached');
+  h.tokenStorage.rotate(scope, { accessToken: 'renewed-access', refreshToken: 'renewed-refresh' });
+  h.notifyStorage('flout.authTokens');
+  assert.equal(h.tokenStorage.getSessionScope(), scope);
+  assert.equal(
+    await h.queryClient.fetchQuery({
+      queryKey: key,
+      queryFn: () => assert.fail('same-session data should be reused'),
+    }),
+    'cached',
+  );
+});
+
+test('another tab replacing legacy credentials clears cached data without exposing tokens in keys', () => {
+  const stored = new Map([['flout.accessToken', 'legacy-account-a']]);
+  const h = harness({}, { stored });
+  const scopeA = h.tokenStorage.getSessionScope();
+  const key = h.queryKeys.result('21', scopeA);
+  h.queryClient.setQueryData(key, 'account A');
+  h.notifyStorage('flout.recentAddresses');
+  assert.equal(h.queryClient.getQueryData(key), 'account A');
+  stored.set('flout.accessToken', 'legacy-account-b');
+  h.notifyStorage('flout.accessToken');
+  const scopeB = h.tokenStorage.getSessionScope();
+  assert.notEqual(scopeB, scopeA);
+  assert.equal(JSON.stringify([scopeA, scopeB]).includes('legacy-account'), false);
+  assert.equal(h.queryClient.getQueryState(key), undefined);
+});
 
 test('login sends public resident endpoint and saves service token; consent flag is retained', async () => {
   for (const requiresConsent of [true, false]) {

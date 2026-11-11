@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, http } from '@/lib/http';
 import { env } from '@/lib/env';
+import { useSessionScope } from '@/lib/useSessionScope';
 import {
   createMockInspection,
   getMockInspection,
@@ -285,8 +286,9 @@ export function useInspectionApplication(
   { refetchUnpublished = false } = {},
 ) {
   const id = parseInspectionApplicationId(applicationId);
+  const session = useSessionScope();
   return useQuery({
-    queryKey: queryKeys.inspectionApplication(id === undefined ? '' : String(id)),
+    queryKey: queryKeys.inspectionApplication(id === undefined ? '' : String(id), session),
     queryFn: ({ signal }) => getInspectionApplication(id!, signal),
     enabled: id !== undefined,
     refetchOnMount: (query) =>

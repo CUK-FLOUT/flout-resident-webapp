@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys, withMock } from '@/api/queryClient';
 import { ApiError, http } from '@/lib/http';
-import { tokenStorage } from '@/lib/storage';
+import { useSessionScope } from '@/lib/useSessionScope';
 import { resultMock } from './inspectionResultMock';
 
 export const inspectionVulnerabilityLabel = {
@@ -121,18 +121,17 @@ export function getInspectionRecommendations(applicationId: number, signal?: Abo
 }
 
 export function useInspectionResult(applicationId: number) {
+  const session = useSessionScope();
   return useQuery({
-    queryKey: [...queryKeys.result(String(applicationId)), tokenStorage.readSession()?.id],
+    queryKey: queryKeys.result(String(applicationId), session),
     queryFn: ({ signal }) => getInspectionResult(applicationId, signal),
   });
 }
 
 export function useInspectionRecommendations(applicationId: number) {
+  const session = useSessionScope();
   return useQuery({
-    queryKey: [
-      ...queryKeys.inspectionRecommendations(String(applicationId)),
-      tokenStorage.readSession()?.id,
-    ],
+    queryKey: queryKeys.inspectionRecommendations(String(applicationId), session),
     queryFn: ({ signal }) => getInspectionRecommendations(applicationId, signal),
   });
 }

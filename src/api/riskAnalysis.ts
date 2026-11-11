@@ -48,6 +48,8 @@ type AssessmentDetail = AnalysisOutcome & {
   address: string;
   detailAddress: string;
   floor: ResidenceFloor | null;
+  guideId: number | null;
+  applicationId: number | null;
 };
 
 interface Envelope<T> {
@@ -86,6 +88,10 @@ export function parseAssessmentId(value: string | undefined): number | null {
   if (!value || !/^\d+$/.test(value)) return null;
   const id = Number(value);
   return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
+function readOptionalId(value: unknown): number | null {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : null;
 }
 
 function readResidenceFloor(housingType: HousingType | null | undefined): ResidenceFloor | null {
@@ -167,6 +173,8 @@ export async function getRiskAssessment(
         status: string;
         riskLevel: string | null;
         housingType?: HousingType | null;
+        guideId?: number | null;
+        applicationId?: number | null;
         result: unknown;
       }>
     >('/resident/risk-assessments/' + id, { signal }),
@@ -183,6 +191,8 @@ export async function getRiskAssessment(
     address: response.address,
     detailAddress: response.detailAddress,
     floor: readResidenceFloor(response.housingType),
+    guideId: readOptionalId(response.guideId),
+    applicationId: readOptionalId(response.applicationId),
   };
 }
 

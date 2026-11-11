@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
-import { generatePath, Navigate, useNavigate, useParams } from 'react-router';
-import { useGuide } from '@/api/risk';
+import { useEffect, useState } from 'react';
+import { generatePath, Navigate, useLocation, useNavigate, useParams } from 'react-router';
+import { getAddressCoordinates, useGuide } from '@/api/risk';
+import { getRiskAssessment, parseAssessmentId } from '@/api/riskAnalysis';
 import { Screen } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
@@ -44,32 +45,94 @@ export function GuideLoadingView({ onBack }: { onBack: () => void }) {
 export default function GuideLoadingPage() {
   const { assessmentId } = useParams();
   const navigate = useNavigate();
+  const { search } = useLocation();
+  const guideId = parseAssessmentId(new URLSearchParams(search).get('guideId') ?? undefined);
+  const assessmentNumber = parseAssessmentId(assessmentId);
+  const canonicalId = assessmentNumber === null ? assessmentId : String(assessmentNumber);
   const result = useAddressDraft((s) => s.result);
-  const valid = Boolean(assessmentId && result && String(result.id) === assessmentId);
-  const guide = useGuide(valid ? assessmentId : undefined);
+  const valid = Boolean(canonicalId && result && String(result.id) === canonicalId);
+  const guide = useGuide(valid ? canonicalId : undefined);
+  const [restoreError, setRestoreError] = useState('');
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (valid && guide.data && assessmentId)
-      navigate(generatePath(PATHS.guide, { assessmentId }), { replace: true });
-  }, [valid, guide.data, assessmentId, navigate]);
+    if (valid || !guideId || !assessmentNumber) return;
+    const controller = new AbortController();
+    setRestoreError('');
+    void (async () => {
+      const assessment = await getRiskAssessment(assessmentNumber, controller.signal);
+      if (
+        assessment.status !== 'COMPLETED' ||
+        assessment.guideId !== guideId ||
+        !assessment.floor ||
+        assessment.floor === 'SECOND_OR_ABOVE'
+      )
+        throw new Error('이 분석에 연결된 예방 가이드를 확인할 수 없어요.');
+      const coordinates = await getAddressCoordinates(assessment.address);
+      if (controller.signal.aborted) return;
+      useAddressDraft.getState().setResult({
+        ...assessment,
+        id: assessmentNumber,
+        source: 'api',
+        input: {
+          address: {
+            roadAddress: assessment.address,
+            jibunAddress: '',
+            buildingName: '',
+            zipCode: '',
+          },
+          coordinates,
+          detail: assessment.detailAddress,
+          floor: assessment.floor,
+        },
+      });
+    })().catch((error: unknown) => {
+      if (!controller.signal.aborted)
+        setRestoreError(error instanceof Error ? error.message : '가이드를 불러오지 못했어요.');
+    });
+    return () => controller.abort();
+  }, [assessmentNumber, guideId, valid, attempt]);
 
-  if (!valid || !assessmentId) return <Navigate to={PATHS.addressSearch} replace />;
-  if (guide.isError)
+  const mismatchedGuide = Boolean(guideId && guide.data && guide.data.id !== String(guideId));
+
+  useEffect(() => {
+    if (valid && guide.data && canonicalId && !mismatchedGuide)
+      navigate(
+        { pathname: generatePath(PATHS.guide, { assessmentId: canonicalId }), search },
+        { replace: true },
+      );
+  }, [valid, guide.data, canonicalId, mismatchedGuide, navigate, search]);
+
+  if (!canonicalId || (!valid && !(guideId && assessmentNumber)))
+    return <Navigate to={PATHS.addressSearch} replace />;
+  if (guide.isError || restoreError || mismatchedGuide)
     return (
       <Screen
         header={{
           title: '맞춤 예방 가이드',
-          onBack: () => navigate(generatePath(PATHS.riskResult, { assessmentId })),
+          onBack: () => navigate(generatePath(PATHS.riskResult, { assessmentId: canonicalId })),
         }}
         tab="home"
-        bottom={<Button onClick={() => void guide.refetch()}>다시 시도</Button>}
+        bottom={
+          <Button
+            onClick={() => {
+              if (restoreError) setAttempt((value) => value + 1);
+              else void guide.refetch();
+            }}
+          >
+            다시 시도
+          </Button>
+        }
       >
         <p role="alert" className="text-body text-muted pt-10 text-center">
-          {guide.error instanceof Error ? guide.error.message : '가이드를 불러오지 못했어요.'}
+          {restoreError ||
+            (guide.error instanceof Error ? guide.error.message : '가이드를 불러오지 못했어요.')}
         </p>
       </Screen>
     );
   return (
-    <GuideLoadingView onBack={() => navigate(generatePath(PATHS.riskResult, { assessmentId }))} />
+    <GuideLoadingView
+      onBack={() => navigate(generatePath(PATHS.riskResult, { assessmentId: canonicalId }))}
+    />
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { generatePath, Navigate, useNavigate } from 'react-router';
+import { generatePath, Navigate, useLocation, useNavigate } from 'react-router';
 import { getInspectionReceipt, useInspectionSubmission } from '@/api/applications';
 import { Screen } from '@/components/layout';
 import { Button, ProgressBar } from '@/components/ui';
@@ -26,6 +26,9 @@ const isReceived = (status: string) => status === 'RECEIVED' || status === 'INSP
 
 export default function InspectionConfirmPage() {
   const navigate = useNavigate();
+  const { search } = useLocation();
+  const applyPath = { pathname: PATHS.inspectionApply, search };
+  const schedulePath = { pathname: PATHS.inspectionSchedule, search };
   const { createDraft, updateMockDraft, uploadPhotos } = useInspectionSubmission();
   const draft = useInspectionDraft();
   const [error, setError] = useState('');
@@ -39,9 +42,9 @@ export default function InspectionConfirmPage() {
     };
   }, []);
   if (!draft.context || draft.sessionScope !== inspectionSessionScope())
-    return <Navigate to={PATHS.inspectionApply} replace />;
-  if (step1Error(draft)) return <Navigate to={PATHS.inspectionApply} replace />;
-  if (step2Error(draft)) return <Navigate to={PATHS.inspectionSchedule} replace />;
+    return <Navigate to={applyPath} replace />;
+  if (step1Error(draft)) return <Navigate to={applyPath} replace />;
+  if (step2Error(draft)) return <Navigate to={schedulePath} replace />;
   const context = draft.context;
   const address = context.address;
   const submit = async () => {
@@ -249,7 +252,7 @@ export default function InspectionConfirmPage() {
   ];
   return (
     <Screen
-      header={{ title: '신청 정보 확인', onBack: () => navigate(PATHS.inspectionSchedule) }}
+      header={{ title: '신청 정보 확인', onBack: () => navigate(schedulePath) }}
       tab="home"
       bottom={
         <>

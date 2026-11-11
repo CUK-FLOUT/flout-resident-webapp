@@ -3,6 +3,7 @@ import type { VisitTimeSlot } from '@/types/domain';
 
 export interface SupportDraft {
   applicationId: string;
+  programId: number;
   facility: string;
   preferredDate: string;
   preferredTimeSlot: VisitTimeSlot;

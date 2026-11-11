@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { generatePath, useLocation, useNavigate } from 'react-router';
+import { generatePath, useLocation, useNavigate, useSearchParams } from 'react-router';
+import { parseAssessmentId } from '@/api/riskAnalysis';
 import { Screen } from '@/components/layout';
 import { Button, ChoiceGroup, ProgressBar, Textarea, TextField } from '@/components/ui';
 import { TENURE_OPTIONS, WATER_ENTRY_OPTIONS, YES_NO_UNKNOWN_OPTIONS } from '@/constants/labels';
@@ -27,7 +28,14 @@ export default function InspectionApplyPage() {
   const navigate = useNavigate();
   const draft = useInspectionDraft();
   const { result } = useAddressDraft();
-  const requestedApplicationId = useLocation().state?.applicationId as number | undefined;
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const requestedFormId = searchParams.get('inspectionFormDraftId') ?? undefined;
+  const requestedAssessmentId =
+    parseAssessmentId(searchParams.get('assessmentId') ?? undefined) ?? undefined;
+  const requestedApplicationId =
+    parseAssessmentId(searchParams.get('applicationId') ?? undefined) ??
+    (location.state?.applicationId as number | undefined);
   const scope = inspectionSessionScope();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -36,15 +44,24 @@ export default function InspectionApplyPage() {
   const ready = Boolean(
     draft.context &&
     draft.sessionScope === scope &&
-    (requestedApplicationId
-      ? draft.savedApplicationId === requestedApplicationId
-      : !result || draft.assessmentId === result.id),
+    (requestedFormId
+      ? draft.formId === requestedFormId
+      : requestedApplicationId
+          ? draft.savedApplicationId === requestedApplicationId &&
+            (!requestedAssessmentId || draft.assessmentId === requestedAssessmentId)
+        : requestedAssessmentId
+          ? draft.assessmentId === requestedAssessmentId
+          : !result || draft.assessmentId === result.id),
   );
   useEffect(() => {
     if (ready) return;
     let active = true;
     setLoading(true);
-    void loadInspectionEntry(result, scope, requestedApplicationId)
+    void loadInspectionEntry(result, scope, {
+      applicationId: requestedApplicationId,
+      formId: requestedFormId,
+      assessmentId: requestedAssessmentId,
+    })
       .then((entry) => {
         if (!active || !entry || scope !== inspectionSessionScope()) return;
         const store = useInspectionDraft.getState();
@@ -85,31 +102,43 @@ export default function InspectionApplyPage() {
     return () => {
       active = false;
     };
-  }, [ready, result, scope, requestedApplicationId, navigate]);
+  }, [
+    ready,
+    result,
+    scope,
+    requestedApplicationId,
+    requestedFormId,
+    requestedAssessmentId,
+    navigate,
+  ]);
+  const resumePhotos = searchParams.get('step') === 'photos';
+  const canResumePhotos = Boolean(draft.savedApplicationId && !step1Error(draft));
+  useEffect(() => {
+    if (!resumePhotos || !ready) return;
+    const params = new URLSearchParams(location.search);
+    params.delete('step');
+    const pathname = canResumePhotos ? PATHS.inspectionSchedule : PATHS.inspectionApply;
+    navigate({ pathname, search: params.toString() }, { replace: true });
+  }, [resumePhotos, ready, canResumePhotos, location.search, navigate]);
   useInspectionAutosave(draft, ready, setError);
   if (!ready)
-  return (
-    <Screen
-      header={{ title: '현장점검하기' }}
-      tab="home"
-      bottom={
-        loading ? undefined : (
-          <Button onClick={() => navigate(PATHS.addressSearch)}>
-            주소 검색하기
-          </Button>
-        )
-      }
-    >
-      <p
-        role={loading ? 'status' : undefined}
-        className="text-body text-muted pt-10 text-center"
+    return (
+      <Screen
+        header={{ title: '현장점검하기' }}
+        tab="home"
+        bottom={
+          loading ? undefined : (
+            <Button onClick={() => navigate(PATHS.addressSearch)}>주소 검색하기</Button>
+          )
+        }
       >
-        {loading
-          ? '임시 저장된 신청서를 불러오고 있어요.'
-          : error || '먼저 주소를 검색하고 침수 취약도를 확인해 주세요.'}
-      </p>
-    </Screen>
-  );
+        <p role={loading ? 'status' : undefined} className="text-body text-muted pt-10 text-center">
+          {loading
+            ? '임시 저장된 신청서를 불러오고 있어요.'
+            : error || '먼저 주소를 검색하고 침수 취약도를 확인해 주세요.'}
+        </p>
+      </Screen>
+    );
   return (
     <Screen
       header={{ title: '현장점검하기' }}
@@ -132,7 +161,7 @@ export default function InspectionApplyPage() {
                 useInspectionDraft.getState().context === draft.context &&
                 scope === inspectionSessionScope()
               )
-                navigate(PATHS.inspectionSchedule);
+                navigate({ pathname: PATHS.inspectionSchedule, search: location.search });
             } catch (failure) {
               setError(
                 failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.',

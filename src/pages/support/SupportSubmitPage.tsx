@@ -82,6 +82,7 @@ function ConsentEntry({
     enabled: Boolean(applicationId && supportId),
     staleTime: 0,
     refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 

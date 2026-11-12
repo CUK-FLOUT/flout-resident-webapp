@@ -1,7 +1,10 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { useLogout } from '@/api/auth';
 import logoutIcon from '@/assets/home/menu-logout.svg';
 import moreIcon from '@/assets/home/menu-more.svg';
 import { Button } from '@/components/ui';
+import { PATHS } from '@/constants/paths';
 
 export function HomeAccountMenu() {
   const menuId = useId();
@@ -12,6 +15,8 @@ export function HomeAccountMenu() {
   const dialog = useRef<HTMLDialogElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const navigate = useNavigate();
+  const logout = useLogout();
 
   useEffect(() => {
     if (!menuOpen || confirmOpen) return;
@@ -43,7 +48,10 @@ export function HomeAccountMenu() {
   }, [confirmOpen]);
 
   const closeDialog = () => dialog.current?.close();
-  const confirmLogoutPreview = () => closeDialog();
+  const confirmLogout = () =>
+    logout.mutate(undefined, {
+      onSettled: () => navigate(PATHS.login, { replace: true }),
+    });
 
   return (
     <div className="relative" ref={container}>
@@ -112,7 +120,8 @@ export function HomeAccountMenu() {
             <Button
               size="md"
               className="h-[42px] rounded-[10px]! text-[13px] font-bold"
-              onClick={confirmLogoutPreview}
+              loading={logout.isPending}
+              onClick={confirmLogout}
             >
               로그아웃
             </Button>

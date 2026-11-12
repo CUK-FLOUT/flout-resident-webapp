@@ -93,3 +93,16 @@ export function useSignup() {
 export function useSaveConsent() {
   return useMutation({ mutationFn: saveConsent });
 }
+
+//로그아웃
+export async function logout() {
+  try {
+    if (!env.useMock) await http.post('/auth/logout');
+  } finally {
+    tokenStorage.clear();
+  }
+}
+
+export function useLogout() {
+  return useMutation({ mutationFn: logout });
+}

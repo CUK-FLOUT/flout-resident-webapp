@@ -69,6 +69,7 @@ export default function SupportStatusPage() {
         id={id}
         onConfirm={() => {
           supportApprovalSeenStorage.add(id);
+          setApprovalConfirmed(true);
           const params = new URLSearchParams(searchParams);
           params.delete('supportApplicationId');
           setSearchParams(params, { replace: true });

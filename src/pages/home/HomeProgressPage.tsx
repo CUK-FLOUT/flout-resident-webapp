@@ -5,7 +5,6 @@ import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { ProgressCard } from './ProgressCard';
-import { progressStages } from './progressStages';
 import './home.css';
 
 export default function HomeProgressPage() {
@@ -47,12 +46,7 @@ export default function HomeProgressPage() {
       {signedIn && items.length > 0 && (
         <ul className="mt-[22px] flex flex-col gap-4 pr-2.5 pl-[15px]">
           {items.map((item) => (
-            <ProgressCard
-              key={item.assessmentId}
-              item={item}
-              list
-              stage={progressStages.get(item.currentStage)}
-            />
+            <ProgressCard key={item.assessmentId} item={item} list />
           ))}
         </ul>
       )}

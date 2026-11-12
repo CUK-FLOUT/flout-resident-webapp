@@ -20,6 +20,11 @@ function matchId<T>(target: unknown, related: unknown, parse: (value: unknown) =
   return a !== null && b !== null && a !== b ? null : (a ?? b);
 }
 
+function matchResultId(target: unknown, related: unknown) {
+  const id = positiveId(target ?? related);
+  return id !== null && (related == null || related === id) ? id : null;
+}
+
 function withParams(path: string, params: Record<string, string>) {
   return path + '?' + new URLSearchParams(params);
 }
@@ -100,6 +105,13 @@ export function getProgressDestination(item: ResidentProgressItem): ProgressLink
       return application(PATHS.inspectionProgress, '진행 현황 보기');
     case 'WAIT_FOR_RESULT':
       return application(PATHS.applicationHub, '점검 현황 보기');
+    case 'VIEW_INSPECTION_RESULT': {
+      const id = matchResultId(target?.applicationId, relatedIds?.applicationId);
+      return {
+        label: '점검 결과 확인',
+        to: id === null ? null : generatePath(PATHS.result, { applicationId: String(id) }),
+      };
+    }
     case 'CHECK_SUPPORT_OPTIONS':
       return application(PATHS.support, '지원사업 알아보기');
     case 'CONTINUE_SUPPORT_FORM': {
@@ -132,6 +144,22 @@ export function getProgressDestination(item: ResidentProgressItem): ProgressLink
       };
     case 'VIEW_SUPPORT_PROGRESS':
       return application(PATHS.supportStatus, '검토 현황 보기', supportId !== null);
+    case 'VIEW_SUPPORT_RESULT': {
+      const id = matchResultId(target?.applicationId, relatedIds?.applicationId);
+      const supportApplicationId = matchResultId(
+        target?.supportApplicationId,
+        relatedIds?.supportApplicationId,
+      );
+      return {
+        label: '승인 결과 확인',
+        to:
+          id !== null && supportApplicationId !== null
+            ? withParams(generatePath(PATHS.supportStatus, { applicationId: String(id) }), {
+                supportApplicationId: String(supportApplicationId),
+              })
+            : null,
+      };
+    }
     case 'VIEW_REJECTION':
       return application(PATHS.supportStatus, '반려 사유 확인', supportId !== null);
     case 'VIEW_CONSTRUCTION_SCHEDULE':

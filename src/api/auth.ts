@@ -104,5 +104,5 @@ export async function logout() {
 }
 
 export function useLogout() {
-  return useMutation({ mutationFn: logout });
+   return useMutation({ mutationFn: logout, networkMode: 'always' });
 }

@@ -127,7 +127,7 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: inspectionResult,
       tone: 'bg-(--home-complete)',
-      actionLabel: '지원사업 보기',
+      actionLabel: '점검 결과 확인',
     },
   ],
   [
@@ -159,7 +159,7 @@ export const progressStages = new Map<string, ProgressStage>([
     {
       icon: approved,
       tone: 'bg-(--home-complete)',
-      actionLabel: '시공 일정 확인',
+      actionLabel: '승인 결과 확인',
     },
   ],
   [

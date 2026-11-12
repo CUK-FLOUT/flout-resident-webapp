@@ -27,13 +27,12 @@ const progressTypeByApplication = {
 export function ProgressCard({
   item,
   list = false,
-  stage,
 }: {
   item: ResidentProgressItem;
   list?: boolean;
-  stage?: { icon: string; tone: string; actionLabel: string };
 }) {
   const action = getProgressDestination(item);
+  const stage = progressStages.get(item.currentStage);
   const caption = item.receiptNumber
     ? `신청번호 ${item.receiptNumber}`
     : ((list && item.currentStage === 'GUIDE_IN_PROGRESS' ? '침수 예방 가이드' : undefined) ??
@@ -41,7 +40,6 @@ export function ProgressCard({
       progressTypeByApplication[item.applicationType]);
   const appearance =
     stage ??
-    progressStages.get(item.currentStage) ??
     (action?.label === '이어서 작성'
       ? { icon: pencil, tone: 'bg-(--home-draft)' }
       : item.currentStage === 'VISIT_SCHEDULED'
@@ -56,7 +54,7 @@ export function ProgressCard({
       caption={caption}
       title={item.title}
       address={item.address}
-      actionLabel={action?.label ?? stage?.actionLabel ?? '이동할 수 없음'}
+      actionLabel={action?.label ?? (list ? stage?.actionLabel : undefined) ?? '이동할 수 없음'}
       to={action?.to}
       list={list}
     />

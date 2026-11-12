@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
-import { generatePath, Navigate, useNavigate, useParams } from 'react-router';
+import { generatePath, Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
 import {
+  parseInspectionApplicationId,
   useInspectionApplication,
   useSupportApproval,
   useSupportRejection,
@@ -26,6 +27,7 @@ const CONSTRUCTION_STAGES = ['CONSTRUCTION_SCHEDULED', 'CONSTRUCTION_IN_PROGRESS
 
 export default function SupportStatusPage() {
   const { applicationId } = useParams<'applicationId'>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const application = useInspectionApplication(applicationId);
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
 
@@ -51,6 +53,30 @@ export default function SupportStatusPage() {
 
   const { progress } = application.data;
   const support = progress?.support;
+
+  const requestedSupportId = searchParams.get('supportApplicationId');
+  if (requestedSupportId !== null) {
+    const id = parseInspectionApplicationId(requestedSupportId);
+    if (id === undefined || support?.status !== 'APPROVED' || support.supportApplicationId !== id) {
+      return (
+        <Screen header={header} tab="home">
+          <StateMessage>이 신청의 승인 결과를 확인할 수 없어요.</StateMessage>
+        </Screen>
+      );
+    }
+    return (
+      <ApprovedView
+        id={id}
+        onConfirm={() => {
+          supportApprovalSeenStorage.add(id);
+          setApprovalConfirmed(true);
+          const params = new URLSearchParams(searchParams);
+          params.delete('supportApplicationId');
+          setSearchParams(params, { replace: true });
+        }}
+      />
+    );
+  }
 
   if (progress?.stage && CONSTRUCTION_STAGES.includes(progress.stage)) {
     return (

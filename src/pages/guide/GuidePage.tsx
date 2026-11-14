@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react';
-import { generatePath, Navigate, useNavigate } from 'react-router';
+import { generatePath, Navigate, useLocation, useNavigate } from 'react-router';
 import { savePreventionGuide, type GuideUpdate } from '@/api/preventionGuide';
 import { queryKeys } from '@/api/queryClient';
 import { Screen } from '@/components/layout';
@@ -149,11 +149,15 @@ export function GuideView({
 export default function GuidePage() {
   const guide = useGuideRoute({ allowGeneration: true });
   const navigate = useNavigate();
+  const { state } = useLocation();
   const { assessmentId } = guide;
 
   if (!assessmentId || !guide.valid) return <Navigate to={PATHS.addressSearch} replace />;
 
-  const onBack = () => navigate(generatePath(PATHS.riskResult, { assessmentId }));
+  const onBack = () => {
+    if (state?.fromProgressList === true) navigate(-1);
+    else navigate(generatePath(PATHS.riskResult, { assessmentId }));
+  };
   if (guide.isLoading) return <GuideLoadingView onBack={onBack} />;
   if (!guide.data)
     return <GuideLoadState error={guide.error} retry={guide.retry} onBack={onBack} />;

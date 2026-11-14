@@ -1,4 +1,4 @@
-import { generatePath, Navigate, useNavigate } from 'react-router';
+import { generatePath, Navigate, useLocation, useNavigate } from 'react-router';
 import { Screen } from '@/components/layout';
 import { PATHS } from '@/constants/paths';
 import { GuideLoadState } from './GuideLoadState';
@@ -41,12 +41,17 @@ export function GuideLoadingView({ onBack }: { onBack: () => void }) {
 
 export default function GuideLoadingPage() {
   const navigate = useNavigate();
+  const { state } = useLocation();
   const guide = useGuideRoute({ allowGeneration: true });
   const { assessmentId } = guide;
 
   if (!assessmentId || !guide.valid) return <Navigate to={PATHS.addressSearch} replace />;
 
-  const onBack = () => navigate(generatePath(PATHS.riskResult, { assessmentId }));
+  const fromProgressList = state?.fromProgressList === true;
+  const onBack = () => {
+    if (fromProgressList) navigate(-1);
+    else navigate(generatePath(PATHS.riskResult, { assessmentId }));
+  };
   if (guide.isLoading) return <GuideLoadingView onBack={onBack} />;
   if (!guide.data)
     return <GuideLoadState error={guide.error} retry={guide.retry} onBack={onBack} />;
@@ -54,6 +59,7 @@ export default function GuideLoadingPage() {
   return (
     <Navigate
       to={{ pathname: generatePath(PATHS.guide, { assessmentId }), search: guide.search }}
+      state={fromProgressList ? { fromProgressList: true } : undefined}
       replace
     />
   );

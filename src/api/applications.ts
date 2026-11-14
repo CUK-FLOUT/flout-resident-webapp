@@ -269,15 +269,24 @@ export function getInspectionApplication(applicationId: number, signal?: AbortSi
   );
 }
 
-export function getRecommendedFacilities(applicationId: string) {
+export function getRecommendedFacilities(applicationId: string, signal?: AbortSignal) {
   return withMock(
     () => mockRecommendedFacilitiesFor(applicationId),
-    async () =>
-      unwrapInspection(
+    async () => {
+      const result = unwrapInspection(
         await http.get<InspectionEnvelope<RecommendedFacilities>>(
           `/resident/applications/${applicationId}/recommended-facilities`,
+          { signal },
         ),
-      ),
+      );
+      if (
+        result.applicationId !== Number(applicationId) ||
+        !Array.isArray(result.facilities) ||
+        result.facilities.some((facility) => typeof facility !== 'string' || !facility.trim())
+      )
+        throw new ApiError(502, '권장 설치 시설 응답을 확인할 수 없어요.');
+      return result;
+    },
   );
 }
 
@@ -297,10 +306,12 @@ export function useInspectionApplication(
 }
 
 export function useRecommendedFacilities(applicationId: string | undefined) {
+  const id = parseInspectionApplicationId(applicationId);
+  const session = useSessionScope();
   return useQuery({
-    queryKey: queryKeys.recommendedFacilities(applicationId ?? ''),
-    queryFn: () => getRecommendedFacilities(applicationId!),
-    enabled: Boolean(applicationId),
+    queryKey: queryKeys.recommendedFacilities(id === undefined ? '' : String(id), session),
+    queryFn: ({ signal }) => getRecommendedFacilities(String(id), signal),
+    enabled: id !== undefined,
   });
 }
 

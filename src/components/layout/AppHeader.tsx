@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import backChevron from '@/assets/back-chevron.svg';
 import { cn } from '@/lib/cn';
 
 /**
@@ -11,13 +11,12 @@ export interface AppHeaderProps {
   title?: ReactNode;
   /** false면 뒤로가기 숨김. 함수면 기본 동작(navigate(-1)) 대신 실행 */
   onBack?: false | (() => void);
-  backIcon?: ReactNode;
   /** 오른쪽 슬롯 (예: 알림 화면의 '모두 읽음') */
   right?: ReactNode;
   className?: string;
 }
 
-export function AppHeader({ title, onBack, backIcon, right, className }: AppHeaderProps) {
+export function AppHeader({ title, onBack, right, className }: AppHeaderProps) {
   const navigate = useNavigate();
   const showBack = onBack !== false;
 
@@ -28,17 +27,16 @@ export function AppHeader({ title, onBack, backIcon, right, className }: AppHead
         className,
       )}
     >
-      {showBack ? (
+      <span aria-hidden />
+      {showBack && (
         <button
           type="button"
           aria-label="뒤로 가기"
           onClick={typeof onBack === 'function' ? onBack : () => navigate(-1)}
-          className="text-primary flex size-11 items-center justify-center"
+          className="absolute top-0.5 left-5 z-10 grid size-11 place-items-center"
         >
-          {backIcon ?? <ChevronLeft size={26} />}
+          <img src={backChevron} alt="" width={44} height={44} />
         </button>
-      ) : (
-        <span />
       )}
       <h1 className="text-section text-ink truncate text-center">{title}</h1>
       <div className="flex items-center justify-end">{right}</div>

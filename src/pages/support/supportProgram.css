@@ -1,0 +1,19 @@
+.support-program {
+  --support-heading: #0d1d39;
+  --support-muted: #526276;
+  --support-rule: #dae4ed;
+  --support-card: #eaf5ff;
+  --support-card-heading: #10213b;
+  --support-card-muted: #4f6074;
+  --support-facility-icon-bg: #d7ecfc;
+  --support-facility-icon: #205681;
+  --support-reason-border: #d9e4ee;
+  --support-divider: #e0e7ef;
+  --support-reason-text: #1e3148;
+  --support-highlight: #205781;
+}
+
+.support-program-reason-icon {
+  background-color: #e6f3fd;
+  color: #235781;
+}

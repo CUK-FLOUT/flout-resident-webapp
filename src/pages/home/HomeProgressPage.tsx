@@ -1,6 +1,5 @@
 import { Link, useNavigate } from 'react-router';
 import { useResidentProgress } from '@/api/residentProgress';
-import backIcon from '@/assets/home/progress/back.svg';
 import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
@@ -20,7 +19,6 @@ export default function HomeProgressPage() {
       header={{
         title: '전체보기',
         onBack: goBack,
-        backIcon: <img src={backIcon} alt="" />,
         className: 'pl-2.5 [&_h1]:text-[17px]',
       }}
       tab="home"

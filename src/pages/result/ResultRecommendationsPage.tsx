@@ -41,21 +41,10 @@ function ResultRecommendations({ title, backTo, application, applicationId }: Re
         retry={() => void recommendations.refetch()}
       />
     );
-  if (facilities.isPending)
-    return (
-      <ResultState title={title} backTo={backTo} message="권장 설치 시설을 확인하고 있어요…" />
-    );
-  if (facilities.isError || !facilities.data)
-    return (
-      <ResultState
-        title={title}
-        backTo={backTo}
-        message="권장 설치 시설을 불러오지 못했어요."
-        retry={() => void facilities.refetch()}
-      />
-    );
   const { recommendedActions } = recommendations.data;
-  const hasFacilities = facilities.data.facilities.length > 0;
+  const facilitiesLoading = facilities.isPending || facilities.isFetching;
+  const hasFacilities =
+    !facilitiesLoading && facilities.isSuccess && facilities.data.facilities.length > 0;
   return (
     <InspectionStatusScreen
       title={title}
@@ -63,7 +52,21 @@ function ResultRecommendations({ title, backTo, application, applicationId }: Re
       bottom={
         <div className="flex flex-col gap-2">
           <div className="text-caption text-muted">
-            {hasFacilities ? (
+            {facilitiesLoading ? (
+              <p role="status">권장 설치 시설을 확인하고 있어요…</p>
+            ) : facilities.isError ? (
+              <div className="flex flex-wrap items-center justify-between gap-x-2">
+                <p role="alert">권장 설치 시설을 불러오지 못했어요.</p>
+                <Button
+                  variant="text"
+                  size="md"
+                  fullWidth={false}
+                  onClick={() => void facilities.refetch()}
+                >
+                  다시 시도
+                </Button>
+              </div>
+            ) : hasFacilities ? (
               <>
                 <p>권장 예방조치와 관련된 지원사업을 확인할 수 있어요.</p>
                 <p>실제 지원 가능 여부는 사업별 조건에 따라 달라질 수 있어요.</p>

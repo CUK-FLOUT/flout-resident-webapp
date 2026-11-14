@@ -285,7 +285,7 @@ export const SCREENS: Partial<Record<PathKey, ScreenMeta>> = {
   },
   resultRecommendations: {
     figmaName: '03-14 현장점검하기_권장 예방조치',
-    figmaNodes: ['1115:3194'],
+    figmaNodes: ['1115:3194', '4133:3051'],
     specs: ['RESULT-05', 'RESULT-06', 'RESULT-08'],
     next: ['support', 'home'],
     status: 'done',

@@ -207,6 +207,12 @@ export const DESIGN_SCREENS: DesignScreen[] = [
     route: 'resultRecommendations',
   },
   {
+    nodeId: '4133:3051',
+    name: '03-15 현장점검하기_권장 예방조치 · 시설 미추출',
+    relatedRoute: 'resultRecommendations',
+    status: 'done',
+  },
+  {
     nodeId: '1115:3218',
     name: '04-1 지원하기_지원사업',
     route: 'support',

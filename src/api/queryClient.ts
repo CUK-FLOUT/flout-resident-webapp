@@ -51,8 +51,8 @@ export const queryKeys = {
     ['applications', applicationId, 'support-programs'] as const,
   inspectionApplication: (applicationId: string, session: string | null) =>
     ['applications', applicationId, 'inspection-application', session] as const,
-  recommendedFacilities: (applicationId: string) =>
-    ['applications', applicationId, 'recommended-facilities'] as const,
+  recommendedFacilities: (applicationId: string, session: string | null) =>
+    ['applications', applicationId, 'recommended-facilities', session] as const,
   supportProgress: (applicationId: string) => ['applications', applicationId, 'support'] as const,
   supportReview: (supportApplicationId: number) =>
     ['support-applications', supportApplicationId, 'review'] as const,

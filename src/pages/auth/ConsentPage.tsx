@@ -76,7 +76,7 @@ export default function ConsentPage() {
                 </span>
               }
               description="현장점검 및 행정 처리를 위해 부천시에 제공해요."
-              className="[&>span:last-child>span:last-child]:text-muted px-0 py-0 [&>span:first-child]:mt-0 [&>span:first-child]:size-6"
+              className="[&>span:last-child>span:last-child]:text-muted bg-transparent! px-0 py-0 [&>span:first-child]:mt-0 [&>span:first-child]:size-6"
             />
 
             <CheckItem
@@ -89,7 +89,7 @@ export default function ConsentPage() {
                 </span>
               }
               description="서비스 이용과 신청자 확인을 위해 사용해요"
-              className="[&>span:last-child>span:last-child]:text-muted px-0 py-0 [&>span:first-child]:mt-0 [&>span:first-child]:size-6"
+              className="[&>span:last-child>span:last-child]:text-muted bg-transparent! px-0 py-0 [&>span:first-child]:mt-0 [&>span:first-child]:size-6"
             />
           </div>
           {error && (

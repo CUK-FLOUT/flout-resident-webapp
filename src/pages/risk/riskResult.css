@@ -1,0 +1,37 @@
+.risk-result-next-step {
+  color: #2464a2;
+}
+
+.risk-result-region-icon {
+  background-color: #eaf3fc;
+}
+
+.risk-result-region-note {
+  color: #526378;
+}
+
+.risk-upper-notice {
+  background-color: #eef5fd;
+}
+
+.risk-upper-notice-title {
+  color: #334d70;
+}
+
+.risk-upper-house {
+  background-color: #e0ecfa;
+}
+
+.risk-upper-house-opening {
+  background-color: #71a8e2;
+}
+
+.risk-upper-surroundings {
+  border-color: #d9e3ec;
+  padding-inline: 13px;
+  padding-bottom: 16px;
+}
+
+.risk-upper-guide {
+  background-color: #f0f7f6;
+}

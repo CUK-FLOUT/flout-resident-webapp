@@ -4,6 +4,7 @@ import { useRecommendedFacilities, useSupportPrograms } from '@/api/applications
 import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
+import './supportProgram.css';
 
 export default function SupportPage() {
   const { applicationId } = useParams<'applicationId'>();
@@ -70,10 +71,11 @@ export default function SupportPage() {
 
   return (
     <Screen
-      header={header}
+      header={{ ...header, className: 'px-5 [&_h1]:text-[18px] [&_svg]:size-6' }}
       tab="home"
       bottom={
         <Button
+          className="-mt-1 mb-1"
           onClick={() =>
             navigate(
               hasFacilities
@@ -86,47 +88,88 @@ export default function SupportPage() {
         </Button>
       }
     >
-      <div className="flex flex-col gap-6 pt-5">
-        <section className="flex flex-col gap-3">
-          <h2 className="text-title text-ink">확인해볼 수 있는 사업이 있어요.</h2>
-          <p className="text-body text-muted">
-            현장에서 확인된 취약지점과 전문가 권장 예방조치를 바탕으로 관련 지원제도를 안내해
-            드려요.
+      <div className="support-program pt-[18px]">
+        <section>
+          <h2 className="text-[22px] leading-[34px] font-bold text-(--support-heading)">
+            확인해볼 수 있는 사업이 있어요.
+          </h2>
+          <p className="mt-2.5 text-[13px] leading-[17px] text-(--support-muted)">
+            <span className="block">
+              현장에서 확인된 취약지점과 전문가 권장 예방조치를 바탕으로
+            </span>
+            관련 지원제도를 안내해 드려요.
           </p>
         </section>
 
-        <p className="text-caption text-muted flex justify-between">
-          <span>관련 지원사업</span>
-          <span>부천시</span>
-        </p>
+        <section className="mt-[33px]">
+          <div className="border-b border-(--support-rule) pb-2">
+            <p className="text-[14px] leading-[23px] font-bold text-(--support-muted)">
+              관련 지원사업
+            </p>
+            <h3 className="mt-1 text-[22px] leading-[30px] font-bold text-(--support-heading)">
+              부천시
+            </h3>
+          </div>
 
-        <section className="border-border flex flex-col gap-2 border-y py-4">
-          <h3 className="text-heading text-primary">{program.name}</h3>
-          {hasFacilities && <p className="text-body text-muted">{program.description}</p>}
+          <div className="mt-4 flex min-h-28 items-start gap-3.5 rounded-[13px] bg-(--support-card) px-3.5 py-[17px]">
+            <span
+              aria-hidden
+              className="grid size-[52px] shrink-0 place-items-center rounded-xl bg-(--support-facility-icon-bg) text-(--support-facility-icon)"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+                <rect x="1" y="1" width="18" height="18" />
+                <path d="M5.5 1v18M10 1v18M14.5 1v18" />
+              </svg>
+            </span>
+            <div className="min-w-0 wrap-anywhere">
+              <h4 className="text-[18px] leading-7 font-bold text-(--support-card-heading)">
+                {program.name}
+              </h4>
+              {hasFacilities && (
+                <p className="mt-2 text-xs leading-4 text-(--support-card-muted)">
+                  {program.description}
+                </p>
+              )}
+            </div>
+          </div>
         </section>
 
         {hasFacilities && (
-          <>
-            <section className="flex flex-col gap-3">
-              <h3 className="text-heading text-ink">이 사업이 표시된 이유</h3>
-              <p className="text-body text-ink flex items-center gap-3">
-                <span className="bg-page text-ink flex size-8 shrink-0 items-center justify-center rounded-full">
-                  <Check size={16} aria-hidden />
+          <section className="mt-6">
+            <h3 className="text-[18px] leading-[30px] font-bold text-(--support-card-heading)">
+              이 사업이 표시된 이유
+            </h3>
+            <div className="bg-surface mt-2 min-h-[153px] rounded-[13px] border border-(--support-reason-border) p-[13px] pt-3.5">
+              <div className="flex items-center gap-2.5 border-b border-(--support-divider) pb-4">
+                <span
+                  aria-hidden
+                  className="support-program-reason-icon grid size-8 shrink-0 place-items-center rounded-full"
+                >
+                  <Check size={20} strokeWidth={3} />
                 </span>
-                {program.reason || '현장점검에서 침수 취약지점이 확인됐어요.'}
-              </p>
-            </section>
-
-            <section className="flex flex-col gap-2">
-              <p className="text-label text-warning flex items-start gap-3">
-                <Info size={24} aria-hidden className="text-ink shrink-0" />
-                지원이 확정된 것은 아니에요.
-              </p>
-              <p className="text-caption text-muted">
-                실제 지원 가능 여부와 지원 범위는 신청 후 행정 검토를 통해 결정돼요.
-              </p>
-            </section>
-          </>
+                <p className="text-[13px] leading-[18px] text-(--support-reason-text)">
+                  {program.reason || '현장점검에서 침수 취약지점이 확인됐어요.'}
+                </p>
+              </div>
+              <div className="mt-[5px] flex items-start gap-2.5">
+                <span
+                  aria-hidden
+                  className="support-program-reason-icon grid size-8 shrink-0 place-items-center rounded-full"
+                >
+                  <Info size={18} strokeWidth={2.5} />
+                </span>
+                <div>
+                  <p className="pt-2 text-[15px] leading-5 font-bold text-(--support-highlight)">
+                    지원이 확정된 것은 아니에요.
+                  </p>
+                  <p className="mt-2 text-xs leading-4 text-(--support-muted)">
+                    <span className="block">실제 지원 가능 여부와 지원 범위는 신청 후</span>
+                    행정 검토를 통해 결정돼요.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
         )}
       </div>
     </Screen>

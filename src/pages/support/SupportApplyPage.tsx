@@ -17,7 +17,6 @@ import { Button, ChoiceGroup, TextField } from '@/components/ui';
 import { TENURE_LABEL, VISIT_TIME_OPTIONS } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
 import { env } from '@/lib/env';
-import { maskPhone } from '@/lib/phone';
 import { useSupportDraft } from '@/stores/supportDraft';
 import type { InspectionApplicationDetail, SupportProgram, VisitTimeSlot } from '@/types/domain';
 
@@ -365,7 +364,7 @@ function ApplyForm({
 
         <div className="grid grid-cols-2 gap-3">
           <TextField size="md" label="이름" value={applicant.name} readOnly />
-          <TextField size="md" label="연락처" value={maskPhone(applicant.phone)} readOnly />
+          <TextField size="md" label="연락처" value={applicant.phone} readOnly />
         </div>
         <TextField
           size="md"

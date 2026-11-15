@@ -7,7 +7,6 @@ import { SUPPORT_DECISION_LABEL } from '@/constants/labels';
 import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/date';
 import { getInspectionAddress, getInspectionStage } from '@/lib/inspectionApplication';
-import { maskPhone } from '@/lib/phone';
 import type { ConstructionStatus } from '@/types/domain';
 import { StageBadge } from './StageBadge';
 
@@ -65,7 +64,7 @@ export default function ApplicationDetailPage() {
 
         <Section title="신청 정보">
           <Row label="이름">{data.applicant.name}</Row>
-          <Row label="연락처">{data.applicant.phone && maskPhone(data.applicant.phone)}</Row>
+          <Row label="연락처">{data.applicant.phone}</Row>
           <Row label="신청일">{appliedAt && formatDate(appliedAt)}</Row>
           <Row label="주소">{address}</Row>
           <Row label="희망 방문일">

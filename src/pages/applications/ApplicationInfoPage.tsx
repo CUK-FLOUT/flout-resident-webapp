@@ -5,7 +5,6 @@ import {
   getInspectionStatusLabel,
   getPreferredVisitTime,
 } from '@/lib/inspectionApplication';
-import { maskPhone } from '@/lib/phone';
 import { InspectionApplicationScreen } from './InspectionApplicationScreen';
 
 export default function ApplicationInfoPage() {
@@ -30,7 +29,7 @@ export default function ApplicationInfoPage() {
           ['접수번호 / 현재 상태', `${detail.receiptNumber} / ${getInspectionStatusLabel(detail)}`],
           [
             '신청자 / 연락처',
-            `${detail.applicant?.name?.trim() || '정보 없음'} / ${phone ? maskPhone(phone) : '정보 없음'}`,
+            `${detail.applicant?.name?.trim() || '정보 없음'} / ${phone || '정보 없음'}`,
           ],
           ['주소 / 거주 형태', `${getInspectionAddress(detail)} / ${tenure ?? '정보 없음'}`],
           ['과거 침수 / 유입 위치', `${flood ?? '정보 없음'} / ${inflow || '정보 없음'}`],

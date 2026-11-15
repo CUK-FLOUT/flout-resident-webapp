@@ -321,7 +321,7 @@ export const mockInspectionApplicationFor = (id: string): InspectionApplicationD
   return {
     applicationId,
     receiptNumber: detail.id,
-    applicant: { name: request.applicantName, phone: '010-****-0002' },
+    applicant: { name: request.applicantName, phone: '010-0000-0002' },
     address: request.address,
     detailAddress: null,
     occupancyType: applicationId === MOCK_OWNER_APPLICATION_ID ? 'OWNER' : 'TENANT',

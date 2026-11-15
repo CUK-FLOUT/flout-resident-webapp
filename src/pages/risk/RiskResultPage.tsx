@@ -56,6 +56,7 @@ export default function RiskResultPage() {
 function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const fromProgressList = location.state?.fromProgressList === true;
   const { result, address, coordinates, detail, floor, setResult } = useAddressDraft();
   const id = parseAssessmentId(assessmentId);
   const current = result && String(result.id) === assessmentId ? result : null;
@@ -83,7 +84,7 @@ function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
   const checkAddress = () =>
     navigate(address && coordinates ? PATHS.addressDetail : PATHS.addressSearch);
   const back = () => {
-    if (location.state?.fromProgressList === true) navigate(-1);
+    if (fromProgressList) navigate(-1);
     else checkAddress();
   };
 
@@ -158,8 +159,10 @@ function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
       destination === 'inspection'
         ? PATHS.inspectionApply
         : generatePath(PATHS.guideLoading, { assessmentId });
+    const state =
+      destination === 'guide' && fromProgressList ? { fromProgressList: true } : undefined;
     if (current) {
-      navigate(path);
+      navigate(path, { state });
       return;
     }
     if (id === null || !primaryAddress || !detailAddress.trim()) return;
@@ -188,7 +191,7 @@ function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
           floor: selectedFloor,
         },
       });
-      navigate(path);
+      navigate(path, { state });
     } catch (failure) {
       if (active.current)
         setError(failure instanceof Error ? failure.message : '주소 좌표를 확인하지 못했어요.');

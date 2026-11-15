@@ -24,6 +24,12 @@ const progressTypeByApplication = {
   SUPPORT: '지원 신청',
 } satisfies Record<ResidentProgressItem['applicationType'], string>;
 
+const progressListReturnStages = new Map<string, readonly string[]>([
+  ['WAIT_FOR_ASSESSMENT', ['RISK_ASSESSMENT_IN_PROGRESS']],
+  ['VIEW_ASSESSMENT', ['RISK_ASSESSMENT_COMPLETED', 'RISK_ASSESSMENT_FAILED']],
+  ['VIEW_GUIDE', ['GUIDE_AVAILABLE', 'GUIDE_IN_PROGRESS']],
+]);
+
 export function ProgressCard({
   item,
   list = false,
@@ -56,6 +62,11 @@ export function ProgressCard({
       address={item.address}
       actionLabel={action?.label ?? (list ? stage?.actionLabel : undefined) ?? '이동할 수 없음'}
       to={action?.to}
+      fromProgressList={Boolean(
+        list &&
+        item.nextAction &&
+        progressListReturnStages.get(item.nextAction.type)?.includes(item.currentStage),
+      )}
       list={list}
     />
   );
@@ -69,6 +80,7 @@ function ProgressCardView({
   tone,
   actionLabel,
   to,
+  fromProgressList,
   list = false,
 }: {
   caption: string;
@@ -78,6 +90,7 @@ function ProgressCardView({
   tone: string;
   actionLabel: string;
   to?: string | null;
+  fromProgressList: boolean;
   list?: boolean;
 }) {
   const actionStyle = cn(
@@ -123,6 +136,7 @@ function ProgressCardView({
       {to ? (
         <Link
           to={to}
+          state={fromProgressList ? { fromProgressList: true } : undefined}
           aria-label={title + ' · ' + actionLabel}
           className={cn('flex min-h-11 items-center', !list && 'rounded-full')}
         >

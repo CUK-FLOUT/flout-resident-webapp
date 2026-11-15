@@ -56,6 +56,7 @@ export default function RiskResultPage() {
 function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const fromProgressList = location.state?.fromProgressList === true;
   const { result, address, coordinates, detail, floor, setResult } = useAddressDraft();
   const id = parseAssessmentId(assessmentId);
   const current = result && String(result.id) === assessmentId ? result : null;
@@ -80,7 +81,12 @@ function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
     (storedFloor === 'BASEMENT' || storedFloor === 'FIRST' || storedFloor === 'SECOND_OR_ABOVE')
       ? storedFloor
       : null);
-  const back = () => navigate(address && coordinates ? PATHS.addressDetail : PATHS.addressSearch);
+  const checkAddress = () =>
+    navigate(address && coordinates ? PATHS.addressDetail : PATHS.addressSearch);
+  const back = () => {
+    if (fromProgressList) navigate(-1);
+    else checkAddress();
+  };
 
   if (query.isError || !data) {
     const apiError = query.error instanceof ApiError ? query.error : null;
@@ -107,7 +113,7 @@ function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
                 다시 시도
               </Button>
             )}
-            <Button variant="secondary" onClick={back}>
+            <Button variant="secondary" onClick={checkAddress}>
               주소 확인하기
             </Button>
           </div>
@@ -153,8 +159,10 @@ function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
       destination === 'inspection'
         ? PATHS.inspectionApply
         : generatePath(PATHS.guideLoading, { assessmentId });
+    const state =
+      destination === 'guide' && fromProgressList ? { fromProgressList: true } : undefined;
     if (current) {
-      navigate(path);
+      navigate(path, { state });
       return;
     }
     if (id === null || !primaryAddress || !detailAddress.trim()) return;
@@ -183,7 +191,7 @@ function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
           floor: selectedFloor,
         },
       });
-      navigate(path);
+      navigate(path, { state });
     } catch (failure) {
       if (active.current)
         setError(failure instanceof Error ? failure.message : '주소 좌표를 확인하지 못했어요.');
@@ -206,6 +214,7 @@ function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
       error={error}
       continuing={continuing}
       onBack={back}
+      onCheckAddress={checkAddress}
       onInspection={canContinue ? () => void proceed('inspection') : undefined}
       onGuide={canContinue ? () => void proceed('guide') : undefined}
     />
@@ -266,6 +275,7 @@ export function RiskResultView({
   error,
   continuing,
   onBack,
+  onCheckAddress = onBack,
   onInspection,
   onGuide,
 }: {
@@ -280,6 +290,7 @@ export function RiskResultView({
   error?: string;
   continuing?: boolean;
   onBack: () => void;
+  onCheckAddress?: () => void;
   onInspection?: () => void;
   onGuide?: () => void;
 }) {
@@ -445,7 +456,13 @@ export function RiskResultView({
             이 결과에서 거주 층을 확인할 수 없어요. 다음 단계로 진행하려면 주소와 거주 층을 다시
             확인해 주세요.
           </p>
-          <Button variant="text" size="md" fullWidth={false} className="px-0" onClick={onBack}>
+          <Button
+            variant="text"
+            size="md"
+            fullWidth={false}
+            className="px-0"
+            onClick={onCheckAddress}
+          >
             주소 확인하기
           </Button>
         </div>

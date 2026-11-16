@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
-import { generatePath, Navigate, useParams } from 'react-router';
-import { useInspectionApplication } from '@/api/applications';
+import { generatePath, Navigate, useNavigate, useParams } from 'react-router';
+import { parseInspectionApplicationId, useInspectionApplication } from '@/api/applications';
 import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
@@ -29,6 +29,16 @@ export function ConstructionScreen<T extends ConstructionSchedule>({
   const application = useInspectionApplication(applicationId);
   const constructionId = application.data?.progress?.constructionId ?? 0;
   const construction = useDetail(constructionId);
+  const navigate = useNavigate();
+
+  if (parseInspectionApplicationId(applicationId) === undefined) {
+    return (
+      <ConstructionState
+        message="신청 번호를 확인할 수 없어요."
+        action={<Button onClick={() => navigate(PATHS.applicationsAll)}>내 신청 보기</Button>}
+      />
+    );
+  }
 
   if (application.isLoading || construction.isLoading) {
     return <ConstructionState message="시공 정보를 불러오고 있어요…" />;
@@ -42,7 +52,13 @@ export function ConstructionScreen<T extends ConstructionSchedule>({
     return (
       <ConstructionState
         message="시공 정보를 불러오지 못했어요."
-        retry={() => (application.data ? construction.refetch() : application.refetch())}
+        action={
+          <Button
+            onClick={() => (application.data ? construction.refetch() : application.refetch())}
+          >
+            다시 시도
+          </Button>
+        }
       />
     );
   }
@@ -65,9 +81,9 @@ export function ConstructionScreen<T extends ConstructionSchedule>({
   );
 }
 
-function ConstructionState({ message, retry }: { message: string; retry?: () => void }) {
+function ConstructionState({ message, action }: { message: string; action?: ReactNode }) {
   return (
-    <Screen header={header} tab="home" bottom={retry && <Button onClick={retry}>다시 시도</Button>}>
+    <Screen header={header} tab="home" bottom={action}>
       <StateMessage>{message}</StateMessage>
     </Screen>
   );

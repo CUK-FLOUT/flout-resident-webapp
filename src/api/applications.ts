@@ -113,13 +113,28 @@ export async function uploadInspectionPhotos(
     ),
   );
 }
-export async function getInspectionReceipt(applicationId: number): Promise<InspectionReceipt> {
-  if (env.useMock) return getMockInspection(applicationId);
-  return unwrapInspection(
-    await http.get<InspectionEnvelope<InspectionReceipt>>(
-      `/resident/applications/${applicationId}`,
-    ),
+async function readInspectionApplication<T extends { applicationId: number }>(
+  applicationId: number,
+  { signal, notFoundOnNull = false }: { signal?: AbortSignal; notFoundOnNull?: boolean } = {},
+): Promise<T> {
+  const response = await http.get<InspectionEnvelope<T | null>>(
+    `/resident/applications/${applicationId}`,
+    { signal },
   );
+  if (notFoundOnNull && response?.isSuccess && response.result === null)
+    throw new ApiError(404, '신청 내역을 찾을 수 없어요.');
+  const application = unwrapInspection(response);
+  if (!application || application.applicationId !== applicationId)
+    throw new ApiError(502, '신청 상세 응답을 확인할 수 없어요.');
+  return application;
+}
+
+export async function getInspectionReceipt(
+  applicationId: number,
+  signal?: AbortSignal,
+): Promise<InspectionReceipt> {
+  if (env.useMock) return getMockInspection(applicationId);
+  return readInspectionApplication<InspectionReceipt>(applicationId, { signal });
 }
 
 export function useInspectionSubmission() {
@@ -254,18 +269,11 @@ export function parseInspectionApplicationId(value: string | undefined) {
 export function getInspectionApplication(applicationId: number, signal?: AbortSignal) {
   return withMock(
     () => mockInspectionApplicationFor(String(applicationId)),
-    async () => {
-      const response = await http.get<InspectionEnvelope<InspectionApplicationDetail | null>>(
-        `/resident/applications/${applicationId}`,
-        { signal },
-      );
-      if (response?.isSuccess && response.result === null)
-        throw new ApiError(404, '신청 내역을 찾을 수 없어요.');
-      const application = unwrapInspection(response);
-      if (!application || application.applicationId !== applicationId)
-        throw new ApiError(502, '신청 상세 응답을 확인할 수 없어요.');
-      return application;
-    },
+    () =>
+      readInspectionApplication<InspectionApplicationDetail>(applicationId, {
+        signal,
+        notFoundOnNull: true,
+      }),
   );
 }
 
@@ -288,6 +296,17 @@ export function getRecommendedFacilities(applicationId: string, signal?: AbortSi
       return result;
     },
   );
+}
+
+export function useInspectionReceipt(id: number | undefined) {
+  const session = useSessionScope();
+  return useQuery({
+    queryKey: queryKeys.inspectionReceipt(id, session),
+    queryFn: ({ signal }) => getInspectionReceipt(id!, signal),
+    enabled: id !== undefined,
+    retry: false,
+    refetchOnMount: 'always',
+  });
 }
 
 export function useInspectionApplication(

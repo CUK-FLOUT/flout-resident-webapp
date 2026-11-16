@@ -1,5 +1,5 @@
 import { Bell } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { generatePath, useNavigate } from 'react-router';
 import { useNotifications, useReadAllNotifications } from '@/api/notifications';
 import { Screen, StateMessage } from '@/components/layout';
@@ -44,22 +44,15 @@ export default function NotificationsPage() {
   }, [hasUnread, readAll]);
 
   if (isLoading) {
-    return (
-      <Screen header={header} tab="notifications">
-        <StateMessage>알림을 불러오고 있어요…</StateMessage>
-      </Screen>
-    );
+    return <NotificationsState message="알림을 불러오고 있어요…" />;
   }
 
   if (isError || !data) {
     return (
-      <Screen
-        header={header}
-        tab="notifications"
-        bottom={<Button onClick={() => refetch()}>다시 시도</Button>}
-      >
-        <StateMessage>알림을 불러오지 못했어요.</StateMessage>
-      </Screen>
+      <NotificationsState
+        message="알림을 불러오지 못했어요."
+        action={<Button onClick={() => refetch()}>다시 시도</Button>}
+      />
     );
   }
 
@@ -129,6 +122,14 @@ export default function NotificationsPage() {
           ))}
         </ol>
       </div>
+    </Screen>
+  );
+}
+
+function NotificationsState({ message, action }: { message: string; action?: ReactNode }) {
+  return (
+    <Screen header={{ title: '알림' }} tab="notifications" bottom={action}>
+      <StateMessage>{message}</StateMessage>
     </Screen>
   );
 }

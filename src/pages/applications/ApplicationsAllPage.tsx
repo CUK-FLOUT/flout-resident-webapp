@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/date';
 import { PATHS } from '@/constants/paths';
 import type { ApplicationListItem } from '@/types/domain';
+import { ApplicationsState } from './ApplicationsState';
 import { StageBadge } from './StageBadge';
 
 const TABS = [
@@ -24,22 +25,16 @@ export default function ApplicationsAllPage() {
   const header = { title: '내 신청' };
 
   if (isLoading) {
-    return (
-      <Screen header={header} tab="applications">
-        <StateMessage>신청 기록을 불러오고 있어요…</StateMessage>
-      </Screen>
-    );
+    return <ApplicationsState title={header.title} message="신청 기록을 불러오고 있어요…" />;
   }
 
   if (isError || !data) {
     return (
-      <Screen
-        header={header}
-        tab="applications"
-        bottom={<Button onClick={() => refetch()}>다시 시도</Button>}
-      >
-        <StateMessage>신청 기록을 불러오지 못했어요.</StateMessage>
-      </Screen>
+      <ApplicationsState
+        title={header.title}
+        message="신청 기록을 불러오지 못했어요."
+        action={<Button onClick={() => refetch()}>다시 시도</Button>}
+      />
     );
   }
 

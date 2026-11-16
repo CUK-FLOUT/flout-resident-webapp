@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { useParams } from 'react-router';
-import { useInspectionApplication } from '@/api/applications';
+import { useNavigate, useParams } from 'react-router';
+import { parseInspectionApplicationId, useInspectionApplication } from '@/api/applications';
 import { Screen } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { SUPPORT_DECISION_LABEL } from '@/constants/labels';
+import { PATHS } from '@/constants/paths';
 import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/date';
 import { getInspectionAddress, getInspectionStage } from '@/lib/inspectionApplication';
@@ -21,7 +22,18 @@ const CONSTRUCTION_STATUS_LABEL: Record<ConstructionStatus, string> = {
 export default function ApplicationDetailPage() {
   const { applicationId } = useParams<'applicationId'>();
   const { data, isLoading, refetch } = useInspectionApplication(applicationId);
+  const navigate = useNavigate();
   const header = { title: '신청 상세' };
+
+  if (parseInspectionApplicationId(applicationId) === undefined) {
+    return (
+      <ApplicationsState
+        title={header.title}
+        message="신청 번호를 확인할 수 없어요."
+        action={<Button onClick={() => navigate(PATHS.applicationsAll)}>내 신청 보기</Button>}
+      />
+    );
+  }
 
   if (isLoading) {
     return <ApplicationsState title={header.title} message="신청 내용을 불러오고 있어요…" />;

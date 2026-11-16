@@ -9,7 +9,12 @@ import { getRiskAssessment, type AnalysisResult } from '@/api/riskAnalysis';
 import { getPrimaryAddress } from '@/lib/address';
 import { env } from '@/lib/env';
 import { ApiError } from '@/lib/http';
-import { formatInspectionPhone, step1Error, visitScheduleError } from '@/lib/inspection';
+import {
+  formatInspectionPhone,
+  isInspectionReceived,
+  step1Error,
+  visitScheduleError,
+} from '@/lib/inspection';
 import { tokenStorage } from '@/lib/storage';
 import { useInspectionDraft, type Draft } from '@/stores/inspectionDraft';
 
@@ -183,10 +188,7 @@ export async function loadInspectionEntry(
   if (!saved && requested && !linkedApplicationId) {
     const receipt = await getInspectionReceipt(requested);
     if (!isCurrentSession()) return null;
-    if (
-      receipt.applicationStatus === 'RECEIVED' ||
-      receipt.applicationStatus === 'INSPECTION_COMPLETED'
-    )
+    if (isInspectionReceived(receipt.applicationStatus))
       return { completed: receipt.applicationId, assessmentId: resume?.assessmentId };
     throw new ApiError(409, '이어 쓸 수 있는 임시 신청서를 찾을 수 없어요.');
   }
@@ -196,10 +198,7 @@ export async function loadInspectionEntry(
   const applicationId = saved?.applicationId ?? linkedApplicationId;
   const application = applicationId ? await getInspectionApplication(applicationId) : null;
   if (!isCurrentSession()) return null;
-  if (
-    application?.applicationStatus === 'RECEIVED' ||
-    application?.applicationStatus === 'INSPECTION_COMPLETED'
-  )
+  if (application && isInspectionReceived(application.applicationStatus))
     return { completed: application.applicationId, assessmentId };
   if (application && application.applicationStatus !== 'DRAFT')
     throw new ApiError(409, '임시 저장 상태의 신청만 수정할 수 있어요.');

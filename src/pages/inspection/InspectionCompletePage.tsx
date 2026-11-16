@@ -1,44 +1,33 @@
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { CheckCircle } from 'lucide-react';
 import { generatePath, useNavigate, useParams } from 'react-router';
-import { getInspectionReceipt } from '@/api/applications';
+import { parseInspectionApplicationId, useInspectionReceipt } from '@/api/applications';
 import { Screen } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { env } from '@/lib/env';
+import { isInspectionReceived } from '@/lib/inspection';
 import { forgetInspection } from '@/lib/inspectionForm';
 import { useInspectionDraft } from '@/stores/inspectionDraft';
 
 export default function InspectionCompletePage() {
   const { applicationId } = useParams();
   const navigate = useNavigate();
-  const valid = Boolean(
-    applicationId &&
-    /^\d+$/.test(applicationId) &&
-    Number(applicationId) > 0 &&
-    Number.isSafeInteger(Number(applicationId)),
-  );
-  const query = useQuery({
-    queryKey: ['inspection-receipt', applicationId, env.useMock],
-    queryFn: () => getInspectionReceipt(Number(applicationId)),
-    enabled: valid,
-    retry: false,
-  });
+  const id = parseInspectionApplicationId(applicationId);
+  const query = useInspectionReceipt(id);
   useEffect(() => {
     const receipt = query.data;
     const draft = useInspectionDraft.getState();
     if (
       !receipt ||
       receipt.applicationId !== draft.savedApplicationId ||
-      (receipt.applicationStatus !== 'RECEIVED' &&
-        receipt.applicationStatus !== 'INSPECTION_COMPLETED')
+      !isInspectionReceived(receipt.applicationStatus)
     )
       return;
     if (draft.assessmentId !== undefined) forgetInspection(draft.assessmentId);
     draft.reset();
   }, [query.data]);
-  if (!valid)
+  if (id === undefined)
     return (
       <Screen
         header={{ title: '현장점검 신청' }}
@@ -93,7 +82,7 @@ export default function InspectionCompletePage() {
         </p>
       </Screen>
     );
-  if (!['RECEIVED', 'INSPECTION_COMPLETED'].includes(receipt.applicationStatus))
+  if (!isInspectionReceived(receipt.applicationStatus))
     return (
       <Screen header={{ title: '현장점검 신청' }}>
         <p role="alert" className="text-body text-muted pt-10 text-center">

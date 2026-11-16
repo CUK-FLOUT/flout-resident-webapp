@@ -4,6 +4,10 @@ export const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 export const INVALID_PHONE_MESSAGE = '올바른 연락처를 입력해 주세요.';
 export const PHONE_TOO_LONG_MESSAGE = '연락처의 숫자가 너무 많아요. 번호를 확인해 주세요.';
 
+export function isInspectionReceived(status?: string) {
+  return status === 'RECEIVED' || status === 'INSPECTION_COMPLETED';
+}
+
 export function formatInspectionPhone(value: string): string {
   const digits = value.replace(/\D/g, '');
   const prefixLength = digits.startsWith('02') ? 2 : 3;

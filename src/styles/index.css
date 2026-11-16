@@ -32,6 +32,21 @@
   --color-warning: #865a16;
   --color-success: #27654d;
 
+  --color-support-heading: #0d1d39;
+  --color-support-muted: #526276;
+  --color-support-rule: #dae4ed;
+  --color-support-card: #eaf5ff;
+  --color-support-card-heading: #10213b;
+  --color-support-card-muted: #4f6074;
+  --color-support-facility-icon-bg: #d7ecfc;
+  --color-support-facility-icon: #205681;
+  --color-support-reason-border: #d9e4ee;
+  --color-support-divider: #e0e7ef;
+  --color-support-reason-text: #1e3148;
+  --color-support-highlight: #205781;
+  --color-support-reason-icon-bg: #e6f3fd;
+  --color-support-reason-icon: #235781;
+
   /* ── Typography (size / line-height / weight) ── */
   --text-risk: 30px;
   --text-risk--line-height: 40px;

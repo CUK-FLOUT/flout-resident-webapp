@@ -22,6 +22,29 @@ import { SupportState } from './SupportState';
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const ACCEPTED_FILE = /\.(pdf|jpe?g|png)$/i;
 
+const COPY = {
+  tenant: {
+    title: ['임대인 동의서를', '첨부해 주세요.'],
+    description: ['세입자는 서명받은 임대인 동의서를', '첨부해야 지원 신청을 접수할 수 있어요.'],
+    requirement: '필수',
+    cardTitle: '서명받은 동의서가 필요해요',
+    cardBody: ['PDF 또는 이미지 1개를 첨부해 주세요.', '파일은 최대 15MB까지 가능해요.'],
+    tenure: '세입자',
+    review: '접수 후 담당자가 동의서와',
+    hint: '동의서 1개를 첨부하면 접수할 수 있어요.',
+  },
+  owner: {
+    title: ['동의서 없이', '접수할 수 있어요.'],
+    description: ['소유자·기타는 임대인 동의서 없이', '지원 신청을 접수할 수 있어요.'],
+    requirement: '불필요',
+    cardTitle: '동의서를 제출하지 않아도 돼요',
+    cardBody: ['소유자·기타는 동의서 첨부 없이', '아래 버튼을 눌러 접수해 주세요.'],
+    tenure: '소유자·기타',
+    review: '접수 후 담당자가',
+    hint: '입력한 내용을 확인한 뒤 접수해 주세요.',
+  },
+};
+
 async function canUploadConsent(applicationId: number, supportId: number, signal: AbortSignal) {
   const visited = new Set<string>();
   let cursor: string | undefined;
@@ -150,6 +173,7 @@ function SubmitForm({
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState('');
   const isTenant = application.occupancyType === 'TENANT';
+  const copy = isTenant ? COPY.tenant : COPY.owner;
   const { receiptNumber, applicant, address } = application;
 
   const selectFile = (e: ChangeEvent<HTMLInputElement>) => {
@@ -230,27 +254,25 @@ function SubmitForm({
 
         <section className="flex flex-col gap-3">
           <h2 className="text-title">
-            {isTenant ? '임대인 동의서를' : '동의서 없이'}
+            {copy.title[0]}
             <br />
-            {isTenant ? '첨부해 주세요.' : '접수할 수 있어요.'}
+            {copy.title[1]}
           </h2>
           <p className="text-body">
-            {isTenant ? '세입자는 서명받은 임대인 동의서를' : '소유자·기타는 임대인 동의서 없이'}
+            {copy.description[0]}
             <br />
-            {isTenant ? '첨부해야 지원 신청을 접수할 수 있어요.' : '지원 신청을 접수할 수 있어요.'}
+            {copy.description[1]}
           </p>
         </section>
 
         <section className="bg-page flex flex-col gap-3 rounded-md p-4">
           <div className="flex flex-col gap-2">
-            <p className="text-caption">임대인 동의서 · {isTenant ? '필수' : '불필요'}</p>
-            <p className="text-section">
-              {isTenant ? '서명받은 동의서가 필요해요' : '동의서를 제출하지 않아도 돼요'}
-            </p>
+            <p className="text-caption">임대인 동의서 · {copy.requirement}</p>
+            <p className="text-section">{copy.cardTitle}</p>
             <p className="text-body">
-              {isTenant ? 'PDF 또는 이미지 1개를 첨부해 주세요.' : '소유자·기타는 동의서 첨부 없이'}
+              {copy.cardBody[0]}
               <br />
-              {isTenant ? '파일은 최대 15MB까지 가능해요.' : '아래 버튼을 눌러 접수해 주세요.'}
+              {copy.cardBody[1]}
             </p>
           </div>
 
@@ -288,7 +310,7 @@ function SubmitForm({
         <dl className="text-caption flex gap-2 px-4 py-2.5">
           <dt className="w-[116px] shrink-0">{draft ? '거주 형태 / 선택 시설' : '거주 형태'}</dt>
           <dd>
-            {isTenant ? '세입자' : '소유자·기타'}
+            {copy.tenure}
             {draft && ` / ${draft.facility}`}
           </dd>
         </dl>
@@ -296,7 +318,7 @@ function SubmitForm({
         <p className="text-body flex items-center gap-2.5 p-3">
           <img src={reviewNotice} alt="" width={24} height={24} className="shrink-0" />
           <span>
-            {isTenant ? '접수 후 담당자가 동의서와' : '접수 후 담당자가'}
+            {copy.review}
             <br />
             지원 자격을 검토해요.
           </span>
@@ -315,11 +337,7 @@ function SubmitForm({
         >
           신청 접수하기
         </Button>
-        <p className="text-center text-[12px] leading-[22px]">
-          {isTenant
-            ? '동의서 1개를 첨부하면 접수할 수 있어요.'
-            : '입력한 내용을 확인한 뒤 접수해 주세요.'}
-        </p>
+        <p className="text-center text-[12px] leading-[22px]">{copy.hint}</p>
       </div>
     </Screen>
   );

@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { generatePath, Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
 import {
   useInspectionApplication,
   useRecommendedFacilities,
   useSupportPrograms,
 } from '@/api/applications';
+import { queryKeys } from '@/api/queryClient';
 import {
   listSupportFormDrafts,
   putSupportFormDraft,
@@ -14,9 +16,10 @@ import radioChecked from '@/assets/support/radio-checked.svg';
 import radioUnchecked from '@/assets/support/radio-unchecked.svg';
 import { Screen } from '@/components/layout';
 import { Button, ChoiceGroup, TextField } from '@/components/ui';
-import { TENURE_LABEL, VISIT_TIME_OPTIONS } from '@/constants/labels';
+import { VISIT_TIME_OPTIONS } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
 import { env } from '@/lib/env';
+import { getInspectionAddress, getTenureLabel } from '@/lib/inspectionApplication';
 import { useSupportDraft } from '@/stores/supportDraft';
 import type { InspectionApplicationDetail, SupportProgram, VisitTimeSlot } from '@/types/domain';
 import { SupportState } from './SupportState';
@@ -46,53 +49,35 @@ function SupportApplyEntry({
   const recommended = useRecommendedFacilities(applicationId);
   const queries = [application, programs, recommended];
   const program = programs.data?.[0];
-  const [resume, setResume] = useState<SupportFormDraft | null | undefined>(
-    env.useMock ? null : undefined,
-  );
-  const [attempt, setAttempt] = useState(0);
-  const [resumeError, setResumeError] = useState(false);
+  const drafts = useQuery({
+    queryKey: queryKeys.supportFormDrafts(),
+    queryFn: () => listSupportFormDrafts(),
+    enabled: !env.useMock && Boolean(applicationId),
+    retry: false,
+    refetchOnMount: 'always',
+    refetchOnReconnect: false,
+  });
+  const resume = env.useMock
+    ? null
+    : (drafts.data?.find((draft) =>
+        requestedDraftId === null
+          ? String(draft.applicationId) === applicationId
+          : draft.applicationId === Number(applicationId) &&
+            draft.draftId === requestedDraftId &&
+            draft.formState === 'EDITING' &&
+            draft.supportApplicationId === null,
+      ) ?? null);
 
-  useEffect(() => {
-    if (env.useMock || !applicationId) return;
-    let alive = true;
-    listSupportFormDrafts()
-      .then((drafts) => {
-        if (!alive) return;
-        setResume(
-          drafts.find((draft) =>
-            requestedDraftId === null
-              ? String(draft.applicationId) === applicationId
-              : draft.applicationId === Number(applicationId) &&
-                draft.draftId === requestedDraftId &&
-                draft.formState === 'EDITING' &&
-                draft.supportApplicationId === null,
-          ) ?? null,
-        );
-      })
-      .catch(() => {
-        if (!alive) return;
-        setResume(null);
-        setResumeError(true);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [applicationId, requestedDraftId, attempt]);
-
-  if (queries.some((q) => q.isLoading) || resume === undefined) {
+  if (
+    queries.some((q) => q.isLoading) ||
+    (!env.useMock && (drafts.isPending || drafts.isFetching))
+  ) {
     return <SupportState message="신청 정보를 불러오고 있어요…" />;
   }
 
-  if (resumeError) {
+  if (drafts.isError) {
     return (
-      <SupportState
-        message="임시 저장 정보를 불러오지 못했어요."
-        retry={() => {
-          setResumeError(false);
-          setResume(undefined);
-          setAttempt((value) => value + 1);
-        }}
-      />
+      <SupportState message="임시 저장 정보를 불러오지 못했어요." retry={() => drafts.refetch()} />
     );
   }
 
@@ -245,7 +230,7 @@ function ApplyForm({
   const autoAssigned = facilityOptions.length === 1;
   const facility = autoAssigned ? facilityOptions[0] : selectedFacility;
   const filled = facility && preferredDate && preferredTimeSlot;
-  const { applicant, address, detailAddress, occupancyType } = application;
+  const { applicant, occupancyType } = application;
   const autosave = useSupportAutosave(applicationId, resume, {
     programId,
     requestedFacility: facility,
@@ -342,18 +327,8 @@ function ApplyForm({
           <TextField size="md" label="이름" value={applicant.name} readOnly />
           <TextField size="md" label="연락처" value={applicant.phone} readOnly />
         </div>
-        <TextField
-          size="md"
-          label="주소"
-          value={detailAddress ? `${address} ${detailAddress}` : address}
-          readOnly
-        />
-        <TextField
-          size="md"
-          label="거주 형태"
-          value={TENURE_LABEL[occupancyType === 'ETC' ? 'OTHER' : occupancyType]}
-          readOnly
-        />
+        <TextField size="md" label="주소" value={getInspectionAddress(application)} readOnly />
+        <TextField size="md" label="거주 형태" value={getTenureLabel(occupancyType)} readOnly />
         <TextField
           size="md"
           type="date"

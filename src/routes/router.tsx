@@ -1,15 +1,14 @@
 import type { ComponentType } from 'react';
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { AppLayout } from '@/components/layout';
 import { PATHS } from '@/constants/paths';
-import { env } from '@/lib/env';
 import HomePage from '@/pages/home/HomePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import RouteErrorPage from '@/pages/RouteErrorPage';
 
 /**
  * 라우트 정의. 홈을 제외한 화면은 lazy import 로 코드 스플리팅합니다.
- * 새 화면 추가 순서: constants/paths.ts → routes/screens.ts → 여기 → pages/<도메인>/XxxPage.tsx
+ * 새 화면 추가 순서: constants/paths.ts → 여기 → pages/<도메인>/XxxPage.tsx
  */
 const page = (load: () => Promise<{ default: ComponentType }>) => async () => ({
   Component: (await load()).default,
@@ -35,10 +34,6 @@ const routes: RouteObject[] = [
       { path: PATHS.riskResult, lazy: page(() => import('@/pages/risk/RiskResultPage')) },
       { path: PATHS.guideLoading, lazy: page(() => import('@/pages/guide/GuideLoadingPage')) },
       { path: PATHS.guide, lazy: page(() => import('@/pages/guide/GuidePage')) },
-      {
-        path: PATHS.guideUnresolved,
-        lazy: page(() => import('@/pages/guide/GuideUnresolvedPage')),
-      },
       { path: PATHS.guideResolved, lazy: page(() => import('@/pages/guide/GuideResolvedPage')) },
 
       // 현장점검 신청
@@ -64,10 +59,7 @@ const routes: RouteObject[] = [
       },
 
       // 내 신청 · 진행상태
-      {
-        path: PATHS.applications,
-        lazy: page(() => import('@/pages/applications/ApplicationsPage')),
-      },
+      { path: PATHS.applications, element: <Navigate to={PATHS.applicationsAll} replace /> },
       {
         path: PATHS.applicationsAll,
         lazy: page(() => import('@/pages/applications/ApplicationsAllPage')),
@@ -139,18 +131,6 @@ const routes: RouteObject[] = [
         path: PATHS.notifications,
         lazy: page(() => import('@/pages/notifications/NotificationsPage')),
       },
-
-      // 개발용 화면 목록
-      ...(env.isDev
-        ? [
-            { path: PATHS.devScreens, lazy: page(() => import('@/pages/dev/DevScreensPage')) },
-            { path: PATHS.devScreensAlias, lazy: page(() => import('@/pages/dev/DevScreensPage')) },
-            {
-              path: PATHS.devScreenPreview,
-              lazy: page(() => import('@/pages/dev/DevScreenPreviewPage')),
-            },
-          ]
-        : []),
 
       { path: '*', element: <NotFoundPage /> },
     ],

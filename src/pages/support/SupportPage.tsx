@@ -5,7 +5,6 @@ import { Screen } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { SupportState } from './SupportState';
-import './supportProgram.css';
 
 export default function SupportPage() {
   const { applicationId } = useParams<'applicationId'>();
@@ -75,12 +74,12 @@ export default function SupportPage() {
         </Button>
       }
     >
-      <div className="support-program pt-[18px]">
+      <div className="pt-[18px]">
         <section>
-          <h2 className="text-[22px] leading-[34px] font-bold text-(--support-heading)">
+          <h2 className="text-support-heading text-[22px] leading-[34px] font-bold">
             확인해볼 수 있는 사업이 있어요.
           </h2>
-          <p className="mt-2.5 text-[13px] leading-[17px] text-(--support-muted)">
+          <p className="text-support-muted mt-2.5 text-[13px] leading-[17px]">
             <span className="block">
               현장에서 확인된 취약지점과 전문가 권장 예방조치를 바탕으로
             </span>
@@ -89,19 +88,17 @@ export default function SupportPage() {
         </section>
 
         <section className="mt-[33px]">
-          <div className="border-b border-(--support-rule) pb-2">
-            <p className="text-[14px] leading-[23px] font-bold text-(--support-muted)">
-              관련 지원사업
-            </p>
-            <h3 className="mt-1 text-[22px] leading-[30px] font-bold text-(--support-heading)">
+          <div className="border-support-rule border-b pb-2">
+            <p className="text-support-muted text-[14px] leading-[23px] font-bold">관련 지원사업</p>
+            <h3 className="text-support-heading mt-1 text-[22px] leading-[30px] font-bold">
               부천시
             </h3>
           </div>
 
-          <div className="mt-4 flex min-h-28 items-start gap-3.5 rounded-[13px] bg-(--support-card) px-3.5 py-[17px]">
+          <div className="bg-support-card mt-4 flex min-h-28 items-start gap-3.5 rounded-[13px] px-3.5 py-[17px]">
             <span
               aria-hidden
-              className="grid size-[52px] shrink-0 place-items-center rounded-xl bg-(--support-facility-icon-bg) text-(--support-facility-icon)"
+              className="bg-support-facility-icon-bg text-support-facility-icon grid size-[52px] shrink-0 place-items-center rounded-xl"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
                 <rect x="1" y="1" width="18" height="18" />
@@ -109,11 +106,11 @@ export default function SupportPage() {
               </svg>
             </span>
             <div className="min-w-0 wrap-anywhere">
-              <h4 className="text-[18px] leading-7 font-bold text-(--support-card-heading)">
+              <h4 className="text-support-card-heading text-[18px] leading-7 font-bold">
                 {program.name}
               </h4>
               {hasFacilities && (
-                <p className="mt-2 text-xs leading-4 text-(--support-card-muted)">
+                <p className="text-support-card-muted mt-2 text-xs leading-4">
                   {program.description}
                 </p>
               )}
@@ -123,33 +120,33 @@ export default function SupportPage() {
 
         {hasFacilities && (
           <section className="mt-6">
-            <h3 className="text-[18px] leading-[30px] font-bold text-(--support-card-heading)">
+            <h3 className="text-support-card-heading text-[18px] leading-[30px] font-bold">
               이 사업이 표시된 이유
             </h3>
-            <div className="bg-surface mt-2 min-h-[153px] rounded-[13px] border border-(--support-reason-border) p-[13px] pt-3.5">
-              <div className="flex items-center gap-2.5 border-b border-(--support-divider) pb-4">
+            <div className="bg-surface border-support-reason-border mt-2 min-h-[153px] rounded-[13px] border p-[13px] pt-3.5">
+              <div className="border-support-divider flex items-center gap-2.5 border-b pb-4">
                 <span
                   aria-hidden
-                  className="support-program-reason-icon grid size-8 shrink-0 place-items-center rounded-full"
+                  className="bg-support-reason-icon-bg text-support-reason-icon grid size-8 shrink-0 place-items-center rounded-full"
                 >
                   <Check size={20} strokeWidth={3} />
                 </span>
-                <p className="text-[13px] leading-[18px] text-(--support-reason-text)">
+                <p className="text-support-reason-text text-[13px] leading-[18px]">
                   {program.reason || '현장점검에서 침수 취약지점이 확인됐어요.'}
                 </p>
               </div>
               <div className="mt-[5px] flex items-start gap-2.5">
                 <span
                   aria-hidden
-                  className="support-program-reason-icon grid size-8 shrink-0 place-items-center rounded-full"
+                  className="bg-support-reason-icon-bg text-support-reason-icon grid size-8 shrink-0 place-items-center rounded-full"
                 >
                   <Info size={18} strokeWidth={2.5} />
                 </span>
                 <div>
-                  <p className="pt-2 text-[15px] leading-5 font-bold text-(--support-highlight)">
+                  <p className="text-support-highlight pt-2 text-[15px] leading-5 font-bold">
                     지원이 확정된 것은 아니에요.
                   </p>
-                  <p className="mt-2 text-xs leading-4 text-(--support-muted)">
+                  <p className="text-support-muted mt-2 text-xs leading-4">
                     <span className="block">실제 지원 가능 여부와 지원 범위는 신청 후</span>
                     행정 검토를 통해 결정돼요.
                   </p>

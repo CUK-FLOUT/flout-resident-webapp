@@ -11,11 +11,11 @@ import {
 } from '@/api/applications';
 import { Screen } from '@/components/layout';
 import { Button, StatusText, StepProgress } from '@/components/ui';
-import { SUPPORT_DECISION_LABEL, SUPPORT_STEPS, TENURE_LABEL } from '@/constants/labels';
+import { SUPPORT_DECISION_LABEL, SUPPORT_STEPS } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
 import { cn } from '@/lib/cn';
 import { formatDate, formatMonthDay } from '@/lib/date';
-import { getPreferredVisitTime } from '@/lib/inspectionApplication';
+import { getPreferredVisitTime, getTenureLabel } from '@/lib/inspectionApplication';
 import { supportApprovalSeenStorage } from '@/lib/storage';
 import { SupportState } from './SupportState';
 
@@ -175,8 +175,7 @@ function ReviewView({ id }: { id: number }) {
             <div className="flex flex-col gap-1">
               <dt className="text-caption">신청 시설 / 거주 형태</dt>
               <dd className="text-body">
-                {review.requestedFacility} /{' '}
-                {TENURE_LABEL[review.occupancyType === 'ETC' ? 'OTHER' : review.occupancyType]}
+                {review.requestedFacility} / {getTenureLabel(review.occupancyType)}
               </dd>
             </div>
             <div className="flex flex-col gap-1">

@@ -1,4 +1,4 @@
-import { APPLICATION_STAGE, VISIT_TIME_LABEL } from '@/constants/labels';
+import { APPLICATION_STAGE, TENURE_LABEL, VISIT_TIME_LABEL } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
 import { formatDate, formatTime, formatWeekday } from '@/lib/date';
 import type { ApplicationStage, InspectionApplicationDetail } from '@/types/domain';
@@ -42,6 +42,10 @@ export function getInspectionAddress({ address, detailAddress }: InspectionAppli
 
 export function getPreferredVisitTime(slot: InspectionApplicationDetail['preferredTimeSlot']) {
   return slot ? (VISIT_TIME_LABEL[slot === 'ANY' ? 'ANYTIME' : slot] ?? '미정') : '미정';
+}
+
+export function getTenureLabel(occupancyType: InspectionApplicationDetail['occupancyType']) {
+  return TENURE_LABEL[occupancyType === 'ETC' ? 'OTHER' : occupancyType];
 }
 
 export function getVisitDateTime(scheduledAt?: string | null) {

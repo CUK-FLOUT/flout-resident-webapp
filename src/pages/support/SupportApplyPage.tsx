@@ -17,6 +17,7 @@ import { Button, ChoiceGroup, TextField } from '@/components/ui';
 import { TENURE_LABEL, VISIT_TIME_OPTIONS } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
 import { env } from '@/lib/env';
+import { getInspectionAddress } from '@/lib/inspectionApplication';
 import { useSupportDraft } from '@/stores/supportDraft';
 import type { InspectionApplicationDetail, SupportProgram, VisitTimeSlot } from '@/types/domain';
 import { SupportState } from './SupportState';
@@ -245,7 +246,7 @@ function ApplyForm({
   const autoAssigned = facilityOptions.length === 1;
   const facility = autoAssigned ? facilityOptions[0] : selectedFacility;
   const filled = facility && preferredDate && preferredTimeSlot;
-  const { applicant, address, detailAddress, occupancyType } = application;
+  const { applicant, occupancyType } = application;
   const autosave = useSupportAutosave(applicationId, resume, {
     programId,
     requestedFacility: facility,
@@ -342,12 +343,7 @@ function ApplyForm({
           <TextField size="md" label="이름" value={applicant.name} readOnly />
           <TextField size="md" label="연락처" value={applicant.phone} readOnly />
         </div>
-        <TextField
-          size="md"
-          label="주소"
-          value={detailAddress ? `${address} ${detailAddress}` : address}
-          readOnly
-        />
+        <TextField size="md" label="주소" value={getInspectionAddress(application)} readOnly />
         <TextField
           size="md"
           label="거주 형태"

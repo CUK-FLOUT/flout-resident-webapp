@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react';
 import { useParams } from 'react-router';
 import { useInspectionApplication } from '@/api/applications';
-import { Screen, StateMessage } from '@/components/layout';
+import { Screen } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { SUPPORT_DECISION_LABEL } from '@/constants/labels';
 import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/date';
 import { getInspectionAddress, getInspectionStage } from '@/lib/inspectionApplication';
 import type { ConstructionStatus } from '@/types/domain';
+import { ApplicationsState } from './ApplicationsState';
 import { StageBadge } from './StageBadge';
 
 const CONSTRUCTION_STATUS_LABEL: Record<ConstructionStatus, string> = {
@@ -23,22 +24,16 @@ export default function ApplicationDetailPage() {
   const header = { title: '신청 상세' };
 
   if (isLoading) {
-    return (
-      <Screen header={header} tab="applications">
-        <StateMessage>신청 내용을 불러오고 있어요…</StateMessage>
-      </Screen>
-    );
+    return <ApplicationsState title={header.title} message="신청 내용을 불러오고 있어요…" />;
   }
 
   if (!data) {
     return (
-      <Screen
-        header={header}
-        tab="applications"
-        bottom={<Button onClick={() => refetch()}>다시 시도</Button>}
-      >
-        <StateMessage>신청 내용을 불러오지 못했어요.</StateMessage>
-      </Screen>
+      <ApplicationsState
+        title={header.title}
+        message="신청 내용을 불러오지 못했어요."
+        action={<Button onClick={() => refetch()}>다시 시도</Button>}
+      />
     );
   }
 

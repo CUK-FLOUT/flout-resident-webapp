@@ -1,9 +1,10 @@
 import { Check, Info } from 'lucide-react';
 import { generatePath, useNavigate, useParams } from 'react-router';
 import { useRecommendedFacilities, useSupportPrograms } from '@/api/applications';
-import { Screen, StateMessage } from '@/components/layout';
+import { Screen } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
+import { SupportState } from './SupportState';
 import './supportProgram.css';
 
 export default function SupportPage() {
@@ -11,7 +12,6 @@ export default function SupportPage() {
   const navigate = useNavigate();
   const programs = useSupportPrograms(applicationId);
   const recommended = useRecommendedFacilities(applicationId);
-  const header = { title: '지원하기' };
 
   if (programs.isLoading || recommended.isLoading) {
     return (
@@ -38,22 +38,13 @@ export default function SupportPage() {
 
   if (!programs.data || !recommended.data) {
     return (
-      <Screen
-        header={header}
-        tab="home"
-        bottom={
-          <Button
-            onClick={() => {
-              programs.refetch();
-              recommended.refetch();
-            }}
-          >
-            다시 시도
-          </Button>
-        }
-      >
-        <StateMessage>지원사업을 불러오지 못했어요.</StateMessage>
-      </Screen>
+      <SupportState
+        message="지원사업을 불러오지 못했어요."
+        retry={() => {
+          programs.refetch();
+          recommended.refetch();
+        }}
+      />
     );
   }
 
@@ -62,16 +53,12 @@ export default function SupportPage() {
   const hasFacilities = recommended.data.facilities.length > 0;
 
   if (!program) {
-    return (
-      <Screen header={header} tab="home">
-        <StateMessage>지금 신청할 수 있는 지원사업이 없어요.</StateMessage>
-      </Screen>
-    );
+    return <SupportState message="지금 신청할 수 있는 지원사업이 없어요." />;
   }
 
   return (
     <Screen
-      header={{ ...header, className: 'px-5 [&_h1]:text-[18px] [&_svg]:size-6' }}
+      header={{ title: '지원하기', className: 'px-5 [&_h1]:text-[18px] [&_svg]:size-6' }}
       tab="home"
       bottom={
         <Button

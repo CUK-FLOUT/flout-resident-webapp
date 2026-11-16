@@ -2,41 +2,29 @@ import type { LucideIcon } from 'lucide-react';
 import { Check, FileText } from 'lucide-react';
 import { generatePath, useNavigate, useParams } from 'react-router';
 import { useSupportPrograms } from '@/api/applications';
-import { Screen, StateMessage } from '@/components/layout';
+import { Screen } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import type { SupportRequirement } from '@/types/domain';
+import { SupportState } from './SupportState';
 
 export default function SupportRequirementsPage() {
   const { applicationId } = useParams<'applicationId'>();
   const navigate = useNavigate();
   const { data, isLoading, isError, refetch } = useSupportPrograms(applicationId);
-  const header = { title: '지원하기' };
   const program = data?.[0];
 
   if (isLoading) {
-    return (
-      <Screen header={header} tab="home">
-        <StateMessage>신청 조건을 불러오고 있어요…</StateMessage>
-      </Screen>
-    );
+    return <SupportState message="신청 조건을 불러오고 있어요…" />;
   }
 
   if (isError || !program) {
-    return (
-      <Screen
-        header={header}
-        tab="home"
-        bottom={<Button onClick={() => refetch()}>다시 시도</Button>}
-      >
-        <StateMessage>신청 조건을 불러오지 못했어요.</StateMessage>
-      </Screen>
-    );
+    return <SupportState message="신청 조건을 불러오지 못했어요." retry={() => refetch()} />;
   }
 
   return (
     <Screen
-      header={header}
+      header={{ title: '지원하기' }}
       tab="home"
       bottom={
         <Button

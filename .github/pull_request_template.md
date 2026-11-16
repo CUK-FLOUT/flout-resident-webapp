@@ -18,5 +18,4 @@
 
 - [ ] `npm run lint` / `npm run build` 통과
 - [ ] 디자인 토큰 클래스 사용 (hex 직접 사용 X)
-- [ ] `routes/screens.ts` status 갱신
 - [ ] 로딩 · 에러 · 빈 상태 처리

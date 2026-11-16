@@ -11,12 +11,13 @@ import { getResidentProgress } from '@/api/residentProgress';
 import arrowRight from '@/assets/support/arrow-right.svg';
 import downloadIcon from '@/assets/support/download.svg';
 import reviewNotice from '@/assets/support/review-notice.svg';
-import { Screen, StateMessage } from '@/components/layout';
+import { Screen } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { tokenStorage } from '@/lib/storage';
 import { useSupportDraft, type SupportDraft } from '@/stores/supportDraft';
 import type { InspectionApplicationDetail } from '@/types/domain';
+import { SupportState } from './SupportState';
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const ACCEPTED_FILE = /\.(pdf|jpe?g|png)$/i;
@@ -70,7 +71,6 @@ function ConsentEntry({
   applicationId?: number;
   supportId?: number;
 }) {
-  const header = { title: '지원하기' };
   const application = useInspectionApplication(applicationId ? String(applicationId) : undefined);
   const target = useQuery({
     queryKey: queryKeys.supportConsentTarget(
@@ -87,11 +87,7 @@ function ConsentEntry({
   });
 
   if (application.isLoading || (!target.isFetchedAfterMount && target.isFetching)) {
-    return (
-      <Screen header={header} tab="home">
-        <StateMessage>신청 정보를 불러오고 있어요…</StateMessage>
-      </Screen>
-    );
+    return <SupportState message="신청 정보를 불러오고 있어요…" />;
   }
   if (
     !applicationId ||
@@ -101,31 +97,18 @@ function ConsentEntry({
     target.data !== true ||
     application.data?.occupancyType !== 'TENANT'
   ) {
-    const canRetry = target.isError || application.isLoadingError;
-    return (
-      <Screen
-        header={header}
-        tab="home"
-        bottom={
-          canRetry && (
-            <Button
-              onClick={() => {
-                if (target.isError) void target.refetch();
-                if (application.isLoadingError) void application.refetch();
-              }}
-            >
-              다시 시도
-            </Button>
-          )
-        }
-      >
-        <StateMessage>
-          {canRetry
-            ? '신청 정보를 불러오지 못했어요.'
-            : '동의서를 등록할 수 있는 지원 신청을 확인하지 못했어요.'}
-        </StateMessage>
-      </Screen>
-    );
+    if (target.isError || application.isLoadingError) {
+      return (
+        <SupportState
+          message="신청 정보를 불러오지 못했어요."
+          retry={() => {
+            if (target.isError) void target.refetch();
+            if (application.isLoadingError) void application.refetch();
+          }}
+        />
+      );
+    }
+    return <SupportState message="동의서를 등록할 수 있는 지원 신청을 확인하지 못했어요." />;
   }
 
   return <SubmitForm application={application.data} submission={{ supportId }} />;
@@ -134,7 +117,6 @@ function ConsentEntry({
 function NewSupportEntry({ applicationId }: { applicationId?: string }) {
   const draft = useSupportDraft((s) => s.draft);
   const application = useInspectionApplication(applicationId);
-  const header = { title: '지원하기' };
 
   if (!draft || draft.applicationId !== applicationId) {
     return (
@@ -143,24 +125,12 @@ function NewSupportEntry({ applicationId }: { applicationId?: string }) {
   }
 
   if (application.isLoading) {
-    return (
-      <Screen header={header} tab="home">
-        <StateMessage>신청 정보를 불러오고 있어요…</StateMessage>
-      </Screen>
-    );
+    return <SupportState message="신청 정보를 불러오고 있어요…" />;
   }
 
   if (!application.data) {
     return (
-      <Screen
-        header={header}
-        tab="home"
-        bottom={
-          <Button onClick={() => application.refetch()}>다시 시도</Button>
-        }
-      >
-        <StateMessage>신청 정보를 불러오지 못했어요.</StateMessage>
-      </Screen>
+      <SupportState message="신청 정보를 불러오지 못했어요." retry={() => application.refetch()} />
     );
   }
 

@@ -9,7 +9,7 @@ import {
   useSupportReview,
   useSupportSchedule,
 } from '@/api/applications';
-import { Screen, StateMessage } from '@/components/layout';
+import { Screen } from '@/components/layout';
 import { Button, StatusText, StepProgress } from '@/components/ui';
 import {
   SUPPORT_DECISION_LABEL,
@@ -21,8 +21,8 @@ import { PATHS } from '@/constants/paths';
 import { cn } from '@/lib/cn';
 import { formatDate, formatMonthDay } from '@/lib/date';
 import { supportApprovalSeenStorage } from '@/lib/storage';
+import { SupportState } from './SupportState';
 
-const header = { title: '지원하기' };
 const CONSTRUCTION_STAGES = ['CONSTRUCTION_SCHEDULED', 'CONSTRUCTION_IN_PROGRESS', 'COMPLETED'];
 
 export default function SupportStatusPage() {
@@ -32,22 +32,12 @@ export default function SupportStatusPage() {
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
 
   if (application.isLoading) {
-    return (
-      <Screen header={header} tab="home">
-        <StateMessage>진행 상태를 불러오고 있어요…</StateMessage>
-      </Screen>
-    );
+    return <SupportState message="진행 상태를 불러오고 있어요…" />;
   }
 
   if (!application.data) {
     return (
-      <Screen
-        header={header}
-        tab="home"
-        bottom={<Button onClick={() => application.refetch()}>다시 시도</Button>}
-      >
-        <StateMessage>진행 상태를 불러오지 못했어요.</StateMessage>
-      </Screen>
+      <SupportState message="진행 상태를 불러오지 못했어요." retry={() => application.refetch()} />
     );
   }
 
@@ -58,11 +48,7 @@ export default function SupportStatusPage() {
   if (requestedSupportId !== null) {
     const id = parseInspectionApplicationId(requestedSupportId);
     if (id === undefined || support?.status !== 'APPROVED' || support.supportApplicationId !== id) {
-      return (
-        <Screen header={header} tab="home">
-          <StateMessage>이 신청의 승인 결과를 확인할 수 없어요.</StateMessage>
-        </Screen>
-      );
+      return <SupportState message="이 신청의 승인 결과를 확인할 수 없어요." />;
     }
     return (
       <ApprovedView
@@ -106,11 +92,7 @@ export default function SupportStatusPage() {
     );
   }
 
-  return (
-    <Screen header={header} tab="home">
-      <StateMessage>진행 중인 지원 신청이 없어요.</StateMessage>
-    </Screen>
-  );
+  return <SupportState message="진행 중인 지원 신청이 없어요." />;
 }
 
 function DetailScreen<T>({
@@ -123,27 +105,15 @@ function DetailScreen<T>({
   children: (data: T) => ReactNode;
 }) {
   if (query.isLoading) {
-    return (
-      <Screen header={header} tab="home">
-        <StateMessage>진행 상태를 불러오고 있어요…</StateMessage>
-      </Screen>
-    );
+    return <SupportState message="진행 상태를 불러오고 있어요…" />;
   }
 
   if (!query.data) {
-    return (
-      <Screen
-        header={header}
-        tab="home"
-        bottom={<Button onClick={() => query.refetch()}>다시 시도</Button>}
-      >
-        <StateMessage>진행 상태를 불러오지 못했어요.</StateMessage>
-      </Screen>
-    );
+    return <SupportState message="진행 상태를 불러오지 못했어요." retry={() => query.refetch()} />;
   }
 
   return (
-    <Screen header={header} tab="home" bottom={bottom}>
+    <Screen header={{ title: '지원하기' }} tab="home" bottom={bottom}>
       {children(query.data)}
     </Screen>
   );

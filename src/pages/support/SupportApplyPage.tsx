@@ -12,13 +12,14 @@ import {
 } from '@/api/supportFormDrafts';
 import radioChecked from '@/assets/support/radio-checked.svg';
 import radioUnchecked from '@/assets/support/radio-unchecked.svg';
-import { Screen, StateMessage } from '@/components/layout';
+import { Screen } from '@/components/layout';
 import { Button, ChoiceGroup, TextField } from '@/components/ui';
 import { TENURE_LABEL, VISIT_TIME_OPTIONS } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
 import { env } from '@/lib/env';
 import { useSupportDraft } from '@/stores/supportDraft';
 import type { InspectionApplicationDetail, SupportProgram, VisitTimeSlot } from '@/types/domain';
+import { SupportState } from './SupportState';
 
 export default function SupportApplyPage() {
   const { applicationId } = useParams<'applicationId'>();
@@ -43,7 +44,6 @@ function SupportApplyEntry({
   const application = useInspectionApplication(applicationId);
   const programs = useSupportPrograms(applicationId);
   const recommended = useRecommendedFacilities(applicationId);
-  const header = { title: '지원하기' };
   const queries = [application, programs, recommended];
   const program = programs.data?.[0];
   const [resume, setResume] = useState<SupportFormDraft | null | undefined>(
@@ -80,54 +80,32 @@ function SupportApplyEntry({
   }, [applicationId, requestedDraftId, attempt]);
 
   if (queries.some((q) => q.isLoading) || resume === undefined) {
+    return <SupportState message="신청 정보를 불러오고 있어요…" />;
+  }
+
+  if (resumeError) {
     return (
-      <Screen header={header} tab="home">
-        <StateMessage>신청 정보를 불러오고 있어요…</StateMessage>
-      </Screen>
+      <SupportState
+        message="임시 저장 정보를 불러오지 못했어요."
+        retry={() => {
+          setResumeError(false);
+          setResume(undefined);
+          setAttempt((value) => value + 1);
+        }}
+      />
     );
   }
 
-  if (resumeError || (requestedDraftId !== null && !resume)) {
-    return (
-      <Screen
-        header={header}
-        tab="home"
-        bottom={
-          resumeError && (
-            <Button
-              onClick={() => {
-                setResumeError(false);
-                setResume(undefined);
-                setAttempt((value) => value + 1);
-              }}
-            >
-              다시 시도
-            </Button>
-          )
-        }
-      >
-        <StateMessage>
-          {resumeError
-            ? '임시 저장 정보를 불러오지 못했어요.'
-            : '이어서 작성할 지원 신청서를 찾을 수 없어요.'}
-        </StateMessage>
-      </Screen>
-    );
+  if (requestedDraftId !== null && !resume) {
+    return <SupportState message="이어서 작성할 지원 신청서를 찾을 수 없어요." />;
   }
 
   if (!application.data || !program || !recommended.data) {
     return (
-      <Screen
-        header={header}
-        tab="home"
-        bottom={
-          <Button onClick={() => queries.forEach((q) => q.isError && q.refetch())}>
-            다시 시도
-          </Button>
-        }
-      >
-        <StateMessage>신청 정보를 불러오지 못했어요.</StateMessage>
-      </Screen>
+      <SupportState
+        message="신청 정보를 불러오지 못했어요."
+        retry={() => queries.forEach((q) => q.isError && q.refetch())}
+      />
     );
   }
 
@@ -140,9 +118,7 @@ function SupportApplyEntry({
     (requestedDraftId !== null && recommended.data.facilities.length === 0)
   ) {
     return (
-      <Screen header={header} tab="home">
-        <StateMessage>이 신청서에 연결된 지원사업 또는 권장 시설을 확인할 수 없어요.</StateMessage>
-      </Screen>
+      <SupportState message="이 신청서에 연결된 지원사업 또는 권장 시설을 확인할 수 없어요." />
     );
   }
 

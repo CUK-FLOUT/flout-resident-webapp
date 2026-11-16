@@ -65,10 +65,6 @@
   --shadow-home-account-menu: 0 3px 12px rgb(0 0 0 / 12%);
 
   /* ── Typography (size / line-height / weight) ── */
-  --text-risk: 30px;
-  --text-risk--line-height: 40px;
-  --text-risk--font-weight: 700;
-
   --text-title: 26px;
   --text-title--line-height: 36px;
   --text-title--font-weight: 700;
@@ -109,7 +105,6 @@
   /* ── Layout ───────────────────────────── */
   --spacing-gutter: 20px; /* 좌우 본문 여백 (px-gutter) */
   --spacing-header: 56px; /* 헤더 높이 (h-header) */
-  --spacing-cta: 84px; /* 하단 고정 CTA 영역 높이 */
   --container-app: 480px; /* 데스크톱에서 앱 최대 폭 (max-w-app) */
 }
 

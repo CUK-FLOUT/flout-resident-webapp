@@ -4,7 +4,6 @@ import { Screen, StateMessage } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { ProgressCard } from './ProgressCard';
-import './home.css';
 
 export default function HomeProgressPage() {
   const navigate = useNavigate();
@@ -24,7 +23,7 @@ export default function HomeProgressPage() {
       tab="home"
       refreshUnread={false}
       bleed
-      className="resident-home pt-[15px]"
+      className="pt-[15px]"
     >
       <section className="px-[18px]" aria-labelledby="all-progress-title">
         <div className="flex min-h-[27px] items-center justify-between gap-3">
@@ -32,7 +31,7 @@ export default function HomeProgressPage() {
             전체 진행 내역
           </h2>
           {count !== undefined && (
-            <span className="grid h-[26px] min-w-14 place-items-center rounded-lg bg-(--home-count) px-2 text-[12px] font-bold text-(--home-action)">
+            <span className="grid h-[26px] min-w-14 place-items-center rounded-lg bg-home-count px-2 text-[12px] font-bold text-home-action">
               {count}건
             </span>
           )}

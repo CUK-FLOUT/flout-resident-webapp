@@ -69,7 +69,7 @@ export function HomeAccountMenu() {
       {menuOpen && (
         <div
           id={menuId}
-          className="bg-surface absolute top-[41px] right-2.5 w-[132px] rounded-[10px] shadow-[0_3px_12px_rgb(0_0_0/0.12)]"
+          className="bg-surface absolute top-[41px] right-2.5 w-[132px] rounded-[10px] shadow-home-account-menu"
         >
           <button
             type="button"
@@ -88,7 +88,7 @@ export function HomeAccountMenu() {
         ref={dialog}
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        className="home-logout-dialog m-auto w-[min(306px,calc(100%-32px))] max-w-none overflow-visible bg-transparent p-0"
+        className="m-auto w-[min(306px,calc(100%-32px))] max-w-none overflow-visible bg-transparent p-0 backdrop:bg-home-logout-backdrop"
         onClick={(event) => {
           if (event.target === event.currentTarget) closeDialog();
         }}

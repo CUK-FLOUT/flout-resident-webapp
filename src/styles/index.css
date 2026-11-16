@@ -47,6 +47,23 @@
   --color-support-reason-icon-bg: #e6f3fd;
   --color-support-reason-icon: #235781;
 
+  /* ── Home and progress ── */
+  --color-home-banner: #eaf3fd;
+  --color-home-tint: #ebf3fc;
+  --color-home-panel: #f3f7fc;
+  --color-home-note: #e8f1fc;
+  --color-home-border: #d8e1e9;
+  --color-home-action: #1663de;
+  --color-home-scheduled: #e7f5ff;
+  --color-home-review: #f0ecff;
+  --color-home-draft: #fff4e3;
+  --color-home-complete: #e9f7ee;
+  --color-home-failed: #fdecec;
+  --color-home-guide: #e8f7f5;
+  --color-home-count: #eaf3ff;
+  --color-home-logout-backdrop: rgb(18 31 51 / 42%);
+  --shadow-home-account-menu: 0 3px 12px rgb(0 0 0 / 12%);
+
   /* ── Typography (size / line-height / weight) ── */
   --text-risk: 30px;
   --text-risk--line-height: 40px;

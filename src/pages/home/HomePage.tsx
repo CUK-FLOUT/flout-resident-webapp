@@ -17,9 +17,8 @@ import { PATHS } from '@/constants/paths';
 import { useAddressDraft } from '@/stores/addressDraft';
 import { HomeAccountMenu } from './HomeAccountMenu';
 import { ProgressCard } from './ProgressCard';
-import './home.css';
 
-const cardSurface = 'rounded-[10px] border border-(--home-border) bg-surface';
+const cardSurface = 'rounded-[10px] border border-home-border bg-surface';
 
 function EmptyProgress() {
   return (
@@ -79,9 +78,9 @@ export default function HomePage() {
       }}
       tab="home"
       bleed
-      className="resident-home px-[15px] pt-3 pb-5!"
+      className="px-[15px] pt-3 pb-5!"
     >
-      <section className="relative min-h-[164px] overflow-hidden rounded-xl bg-(--home-banner) px-3.5 py-2.5">
+      <section className="relative min-h-[164px] overflow-hidden rounded-xl bg-home-banner px-3.5 py-2.5">
         <img
           src={heroWave}
           width={360}
@@ -97,7 +96,7 @@ export default function HomePage() {
           alt=""
         />
         <div className="relative">
-          <p className="text-[12px] leading-[18px] font-bold text-(--home-action)">FLOUT</p>
+          <p className="text-[12px] leading-[18px] font-bold text-home-action">FLOUT</p>
           <h2 className="mt-2.5 text-[clamp(15px,4.87vw,19px)] leading-[27px] font-bold tracking-[-0.035em]">
             우리 집 침수 걱정
             <br />
@@ -117,7 +116,7 @@ export default function HomePage() {
           cardSurface + ' mt-4 flex min-h-[68px] items-center gap-2.5 px-[11px] py-2 text-left'
         }
       >
-        <span className="grid h-[50px] w-12 shrink-0 place-items-center rounded-[9px] bg-(--home-tint)">
+        <span className="grid h-[50px] w-12 shrink-0 place-items-center rounded-[9px] bg-home-tint">
           <img src={search} width={28} height={28} alt="" />
         </span>
         <span className="relative h-12 w-px shrink-0" aria-hidden>
@@ -147,13 +146,13 @@ export default function HomePage() {
             {count !== undefined && (
               <span
                 aria-label={`전체 ${count}건`}
-                className="grid h-6 min-w-6 place-items-center rounded-full bg-(--home-count) px-1.5 text-[10px] leading-4 text-(--home-action)"
+                className="grid h-6 min-w-6 place-items-center rounded-full bg-home-count px-1.5 text-[10px] leading-4 text-home-action"
               >
                 {count}
               </span>
             )}
           </h2>
-          <Link to={PATHS.homeProgress} className="text-[12px] font-medium text-(--home-action)">
+          <Link to={PATHS.homeProgress} className="text-[12px] font-medium text-home-action">
             전체 보기 <span aria-hidden>›</span>
           </Link>
         </div>
@@ -222,7 +221,7 @@ export default function HomePage() {
         )}
       </section>
       <section
-        className="mt-6 rounded-xl bg-(--home-panel) pt-3 pb-2"
+        className="mt-6 rounded-xl bg-home-panel pt-3 pb-2"
         aria-labelledby="service-steps"
       >
         <h2 id="service-steps" className="text-section px-3">
@@ -254,7 +253,7 @@ export default function HomePage() {
             </li>
           ))}
         </ol>
-        <p className="text-muted mx-2.5 mt-6 rounded-xl bg-(--home-note) px-1.5 py-[6px] text-center text-[10px] leading-[18px]">
+        <p className="text-muted mx-2.5 mt-6 rounded-xl bg-home-note px-1.5 py-[6px] text-center text-[10px] leading-[18px]">
           <span aria-hidden>ⓘ </span>분석 결과와 지원 조건에 따라 진행 단계가 달라질 수 있어요.
         </p>
       </section>

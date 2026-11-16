@@ -47,11 +47,11 @@ export function ProgressCard({
   const appearance =
     stage ??
     (action?.label === '이어서 작성'
-      ? { icon: pencil, tone: 'bg-(--home-draft)' }
+      ? { icon: pencil, tone: 'bg-home-draft' }
       : item.currentStage === 'VISIT_SCHEDULED'
-        ? { icon: calendar, tone: 'bg-(--home-scheduled)' }
+        ? { icon: calendar, tone: 'bg-home-scheduled' }
         : item.applicationType === 'SUPPORT'
-          ? { icon: review, tone: 'bg-(--home-review)' }
+          ? { icon: review, tone: 'bg-home-review' }
           : { icon: stepInspection, tone: 'bg-soft' });
 
   return (
@@ -101,7 +101,7 @@ function ProgressCardView({
   return (
     <li
       className={cn(
-        'bg-surface grid min-h-[76px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-[10px] border border-(--home-border) px-[11px] py-2 min-[360px]:gap-3',
+        'bg-surface grid min-h-[76px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-[10px] border border-home-border px-[11px] py-2 min-[360px]:gap-3',
         list && 'min-[360px]:pr-[19px]',
       )}
     >
@@ -143,7 +143,7 @@ function ProgressCardView({
           <span
             className={cn(
               actionStyle,
-              'grid place-items-center bg-(--home-tint) font-bold text-(--home-action)',
+              'grid place-items-center bg-home-tint font-bold text-home-action',
             )}
           >
             {actionLabel}
@@ -155,7 +155,7 @@ function ProgressCardView({
           disabled
           className={cn(
             actionStyle,
-            list ? 'bg-(--home-tint) font-bold text-(--home-action)' : 'text-muted bg-soft',
+            list ? 'bg-home-tint font-bold text-home-action' : 'text-muted bg-soft',
           )}
         >
           {actionLabel}

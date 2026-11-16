@@ -30,7 +30,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'RISK_ASSESSMENT_IN_PROGRESS',
     {
       icon: analysis,
-      tone: 'bg-(--home-scheduled)',
+      tone: 'bg-home-scheduled',
       actionLabel: '분석 현황',
     },
   ],
@@ -38,7 +38,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'RISK_ASSESSMENT_FAILED',
     {
       icon: analysisFailed,
-      tone: 'bg-(--home-failed)',
+      tone: 'bg-home-failed',
       actionLabel: '결과 확인',
     },
   ],
@@ -46,7 +46,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'RISK_ASSESSMENT_COMPLETED',
     {
       icon: analysisComplete,
-      tone: 'bg-(--home-complete)',
+      tone: 'bg-home-complete',
       actionLabel: '결과 확인',
     },
   ],
@@ -54,7 +54,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'GUIDE_AVAILABLE',
     {
       icon: guide,
-      tone: 'bg-(--home-guide)',
+      tone: 'bg-home-guide',
       actionLabel: '가이드 보기',
     },
   ],
@@ -62,7 +62,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'GUIDE_IN_PROGRESS',
     {
       icon: guideProgress,
-      tone: 'bg-(--home-guide)',
+      tone: 'bg-home-guide',
       actionLabel: '이어서 보기',
     },
   ],
@@ -70,7 +70,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'GUIDE_COMPLETED',
     {
       icon: guideComplete,
-      tone: 'bg-(--home-complete)',
+      tone: 'bg-home-complete',
       actionLabel: '점검 안내',
     },
   ],
@@ -78,7 +78,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'INSPECTION_FORM_EDITING',
     {
       icon: inspectionDraft,
-      tone: 'bg-(--home-draft)',
+      tone: 'bg-home-draft',
       actionLabel: '이어서 작성',
     },
   ],
@@ -86,7 +86,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'INSPECTION_DRAFT',
     {
       icon: camera,
-      tone: 'bg-(--home-draft)',
+      tone: 'bg-home-draft',
       actionLabel: '사진 등록',
     },
   ],
@@ -94,7 +94,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'INSPECTION_RECEIVED',
     {
       icon: inspectionReceived,
-      tone: 'bg-(--home-scheduled)',
+      tone: 'bg-home-scheduled',
       actionLabel: '신청 현황',
     },
   ],
@@ -102,7 +102,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'VISIT_SCHEDULED',
     {
       icon: calendar,
-      tone: 'bg-(--home-scheduled)',
+      tone: 'bg-home-scheduled',
       actionLabel: '일정 확인',
     },
   ],
@@ -110,7 +110,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'INSPECTION_IN_PROGRESS',
     {
       icon: inspectionProgress,
-      tone: 'bg-(--home-scheduled)',
+      tone: 'bg-home-scheduled',
       actionLabel: '진행 현황',
     },
   ],
@@ -118,7 +118,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'INSPECTION_RESULT_PENDING',
     {
       icon: clock,
-      tone: 'bg-(--home-scheduled)',
+      tone: 'bg-home-scheduled',
       actionLabel: '점검 현황',
     },
   ],
@@ -126,7 +126,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'INSPECTION_RESULT_PUBLISHED',
     {
       icon: inspectionResult,
-      tone: 'bg-(--home-complete)',
+      tone: 'bg-home-complete',
       actionLabel: '점검 결과 확인',
     },
   ],
@@ -134,7 +134,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'SUPPORT_FORM_EDITING',
     {
       icon: supportDraft,
-      tone: 'bg-(--home-draft)',
+      tone: 'bg-home-draft',
       actionLabel: '이어서 작성',
     },
   ],
@@ -142,7 +142,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'SUPPORT_DRAFT',
     {
       icon: upload,
-      tone: 'bg-(--home-draft)',
+      tone: 'bg-home-draft',
       actionLabel: '동의서 등록',
     },
   ],
@@ -150,7 +150,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'SUPPORT_REVIEW',
     {
       icon: review,
-      tone: 'bg-(--home-review)',
+      tone: 'bg-home-review',
       actionLabel: '검토 현황',
     },
   ],
@@ -158,7 +158,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'SUPPORT_APPROVED',
     {
       icon: approved,
-      tone: 'bg-(--home-complete)',
+      tone: 'bg-home-complete',
       actionLabel: '승인 결과 확인',
     },
   ],
@@ -166,7 +166,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'SUPPORT_REJECTED',
     {
       icon: rejected,
-      tone: 'bg-(--home-failed)',
+      tone: 'bg-home-failed',
       actionLabel: '반려 사유 확인',
     },
   ],
@@ -174,7 +174,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'CONSTRUCTION_SCHEDULED',
     {
       icon: calendar,
-      tone: 'bg-(--home-scheduled)',
+      tone: 'bg-home-scheduled',
       actionLabel: '일정 확인',
     },
   ],
@@ -182,7 +182,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'CONSTRUCTION_IN_PROGRESS',
     {
       icon: constructionProgress,
-      tone: 'bg-(--home-scheduled)',
+      tone: 'bg-home-scheduled',
       actionLabel: '진행 현황',
     },
   ],
@@ -190,7 +190,7 @@ export const progressStages = new Map<string, ProgressStage>([
     'CONSTRUCTION_COMPLETED',
     {
       icon: constructionComplete,
-      tone: 'bg-(--home-complete)',
+      tone: 'bg-home-complete',
       actionLabel: '완료 내용 확인',
     },
   ],

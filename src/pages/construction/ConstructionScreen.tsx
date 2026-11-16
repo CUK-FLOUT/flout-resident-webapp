@@ -31,36 +31,19 @@ export function ConstructionScreen<T extends ConstructionSchedule>({
   const construction = useDetail(constructionId);
 
   if (application.isLoading || construction.isLoading) {
-    return (
-      <Screen header={header} tab="home">
-        <StateMessage>시공 정보를 불러오고 있어요…</StateMessage>
-      </Screen>
-    );
+    return <ConstructionState message="시공 정보를 불러오고 있어요…" />;
   }
 
   if (application.data && !constructionId) {
-    return (
-      <Screen header={header} tab="home">
-        <StateMessage>등록된 시공 정보가 없어요.</StateMessage>
-      </Screen>
-    );
+    return <ConstructionState message="등록된 시공 정보가 없어요." />;
   }
 
   if (!construction.data) {
     return (
-      <Screen
-        header={header}
-        tab="home"
-        bottom={
-          <Button
-            onClick={() => (application.data ? construction.refetch() : application.refetch())}
-          >
-            다시 시도
-          </Button>
-        }
-      >
-        <StateMessage>시공 정보를 불러오지 못했어요.</StateMessage>
-      </Screen>
+      <ConstructionState
+        message="시공 정보를 불러오지 못했어요."
+        retry={() => (application.data ? construction.refetch() : application.refetch())}
+      />
     );
   }
 
@@ -78,6 +61,14 @@ export function ConstructionScreen<T extends ConstructionSchedule>({
   return (
     <Screen header={header} tab="home">
       <div className="text-ink flex flex-col gap-[18px] pt-5">{children(construction.data)}</div>
+    </Screen>
+  );
+}
+
+function ConstructionState({ message, retry }: { message: string; retry?: () => void }) {
+  return (
+    <Screen header={header} tab="home" bottom={retry && <Button onClick={retry}>다시 시도</Button>}>
+      <StateMessage>{message}</StateMessage>
     </Screen>
   );
 }

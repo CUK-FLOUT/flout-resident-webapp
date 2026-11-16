@@ -1,6 +1,7 @@
 ﻿import { create } from 'zustand';
 import type { AddressCoordinates, AddressSearchItem } from '@/api/risk';
 import type { AnalysisResult } from '@/api/riskAnalysis';
+import { tokenStorage } from '@/lib/storage';
 import type { RiskLevel } from '@/types/domain';
 
 export type ResidenceFloor = 'BASEMENT' | 'FIRST' | 'SECOND_OR_ABOVE';
@@ -69,3 +70,13 @@ export const useAddressDraft = create<AddressDraftState>()((set) => ({
       searchScrollY: 0,
     })),
 }));
+
+let sessionScope = tokenStorage.getSessionScope();
+tokenStorage.subscribeToSession(() => {
+  const next = tokenStorage.getSessionScope();
+  if (next === sessionScope) return;
+  sessionScope = next;
+  const { startNewSearch, setMockLevel } = useAddressDraft.getState();
+  startNewSearch();
+  setMockLevel('HIGH');
+});

@@ -16,8 +16,7 @@ import { useInspectionDraft, type Draft } from '@/stores/inspectionDraft';
 const resumeKey = 'flout.inspectionResume';
 
 export function inspectionSessionScope() {
-  const session = tokenStorage.readSession();
-  return env.useMock ? 'mock' : (session?.id ?? session?.accessToken ?? null);
+  return env.useMock ? 'mock' : tokenStorage.getSessionScope();
 }
 
 function readResume() {
@@ -148,15 +147,15 @@ export async function loadInspectionEntry(
     return result
       ? { draft: { assessmentId: result.id, context: initialContext, sessionScope: scope } }
       : null;
-  if (!scope) return null;
+  if (!scope || scope !== inspectionSessionScope()) return null;
+  const isCurrentSession = () => scope === inspectionSessionScope();
 
   const resume = readResume();
   const drafts = await listInspectionFormDrafts();
+  if (!isCurrentSession()) return null;
   const requested =
     requestedApplicationId ??
-    (!result && !requestedFormId && !requestedAssessmentId
-      ? resume?.applicationId
-      : null);
+    (!result && !requestedFormId && !requestedAssessmentId ? resume?.applicationId : null);
   const assessmentToResume = requestedAssessmentId ?? result?.id ?? resume?.assessmentId;
   const saved = requestedFormId
     ? drafts.find((item) => item.draftId === requestedFormId)
@@ -175,6 +174,7 @@ export async function loadInspectionEntry(
     !saved && requested && requestedAssessmentId
       ? await getRiskAssessment(requestedAssessmentId)
       : null;
+  if (!isCurrentSession()) return null;
   const linkedApplicationId =
     linkedAnalysis?.status === 'COMPLETED' && linkedAnalysis.applicationId === requested
       ? requested
@@ -182,6 +182,7 @@ export async function loadInspectionEntry(
 
   if (!saved && requested && !linkedApplicationId) {
     const receipt = await getInspectionReceipt(requested);
+    if (!isCurrentSession()) return null;
     if (
       receipt.applicationStatus === 'RECEIVED' ||
       receipt.applicationStatus === 'INSPECTION_COMPLETED'
@@ -194,6 +195,7 @@ export async function loadInspectionEntry(
   if (typeof assessmentId !== 'number') return null;
   const applicationId = saved?.applicationId ?? linkedApplicationId;
   const application = applicationId ? await getInspectionApplication(applicationId) : null;
+  if (!isCurrentSession()) return null;
   if (
     application?.applicationStatus === 'RECEIVED' ||
     application?.applicationStatus === 'INSPECTION_COMPLETED'
@@ -210,12 +212,14 @@ export async function loadInspectionEntry(
         context.detailAddress !== application.detailAddress))
   ) {
     const analysis = application ?? (await getRiskAssessment(assessmentId));
+    if (!isCurrentSession()) return null;
     if ('status' in analysis && analysis.status !== 'COMPLETED')
       throw new ApiError(409, '완료된 취약도 분석 결과가 필요해요.');
     const address = analysis.address.trim();
     const detailAddress = analysis.detailAddress?.trim();
     if (!address || !detailAddress) throw new ApiError(409, '신청 주소를 다시 확인해 주세요.');
     context = { address, detailAddress, ...(await getAddressCoordinates(address)) };
+    if (!isCurrentSession()) return null;
   }
   const fields = application
     ? {
@@ -287,6 +291,7 @@ export async function saveInspectionProgress(): Promise<void> {
     try {
       saved = await putInspectionFormDraft(formId, assessmentId, draft.formVersion, fields);
     } catch (error) {
+      if (!current()) return;
       if (
         !(error instanceof ApiError) ||
         (error.status !== 409 && error.status !== 0 && error.status < 500)
@@ -295,6 +300,7 @@ export async function saveInspectionProgress(): Promise<void> {
       const matching = (await listInspectionFormDrafts()).find(
         (item) => item.draftId === formId && item.assessmentId === assessmentId,
       );
+      if (!current()) return;
       const sameFields =
         matching &&
         Object.entries(fields).every(
@@ -317,7 +323,9 @@ export async function saveInspectionProgress(): Promise<void> {
 }
 
 export async function recoverInspectionCreation(assessmentId: number, draftId: string) {
+  const scope = inspectionSessionScope();
   const forms = await listInspectionFormDrafts();
+  if (scope !== inspectionSessionScope()) return null;
   const form = forms.find((item) => item.draftId === draftId && item.assessmentId === assessmentId);
   if (form?.applicationId) return getInspectionApplication(form.applicationId);
   if (form?.formState !== 'EDITING')

@@ -15,6 +15,7 @@ import { PATHS } from '@/constants/paths';
 import { getPrimaryAddress } from '@/lib/address';
 import { cn } from '@/lib/cn';
 import { ApiError, RefreshError } from '@/lib/http';
+import { tokenStorage } from '@/lib/storage';
 import { useAddressDraft, type ResidenceFloor } from '@/stores/addressDraft';
 import type { RiskLevel } from '@/types/domain';
 import { RiskLoadingContent } from './RiskLoadingPage';
@@ -56,6 +57,7 @@ export default function RiskResultPage() {
 function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const sessionScope = tokenStorage.getSessionScope();
   const fromProgressList = location.state?.fromProgressList === true;
   const { result, address, coordinates, detail, floor, setResult } = useAddressDraft();
   const id = parseAssessmentId(assessmentId);
@@ -153,7 +155,14 @@ function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
   const canContinue = Boolean(selectedFloor && selectedFloor !== 'SECOND_OR_ABOVE');
 
   async function proceed(destination: 'inspection' | 'guide') {
-    if (busy.current || !assessmentId || !data || data.status !== 'COMPLETED' || !selectedFloor)
+    if (
+      busy.current ||
+      sessionScope !== tokenStorage.getSessionScope() ||
+      !assessmentId ||
+      !data ||
+      data.status !== 'COMPLETED' ||
+      !selectedFloor
+    )
       return;
     const path =
       destination === 'inspection'
@@ -177,7 +186,7 @@ function RiskResultRoute({ assessmentId }: { assessmentId?: string }) {
         detail.trim() === detailAddress.trim();
       const position =
         sameAddress && coordinates ? coordinates : await getAddressCoordinates(primaryAddress);
-      if (!active.current) return;
+      if (!active.current || sessionScope !== tokenStorage.getSessionScope()) return;
       setResult({
         ...data,
         id,

@@ -6,6 +6,7 @@ import { Screen } from '@/components/layout';
 import { Button, TextField } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { ApiError, RefreshError } from '@/lib/http';
+import { tokenStorage } from '@/lib/storage';
 import { getPrimaryAddress } from '@/lib/address';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { useAddressDraft } from '@/stores/addressDraft';
@@ -163,11 +164,13 @@ export default function AddressSearchPage() {
   const choose = async (address: AddressSearchItem) => {
     if (!current || !isBucheon(address) || selecting.current) return;
     const requestSequence = sequence.current;
+    const sessionScope = tokenStorage.getSessionScope();
     selecting.current = true;
     setCoordinateError(null);
     try {
       const result = await coordinates.mutateAsync(getPrimaryAddress(address));
-      if (requestSequence !== sequence.current) return;
+      if (requestSequence !== sequence.current || sessionScope !== tokenStorage.getSessionScope())
+        return;
       setSearchScrollY(window.scrollY);
       selectAddress(address, result);
       navigate(PATHS.addressDetail);

@@ -11,29 +11,32 @@ export function useInspectionAutosave(
   const snapshot = JSON.stringify(inspectionFormFields(draft));
   useEffect(() => {
     if (!enabled || env.useMock || draft.submitting) return;
-    const timer = window.setTimeout(() => {
-  const savedSnapshot = snapshot;
-
-  void saveInspectionProgress()
-    .then(() => {
+    const isCurrent = () => {
       const current = useInspectionDraft.getState();
-
-      if (
-        JSON.stringify(inspectionFormFields(current)) === savedSnapshot &&
-        (current.formSnapshot === savedSnapshot ||
-          current.savedPayload === savedSnapshot)
-      ) {
-        setError('');
-      }
-    })
-    .catch((failure: unknown) => {
-      setError(
-        failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.',
+      return (
+        current.context === draft.context &&
+        JSON.stringify(inspectionFormFields(current)) === snapshot
       );
-    });
-}, 650);
+    };
+    const timer = window.setTimeout(() => {
+      void saveInspectionProgress()
+        .then(() => {
+          const current = useInspectionDraft.getState();
+          if (
+            isCurrent() &&
+            (current.formSnapshot === snapshot || current.savedPayload === snapshot)
+          )
+            setError('');
+        })
+        .catch((failure: unknown) => {
+          if (isCurrent())
+            setError(
+              failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.',
+            );
+        });
+    }, 650);
     return () => window.clearTimeout(timer);
-  }, [snapshot, enabled, draft.submitting, setError]);
+  }, [snapshot, enabled, draft.context, draft.submitting, setError]);
   useEffect(() => {
     const context = draft.context;
     if (!enabled || env.useMock || !context) return;

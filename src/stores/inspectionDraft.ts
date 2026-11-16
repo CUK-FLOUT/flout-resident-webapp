@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { tokenStorage } from '@/lib/storage';
 import type {
   InspectionUploadResponse,
   Tenure,
@@ -79,3 +80,11 @@ export const useInspectionDraft = create<InspectionDraftState>()((set) => ({
   update: (patch) => set(patch),
   reset: () => set(initial),
 }));
+
+let sessionScope = tokenStorage.getSessionScope();
+tokenStorage.subscribeToSession(() => {
+  const next = tokenStorage.getSessionScope();
+  if (next === sessionScope) return;
+  sessionScope = next;
+  useInspectionDraft.getState().reset();
+});

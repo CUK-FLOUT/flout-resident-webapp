@@ -54,6 +54,7 @@ export const queryKeys = {
   recommendedFacilities: (applicationId: string, session: string | null) =>
     ['applications', applicationId, 'recommended-facilities', session] as const,
   supportProgress: (applicationId: string) => ['applications', applicationId, 'support'] as const,
+  supportFormDrafts: () => ['support-form-drafts'] as const,
   supportReview: (supportApplicationId: number) =>
     ['support-applications', supportApplicationId, 'review'] as const,
   supportDetail: (supportApplicationId: number, detail: string) =>

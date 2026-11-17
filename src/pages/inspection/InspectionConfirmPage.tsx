@@ -11,7 +11,11 @@ import {
 } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
 import { step1Error, step2Error } from '@/lib/inspection';
-import { inspectionSessionScope } from '@/lib/inspectionForm';
+import {
+  inspectionSessionScope,
+  matchesInspectionDraftRoute,
+  readInspectionDraftRoute,
+} from '@/lib/inspectionForm';
 import { submitInspection } from '@/lib/inspectionSubmission';
 import { useInspectionDraft } from '@/stores/inspectionDraft';
 
@@ -30,14 +34,21 @@ export default function InspectionConfirmPage() {
       active.current = false;
     };
   }, []);
-  if (!draft.context || draft.sessionScope !== inspectionSessionScope())
+  const route = readInspectionDraftRoute(search);
+  if (!draft.context || !matchesInspectionDraftRoute(draft, inspectionSessionScope(), route))
     return <Navigate to={applyPath} replace />;
   if (step1Error(draft)) return <Navigate to={applyPath} replace />;
   if (step2Error(draft)) return <Navigate to={schedulePath} replace />;
   const context = draft.context;
   const address = context.address;
   const submit = async () => {
-    if (useInspectionDraft.getState().submitting) return;
+    const current = useInspectionDraft.getState();
+    if (
+      current.submitting ||
+      current.context !== context ||
+      !matchesInspectionDraftRoute(current, inspectionSessionScope(), route)
+    )
+      return;
     setError('');
     try {
       await submitInspection(context, submission, (applicationId) => {

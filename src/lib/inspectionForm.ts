@@ -1,6 +1,7 @@
 import {
   getInspectionApplication,
   getInspectionReceipt,
+  parseInspectionApplicationId,
   updateInspectionDraft,
 } from '@/api/applications';
 import { listInspectionFormDrafts, putInspectionFormDraft } from '@/api/inspectionFormDrafts';
@@ -22,6 +23,44 @@ const resumeKey = 'flout.inspectionResume';
 
 export function inspectionSessionScope() {
   return env.useMock ? 'mock' : tokenStorage.getSessionScope();
+}
+
+export function readInspectionDraftRoute(search: string, stateApplicationId?: unknown) {
+  const params = new URLSearchParams(search);
+  const formId = params.get('inspectionFormDraftId') ?? undefined;
+  const rawAssessmentId = params.get('assessmentId');
+  const rawApplicationId =
+    params.get('applicationId') ??
+    (typeof stateApplicationId === 'number' ? String(stateApplicationId) : null);
+  const assessmentId = parseInspectionApplicationId(rawAssessmentId ?? undefined);
+  const applicationId = parseInspectionApplicationId(rawApplicationId ?? undefined);
+  return {
+    formId,
+    assessmentId,
+    applicationId,
+    invalid:
+      (formId !== undefined && !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(formId)) ||
+      (rawAssessmentId !== null && assessmentId === undefined) ||
+      (rawApplicationId !== null && applicationId === undefined),
+  };
+}
+
+export function matchesInspectionDraftRoute(
+  draft: Draft,
+  scope: string | null,
+  { formId, assessmentId, applicationId, invalid }: ReturnType<typeof readInspectionDraftRoute>,
+  fallbackAssessmentId?: Draft['assessmentId'],
+) {
+  const expectedAssessmentId =
+    assessmentId ?? (formId || applicationId ? undefined : fallbackAssessmentId);
+  return (
+    !invalid &&
+    draft.context !== null &&
+    draft.sessionScope === scope &&
+    (formId === undefined || draft.formId === formId) &&
+    (applicationId === undefined || draft.savedApplicationId === applicationId) &&
+    (expectedAssessmentId === undefined || draft.assessmentId === expectedAssessmentId)
+  );
 }
 
 function readResume() {
@@ -172,6 +211,8 @@ export async function loadInspectionEntry(
 
   if (requestedFormId && !saved)
     throw new ApiError(404, '이어 쓸 수 있는 임시 신청서를 찾을 수 없어요.');
+  if (saved && requestedApplicationId && saved.applicationId !== requestedApplicationId)
+    throw new ApiError(409, '이어 쓸 수 있는 임시 신청서를 찾을 수 없어요.');
   if (saved && requestedAssessmentId && saved.assessmentId !== requestedAssessmentId)
     throw new ApiError(409, '신청에 연결된 취약도 분석을 확인할 수 없어요.');
 

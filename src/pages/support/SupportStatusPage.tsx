@@ -196,7 +196,7 @@ function ApprovedView({ id, onConfirm }: { id: number; onConfirm: () => void }) 
   return (
     <DetailScreen
       query={useSupportApproval(id)}
-      bottom={<Button onClick={onConfirm}>일정 확인하기</Button>}
+      bottom={<Button onClick={onConfirm}>다음 절차 확인하기</Button>}
     >
       {(approval) => (
         <DecidedLayout

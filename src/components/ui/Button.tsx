@@ -1,15 +1,6 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
-/**
- * Figma: 디자인 시스템 › 05 · Button (1162:672)
- * - primary   : 채움 버튼 (CTA) · 350 × 52 · radius 6
- * - secondary : 외곽선 버튼 (보조 CTA, 소셜 로그인)
- * - soft      : 홈 하단 행동 버튼 (soft 배경 + primary 외곽선)
- * - muted     : 클릭 가능한 회색 버튼
- * - text      : 텍스트 버튼 ("닫고 더 해볼게요")
- * 비활성/로딩 상태는 border 색 배경 + muted 텍스트, 로딩 문구는 구체적으로 ("가이드 만드는 중…").
- */
 type Variant = 'primary' | 'secondary' | 'soft' | 'text' | 'muted';
 type Size = 'lg' | 'md';
 

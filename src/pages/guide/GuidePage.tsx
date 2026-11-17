@@ -49,7 +49,7 @@ export function GuideView({
         tab="home"
         bottom={
           <Button disabled={items.length === 0 || saving} onClick={() => setSheetOpen(true)}>
-            가이드대로 해봤어요
+            확인 완료
           </Button>
         }
       >
@@ -106,7 +106,7 @@ export function GuideView({
         description="가이드를 따라 해보셨다면 알려 주세요."
         footer={
           <Button variant="text" size="md" onClick={() => setSheetOpen(false)}>
-            닫고 더 해볼게요
+            예방 가이드 화면으로 돌아가기
           </Button>
         }
       >

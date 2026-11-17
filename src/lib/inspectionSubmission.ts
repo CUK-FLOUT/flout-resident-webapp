@@ -1,7 +1,13 @@
 import { getInspectionReceipt, type useInspectionSubmission } from '@/api/applications';
 import { env } from '@/lib/env';
 import { ApiError } from '@/lib/http';
-import { inspectionPhotoRequestKey, samePhotos, step1Error, step2Error } from '@/lib/inspection';
+import {
+  inspectionPhotoRequestKey,
+  isInspectionReceived,
+  samePhotos,
+  step1Error,
+  step2Error,
+} from '@/lib/inspection';
 import {
   inspectionFormFields,
   inspectionSessionScope,
@@ -10,8 +16,6 @@ import {
   saveInspectionProgress,
 } from '@/lib/inspectionForm';
 import { useInspectionDraft, type Draft } from '@/stores/inspectionDraft';
-
-const isReceived = (status: string) => status === 'RECEIVED' || status === 'INSPECTION_COMPLETED';
 
 async function uploadInspectionSubmissionPhotos(
   applicationId: number,
@@ -130,7 +134,7 @@ export async function submitInspection(
     ) {
       const application = await recoverInspectionCreation(assessmentId, current.formId);
       if (!isCurrent()) return;
-      if (application && isReceived(application.applicationStatus)) {
+      if (application && isInspectionReceived(application.applicationStatus)) {
         complete(application.applicationId);
         return;
       }
@@ -141,7 +145,7 @@ export async function submitInspection(
     if (!env.useMock && applicationId) {
       const receipt = await getInspectionReceipt(applicationId);
       if (!isCurrent()) return;
-      if (isReceived(receipt.applicationStatus)) {
+      if (isInspectionReceived(receipt.applicationStatus)) {
         complete(applicationId);
         return;
       }
@@ -159,7 +163,7 @@ export async function submitInspection(
         throw new Error('임시 신청 상태를 확인하지 못했어요.');
       if (!isCurrent()) return;
       applicationId = created.applicationId;
-      if (isReceived(created.status)) {
+      if (isInspectionReceived(created.status)) {
         complete(applicationId);
         return;
       }
@@ -185,7 +189,7 @@ export async function submitInspection(
     );
     if (!isCurrent()) return;
     const receipt = await getInspectionReceipt(applicationId);
-    if (!isReceived(receipt.applicationStatus))
+    if (!isInspectionReceived(receipt.applicationStatus))
       throw new Error('아직 접수가 확인되지 않았어요. 다시 시도해 주세요.');
     complete(applicationId);
   } catch (failure) {

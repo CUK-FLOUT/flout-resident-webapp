@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { generatePath, useLocation, useNavigate, useSearchParams } from 'react-router';
-import { parseAssessmentId } from '@/api/riskAnalysis';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { generatePath, useLocation, useNavigate, useNavigation } from 'react-router';
 import { Screen } from '@/components/layout';
 import { Button, ChoiceGroup, ProgressBar, Textarea, TextField } from '@/components/ui';
 import { TENURE_OPTIONS, WATER_ENTRY_OPTIONS, YES_NO_UNKNOWN_OPTIONS } from '@/constants/labels';
@@ -19,6 +18,8 @@ import {
   inspectionFormFields,
   inspectionSessionScope,
   loadInspectionEntry,
+  matchesInspectionDraftRoute,
+  readInspectionDraftRoute,
   rememberInspection,
   saveInspectionProgress,
 } from '@/lib/inspectionForm';
@@ -29,32 +30,34 @@ export default function InspectionApplyPage() {
   const draft = useInspectionDraft();
   const { result } = useAddressDraft();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const requestedFormId = searchParams.get('inspectionFormDraftId') ?? undefined;
-  const requestedAssessmentId =
-    parseAssessmentId(searchParams.get('assessmentId') ?? undefined) ?? undefined;
-  const requestedApplicationId =
-    parseAssessmentId(searchParams.get('applicationId') ?? undefined) ??
-    (location.state?.applicationId as number | undefined);
+  const pendingLocation = useNavigation().location;
+  const route = readInspectionDraftRoute(location.search, location.state?.applicationId);
+  const {
+    applicationId: requestedApplicationId,
+    assessmentId: requestedAssessmentId,
+    formId: requestedFormId,
+    invalid,
+  } = route;
   const scope = inspectionSessionScope();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [phoneTouched, setPhoneTouched] = useState(false);
-  const advancing = useRef(false);
-  const ready = Boolean(
-    draft.context &&
-    draft.sessionScope === scope &&
-    (requestedFormId
-      ? draft.formId === requestedFormId
-      : requestedApplicationId
-          ? draft.savedApplicationId === requestedApplicationId &&
-            (!requestedAssessmentId || draft.assessmentId === requestedAssessmentId)
-        : requestedAssessmentId
-          ? draft.assessmentId === requestedAssessmentId
-          : !result || draft.assessmentId === result.id),
-  );
+  const activeEntry = useRef<{ location: typeof location; advancing: boolean } | null>(null);
+  useLayoutEffect(() => {
+    if (pendingLocation) return;
+    activeEntry.current = { location, advancing: false };
+    const invalidate = () => {
+      activeEntry.current = null;
+    };
+    window.addEventListener('popstate', invalidate);
+    return () => {
+      invalidate();
+      window.removeEventListener('popstate', invalidate);
+    };
+  }, [location, pendingLocation]);
+  const ready = matchesInspectionDraftRoute(draft, scope, route, result?.id);
   useEffect(() => {
-    if (ready) return;
+    if (ready || invalid) return;
     let active = true;
     setLoading(true);
     void loadInspectionEntry(result, scope, {
@@ -104,6 +107,7 @@ export default function InspectionApplyPage() {
     };
   }, [
     ready,
+    invalid,
     result,
     scope,
     requestedApplicationId,
@@ -111,15 +115,17 @@ export default function InspectionApplyPage() {
     requestedAssessmentId,
     navigate,
   ]);
-  const resumePhotos = searchParams.get('step') === 'photos';
+  const resumePhotos = new URLSearchParams(location.search).get('step') === 'photos';
   const canResumePhotos = Boolean(draft.savedApplicationId && !step1Error(draft));
   useEffect(() => {
     if (!resumePhotos || !ready) return;
     const params = new URLSearchParams(location.search);
     params.delete('step');
+    if (requestedApplicationId !== undefined && !params.has('applicationId'))
+      params.set('applicationId', String(requestedApplicationId));
     const pathname = canResumePhotos ? PATHS.inspectionSchedule : PATHS.inspectionApply;
     navigate({ pathname, search: params.toString() }, { replace: true });
-  }, [resumePhotos, ready, canResumePhotos, location.search, navigate]);
+  }, [resumePhotos, ready, canResumePhotos, location.search, requestedApplicationId, navigate]);
   useInspectionAutosave(draft, ready, setError);
   if (!ready)
     return (
@@ -127,15 +133,17 @@ export default function InspectionApplyPage() {
         header={{ title: '현장점검하기' }}
         tab="home"
         bottom={
-          loading ? undefined : (
+          loading && !invalid ? undefined : (
             <Button onClick={() => navigate(PATHS.addressSearch)}>주소 검색하기</Button>
           )
         }
       >
         <p role={loading ? 'status' : undefined} className="text-body text-muted pt-10 text-center">
-          {loading
-            ? '임시 저장된 신청서를 불러오고 있어요.'
-            : error || '먼저 주소를 검색하고 침수 취약도를 확인해 주세요.'}
+          {invalid
+            ? '신청 번호를 확인할 수 없어요.'
+            : loading
+              ? '임시 저장된 신청서를 불러오고 있어요.'
+              : error || '먼저 주소를 검색하고 침수 취약도를 확인해 주세요.'}
         </p>
       </Screen>
     );
@@ -147,27 +155,49 @@ export default function InspectionApplyPage() {
         <Button
           variant={step1Error(draft) ? 'muted' : 'primary'}
           onClick={async () => {
-            if (advancing.current || draft.submitting) return;
+            const entry = activeEntry.current;
+            if (!entry || entry.advancing || draft.submitting) return;
             const message = step1Error(draft);
             setPhoneTouched(true);
             setError(
               message && message === inspectionPhoneError(draft.phone) ? '' : (message ?? ''),
             );
             if (message) return;
-            advancing.current = true;
+            entry.advancing = true;
             try {
               await saveInspectionProgress();
+              const latest = activeEntry.current;
+              if (latest !== entry) return;
+              const { search, state } = latest.location;
+              const latestRoute = readInspectionDraftRoute(search, state?.applicationId);
+              const current = useInspectionDraft.getState();
               if (
-                useInspectionDraft.getState().context === draft.context &&
-                scope === inspectionSessionScope()
-              )
-                navigate({ pathname: PATHS.inspectionSchedule, search: location.search });
+                current.context === draft.context &&
+                matchesInspectionDraftRoute(
+                  current,
+                  inspectionSessionScope(),
+                  latestRoute,
+                  useAddressDraft.getState().result?.id,
+                )
+              ) {
+                const params = new URLSearchParams(search);
+                const { applicationId, assessmentId, formId } = latestRoute;
+                if (applicationId !== undefined && !params.has('applicationId'))
+                  params.set('applicationId', String(applicationId));
+                if (!formId && !applicationId && !assessmentId) {
+                  if (current.formId) params.set('inspectionFormDraftId', current.formId);
+                  else if (typeof current.assessmentId === 'number')
+                    params.set('assessmentId', String(current.assessmentId));
+                }
+                navigate({ pathname: PATHS.inspectionSchedule, search: params.toString() });
+              }
             } catch (failure) {
-              setError(
-                failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.',
-              );
+              if (activeEntry.current === entry)
+                setError(
+                  failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.',
+                );
             } finally {
-              advancing.current = false;
+              entry.advancing = false;
             }
           }}
         >

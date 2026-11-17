@@ -1,4 +1,5 @@
 import { generatePath, useNavigate, useParams } from 'react-router';
+import { parseInspectionApplicationId } from '@/api/applications';
 import { Button } from '@/components/ui';
 import { PATHS } from '@/constants/paths';
 import { InspectionStatusScreen } from './InspectionStatusScreen';
@@ -7,12 +8,17 @@ const steps = ['현재 단계 · 신청 접수', '방문일정 확정', '전문�
 
 export default function InspectionNextStepsPage() {
   const navigate = useNavigate();
-  const { applicationId = '000001' } = useParams<'applicationId'>();
+  const { applicationId } = useParams<'applicationId'>();
+  const id = parseInspectionApplicationId(applicationId);
 
   return (
     <InspectionStatusScreen
       title="진행 절차"
-      backTo={generatePath(PATHS.inspectionComplete, { applicationId })}
+      backTo={
+        id === undefined
+          ? PATHS.home
+          : generatePath(PATHS.inspectionComplete, { applicationId: String(id) })
+      }
       bottom={
         <Button variant="secondary" onClick={() => navigate(PATHS.home)}>
           홈으로 가기

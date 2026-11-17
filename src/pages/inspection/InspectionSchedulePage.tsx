@@ -6,7 +6,12 @@ import { Button, ChoiceGroup, ProgressBar, TextField } from '@/components/ui';
 import { VISIT_TIME_OPTIONS } from '@/constants/labels';
 import { PATHS } from '@/constants/paths';
 import { photoError, step1Error, step2Error } from '@/lib/inspection';
-import { inspectionSessionScope, saveInspectionProgress } from '@/lib/inspectionForm';
+import {
+  inspectionSessionScope,
+  matchesInspectionDraftRoute,
+  readInspectionDraftRoute,
+  saveInspectionProgress,
+} from '@/lib/inspectionForm';
 import { useInspectionDraft } from '@/stores/inspectionDraft';
 import { useInspectionAutosave } from './useInspectionAutosave';
 
@@ -64,7 +69,8 @@ export default function InspectionSchedulePage() {
   const applyPath = { pathname: PATHS.inspectionApply, search };
   const draft = useInspectionDraft();
   const scope = inspectionSessionScope();
-  const ready = Boolean(draft.context && draft.sessionScope === scope);
+  const route = readInspectionDraftRoute(search);
+  const ready = matchesInspectionDraftRoute(draft, scope, route);
   const [error, setError] = useState('');
   const [showPhotoAlert, setShowPhotoAlert] = useState(false);
   const advancing = useRef(false);
@@ -96,7 +102,14 @@ export default function InspectionSchedulePage() {
           <Button
             variant={step2Error(draft) ? 'muted' : 'primary'}
             onClick={async () => {
-              if (advancing.current || draft.submitting) return;
+              const current = useInspectionDraft.getState();
+              if (
+                advancing.current ||
+                current.submitting ||
+                current.context !== draft.context ||
+                !matchesInspectionDraftRoute(current, inspectionSessionScope(), route)
+              )
+                return;
               if (!draft.photos.length) {
                 setShowPhotoAlert(true);
                 return;

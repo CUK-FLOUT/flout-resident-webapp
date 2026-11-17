@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { generatePath, useLocation, useNavigate } from 'react-router';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { generatePath, useLocation, useNavigate, useNavigation } from 'react-router';
 import { Screen } from '@/components/layout';
 import { Button, ChoiceGroup, ProgressBar, Textarea, TextField } from '@/components/ui';
 import { TENURE_OPTIONS, WATER_ENTRY_OPTIONS, YES_NO_UNKNOWN_OPTIONS } from '@/constants/labels';
@@ -30,6 +30,7 @@ export default function InspectionApplyPage() {
   const draft = useInspectionDraft();
   const { result } = useAddressDraft();
   const location = useLocation();
+  const pendingLocation = useNavigation().location;
   const route = readInspectionDraftRoute(location.search, location.state?.applicationId);
   const {
     applicationId: requestedApplicationId,
@@ -41,7 +42,19 @@ export default function InspectionApplyPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [phoneTouched, setPhoneTouched] = useState(false);
-  const advancing = useRef(false);
+  const activeEntry = useRef<{ location: typeof location; advancing: boolean } | null>(null);
+  useLayoutEffect(() => {
+    if (pendingLocation) return;
+    activeEntry.current = { location, advancing: false };
+    const invalidate = () => {
+      activeEntry.current = null;
+    };
+    window.addEventListener('popstate', invalidate);
+    return () => {
+      invalidate();
+      window.removeEventListener('popstate', invalidate);
+    };
+  }, [location, pendingLocation]);
   const ready = matchesInspectionDraftRoute(draft, scope, route, result?.id);
   useEffect(() => {
     if (ready || invalid) return;
@@ -142,25 +155,36 @@ export default function InspectionApplyPage() {
         <Button
           variant={step1Error(draft) ? 'muted' : 'primary'}
           onClick={async () => {
-            if (advancing.current || draft.submitting) return;
+            const entry = activeEntry.current;
+            if (!entry || entry.advancing || draft.submitting) return;
             const message = step1Error(draft);
             setPhoneTouched(true);
             setError(
               message && message === inspectionPhoneError(draft.phone) ? '' : (message ?? ''),
             );
             if (message) return;
-            advancing.current = true;
+            entry.advancing = true;
             try {
               await saveInspectionProgress();
+              const latest = activeEntry.current;
+              if (latest !== entry) return;
+              const { search, state } = latest.location;
+              const latestRoute = readInspectionDraftRoute(search, state?.applicationId);
               const current = useInspectionDraft.getState();
               if (
                 current.context === draft.context &&
-                matchesInspectionDraftRoute(current, inspectionSessionScope(), route, result?.id)
+                matchesInspectionDraftRoute(
+                  current,
+                  inspectionSessionScope(),
+                  latestRoute,
+                  useAddressDraft.getState().result?.id,
+                )
               ) {
-                const params = new URLSearchParams(location.search);
-                if (requestedApplicationId !== undefined && !params.has('applicationId'))
-                  params.set('applicationId', String(requestedApplicationId));
-                if (!requestedFormId && !requestedApplicationId && !requestedAssessmentId) {
+                const params = new URLSearchParams(search);
+                const { applicationId, assessmentId, formId } = latestRoute;
+                if (applicationId !== undefined && !params.has('applicationId'))
+                  params.set('applicationId', String(applicationId));
+                if (!formId && !applicationId && !assessmentId) {
                   if (current.formId) params.set('inspectionFormDraftId', current.formId);
                   else if (typeof current.assessmentId === 'number')
                     params.set('assessmentId', String(current.assessmentId));
@@ -168,11 +192,12 @@ export default function InspectionApplyPage() {
                 navigate({ pathname: PATHS.inspectionSchedule, search: params.toString() });
               }
             } catch (failure) {
-              setError(
-                failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.',
-              );
+              if (activeEntry.current === entry)
+                setError(
+                  failure instanceof Error ? failure.message : '신청서를 임시 저장하지 못했어요.',
+                );
             } finally {
-              advancing.current = false;
+              entry.advancing = false;
             }
           }}
         >

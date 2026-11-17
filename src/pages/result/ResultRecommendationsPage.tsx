@@ -79,14 +79,14 @@ function ResultRecommendations({ title, backTo, application, applicationId }: Re
             )}
           </div>
           <Button
-            className="rounded-[5px] text-[13px]"
+            className="rounded-[5px]"
             disabled={!hasFacilities}
             onClick={() => navigate(generatePath(PATHS.support, { applicationId }))}
           >
             관련 사업 알아보기
           </Button>
           <Button
-            className="rounded-[5px] text-[13px]"
+            className="rounded-[5px]"
             variant={hasFacilities ? 'secondary' : 'primary'}
             onClick={() => navigate(PATHS.home)}
           >

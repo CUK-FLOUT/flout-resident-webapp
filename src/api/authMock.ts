@@ -36,12 +36,23 @@ function readSession(): MockSession | null {
   return memorySession;
 }
 
+export { readSession as readMockSession };
+
 function writeSession(session: MockSession) {
   memorySession = session;
   try {
     sessionStorage.setItem(sessionKey, JSON.stringify(session));
   } catch {
     /* 메모리 세션 유지 */
+  }
+}
+
+export function clearMockSession() {
+  memorySession = null;
+  try {
+    sessionStorage.removeItem(sessionKey);
+  } catch {
+    /* 저장소가 차단되면 메모리 세션만 정리합니다. */
   }
 }
 

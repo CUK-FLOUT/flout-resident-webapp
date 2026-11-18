@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { env } from '@/lib/env';
 import { ApiError, http } from '@/lib/http';
 import { hasTokenPair, tokenStorage } from '@/lib/storage';
-import { mockConsent, mockLogin, mockSignup } from '@/api/authMock';
+import { clearMockSession, mockConsent, mockLogin, mockSignup } from '@/api/authMock';
 
 interface Envelope<T> {
   isSuccess: boolean;
@@ -97,7 +97,8 @@ export function useSaveConsent() {
 //로그아웃
 export async function logout() {
   try {
-    if (!env.useMock) await http.post('/auth/logout');
+    if (env.useMock) clearMockSession();
+    else await http.post('/auth/logout');
   } finally {
     tokenStorage.clear();
   }

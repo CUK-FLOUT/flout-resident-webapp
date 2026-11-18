@@ -48,10 +48,14 @@ export function HomeAccountMenu() {
   }, [confirmOpen]);
 
   const closeDialog = () => dialog.current?.close();
-  const confirmLogout = () =>
-    logout.mutate(undefined, {
-      onSettled: () => navigate(PATHS.login, { replace: true }),
-    });
+  const confirmLogout = async () => {
+    try {
+      await logout.mutateAsync();
+    } catch {
+      // The logout request clears the local session even when the server request fails.
+    }
+    await navigate(PATHS.onboarding, { replace: true });
+  };
 
   return (
     <div className="relative" ref={container}>

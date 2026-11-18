@@ -36,6 +36,8 @@ function readSession(): MockSession | null {
   return memorySession;
 }
 
+export { readSession as readMockSession };
+
 function writeSession(session: MockSession) {
   memorySession = session;
   try {

@@ -1,7 +1,10 @@
 import type { ComponentType } from 'react';
-import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
+import { createBrowserRouter, Navigate, replace, type RouteObject } from 'react-router';
+import { readMockSession } from '@/api/authMock';
 import { AppLayout } from '@/components/layout';
 import { PATHS } from '@/constants/paths';
+import { env } from '@/lib/env';
+import { tokenStorage } from '@/lib/storage';
 import HomePage from '@/pages/home/HomePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import RouteErrorPage from '@/pages/RouteErrorPage';
@@ -26,7 +29,14 @@ const routes: RouteObject[] = [
       { path: PATHS.consent, lazy: page(() => import('@/pages/auth/ConsentPage')) },
 
       // 홈·취약도·예방 가이드
-      { path: PATHS.home, element: <HomePage /> },
+      {
+        path: PATHS.home,
+        loader: () => {
+          const session = env.useMock ? readMockSession() : tokenStorage.getSessionScope();
+          return session === null ? replace(PATHS.onboarding) : null;
+        },
+        element: <HomePage />,
+      },
       { path: PATHS.homeProgress, lazy: page(() => import('@/pages/home/HomeProgressPage')) },
       { path: PATHS.addressSearch, lazy: page(() => import('@/pages/home/AddressSearchPage')) },
       { path: PATHS.addressDetail, lazy: page(() => import('@/pages/home/AddressDetailPage')) },

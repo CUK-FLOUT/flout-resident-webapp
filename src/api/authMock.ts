@@ -47,6 +47,15 @@ function writeSession(session: MockSession) {
   }
 }
 
+export function clearMockSession() {
+  memorySession = null;
+  try {
+    sessionStorage.removeItem(sessionKey);
+  } catch {
+    /* 저장소가 차단되면 메모리 세션만 정리합니다. */
+  }
+}
+
 export async function mockSignup(input: SignupInput) {
   await mockDelay();
   if (users.has(input.email)) throw new ApiError(409, '이미 가입된 이메일입니다.');
